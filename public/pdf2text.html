@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF转文本工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-color: #f9fafb;
+      --card-bg: #ffffff;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --warning-color: #f59e0b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    /* 上传区域 */
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #fafafa;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-color);
+      background: #f5f3ff;
+    }
+
+    .upload-area.dragover {
+      border-color: var(--primary-color);
+      background: #eef2ff;
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--primary-color), #818cf8);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+
+    .upload-area h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .upload-area p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* 文件信息 */
+    .file-info {
+      display: none;
+      padding: 16px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+
+    .file-info.active {
+      display: block;
+    }
+
+    .file-details {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .file-icon {
+      width: 40px;
+      height: 40px;
+      background: #fee2e2;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-icon svg {
+      width: 20px;
+      height: 20px;
+      color: #ef4444;
+    }
+
+    .file-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .file-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .file-stats {
+      display: flex;
+      gap: 24px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      margin: 12px 0;
+    }
+
+    .file-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .file-stat svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* 按钮样式 */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .btn-success {
+      background: var(--success-color);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-warning {
+      background: var(--warning-color);
+      color: white;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* 页面选择器 */
+    .page-selector {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .page-selector.active {
+      display: block;
+    }
+
+    .page-selector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .page-selector-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .page-range-input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .page-range-input input {
+      width: 80px;
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .page-item {
+      padding: 6px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .page-item:hover {
+      background: #f3f4f6;
+    }
+
+    .page-item.selected {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .page-item.empty {
+      background: #f3f4f6;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* 进度条 */
+    .progress-section {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .progress-section.active {
+      display: block;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), #818cf8);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .progress-status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 文本预览 */
+    .preview-section {
+      display: none;
+    }
+
+    .preview-section.active {
+      display: block;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .preview-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .preview-stats {
+      display: flex;
+      gap: 24px;
+      padding: 12px 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .preview-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .preview-content {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      max-height: 500px;
+      overflow-y: auto;
+      background: #fafafa;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .preview-content:empty::before {
+      content: '暂无文本内容';
+      color: var(--text-secondary);
+    }
+
+    /* 页码导航 */
+    .page-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .page-nav button {
+      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .page-nav button:hover:not(:disabled) {
+      background: #f3f4f6;
+    }
+
+    .page-nav button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .page-nav span {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* 错误提示 */
+    .error-message {
+      display: none;
+      padding: 12px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: var(--error-color);
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .error-message.active {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-message svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* 标签页 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    .tab:hover {
+      background: #f3f4f6;
+    }
+
+    .tab.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* 响应式 */
+    @media (max-width: 640px) {
+      .container {
+        padding: 0 16px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .upload-area {
+        padding: 32px 16px;
+      }
+
+      .page-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .preview-stats {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>PDF转文本工具</h1>
+      <p>上传PDF文件，提取中文文本内容</p>
+    </div>
+
+    <div class="card">
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <h3>点击或拖拽上传PDF文件</h3>
+        <p>支持 PDF 文档，最多 100MB</p>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,application/pdf">
+
+      <div class="file-info" id="fileInfo">
+        <div class="file-details">
+          <div class="file-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="file-name" id="fileName">document.pdf</div>
+            <div class="file-meta" id="fileMeta">2.5 MB</div>
+          </div>
+        </div>
+
+        <div class="file-stats" id="fileStats">
+          <div class="file-stat">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span id="pageCount">- 页</span>
+          </div>
+          <div class="file-stat">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <span id="charCount">- 字符</span>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="analyzeBtn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            分析PDF
+          </button>
+          <button class="btn btn-success" id="extractAllBtn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+            提取全部
+          </button>
+          <button class="btn btn-warning" id="extractSelectedBtn" disabled>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            提取选中
+          </button>
+          <button class="btn btn-secondary" id="cancelBtn">取消</button>
+        </div>
+
+        <!-- 页面选择器 -->
+        <div class="page-selector" id="pageSelector">
+          <div class="page-selector-header">
+            <span class="page-selector-title">选择页面</span>
+            <button class="btn btn-secondary" id="selectAllBtn" style="padding: 4px 10px; font-size: 12px;">全选</button>
+          </div>
+          <div class="page-range-input">
+            <input type="number" id="rangeStart" placeholder="起始页" min="1">
+            <span>-</span>
+            <input type="number" id="rangeEnd" placeholder="结束页" min="1">
+            <button class="btn btn-primary" id="rangeBtn" style="padding: 6px 12px; font-size: 12px;">应用</button>
+          </div>
+          <div class="page-grid" id="pageGrid"></div>
+        </div>
+      </div>
+
+      <div class="error-message" id="errorMessage">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span id="errorText">错误信息</span>
+      </div>
+    </div>
+
+    <div class="card progress-section" id="progressSection">
+      <div class="progress-label">
+        <span id="progressTitle">正在处理...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-status" id="progressStatus">请稍候...</div>
+    </div>
+
+    <div class="card preview-section" id="previewSection">
+      <div class="preview-header">
+        <span class="preview-title">提取结果</span>
+        <div class="preview-actions">
+          <button class="btn btn-success" id="downloadBtn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            下载TXT
+          </button>
+          <button class="btn btn-secondary" id="copyBtn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            复制
+          </button>
+          <button class="btn btn-secondary" id="clearBtn">清空</button>
+        </div>
+      </div>
+
+      <div class="tabs" id="tabs" style="display: none;">
+        <button class="tab active" data-tab="all">全部内容</button>
+        <button class="tab" data-tab="page">按页面</button>
+      </div>
+
+      <div class="preview-stats" id="previewStats">
+        <div class="preview-stat">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span id="totalPages">0 页</span>
+        </div>
+        <div class="preview-stat">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          </svg>
+          <span id="totalChars">0 字符</span>
+        </div>
+        <div class="preview-stat">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <span id="extractedPages">0 页</span>
+        </div>
+      </div>
+
+      <div class="preview-content" id="previewContent"></div>
+
+      <div class="page-nav" id="pageNav" style="display: none;">
+        <button id="prevPageBtn">上一页</button>
+        <span id="pageInfo">1 / 1</span>
+        <button id="nextPageBtn">下一页</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 状态变量
+    let currentFile = null;
+    let pdfAnalysis = null;
+    let extractedData = null;
+    let selectedPages = new Set();
+    let currentPage = 1;
+    let currentTab = 'all';
+
+    // DOM元素
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileMeta = document.getElementById('fileMeta');
+    const pageCountEl = document.getElementById('pageCount');
+    const charCountEl = document.getElementById('charCount');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const extractAllBtn = document.getElementById('extractAllBtn');
+    const extractSelectedBtn = document.getElementById('extractSelectedBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const pageSelector = document.getElementById('pageSelector');
+    const pageGrid = document.getElementById('pageGrid');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const rangeStart = document.getElementById('rangeStart');
+    const rangeEnd = document.getElementById('rangeEnd');
+    const rangeBtn = document.getElementById('rangeBtn');
+    const progressSection = document.getElementById('progressSection');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressStatus = document.getElementById('progressStatus');
+    const progressTitle = document.getElementById('progressTitle');
+    const previewSection = document.getElementById('previewSection');
+    const previewContent = document.getElementById('previewContent');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const tabs = document.getElementById('tabs');
+    const pageNav = document.getElementById('pageNav');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const pageInfo = document.getElementById('pageInfo');
+
+    // 初始化
+    function init() {
+      uploadArea.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', handleFileSelect);
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) handleFile(files[0]);
+      });
+
+      analyzeBtn.addEventListener('click', analyzePDF);
+      extractAllBtn.addEventListener('click', () => extractText('all'));
+      extractSelectedBtn.addEventListener('click', () => extractText('selected'));
+      cancelBtn.addEventListener('click', resetUI);
+      selectAllBtn.addEventListener('click', toggleSelectAll);
+      rangeBtn.addEventListener('click', applyRange);
+      downloadBtn.addEventListener('click', downloadText);
+      copyBtn.addEventListener('click', copyText);
+      clearBtn.addEventListener('click', resetUI);
+
+      // 标签页切换
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+      });
+
+      prevPageBtn.addEventListener('click', () => navigatePage(-1));
+      nextPageBtn.addEventListener('click', () => navigatePage(1));
+    }
+
+    // 处理文件选择
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    }
+
+    // 处理文件
+    function handleFile(file) {
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        showError('请上传PDF文件');
+        return;
+      }
+
+      if (file.size > 100 * 1024 * 1024) {
+        showError('文件大小不能超过100MB');
+        return;
+      }
+
+      hideError();
+      currentFile = file;
+      pdfAnalysis = null;
+      extractedData = null;
+      selectedPages.clear();
+
+      fileName.textContent = file.name;
+      fileMeta.textContent = formatFileSize(file.size);
+      pageCountEl.textContent = '获取中...';
+      charCountEl.textContent = '获取中...';
+
+      uploadArea.style.display = 'none';
+      fileInfo.classList.add('active');
+
+      // 自动分析PDF
+      analyzePDF();
+    }
+
+    // 分析PDF
+    async function analyzePDF() {
+      if (!currentFile) return;
+
+      showProgress('正在分析PDF...', 'analyze');
+      fileInfo.classList.remove('active');
+      progressSection.classList.add('active');
+
+      const formData = new FormData();
+      formData.append('file', currentFile);
+
+      try {
+        const response = await fetch('/api/pdf2text/analyze', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          pdfAnalysis = result.data;
+          pageCountEl.textContent = `${pdfAnalysis.totalPages} 页`;
+          charCountEl.textContent = `${pdfAnalysis.totalChars} 字符`;
+
+          // 生成页面选择器
+          generatePageSelector(pdfAnalysis.pages);
+
+          progressSection.classList.remove('active');
+          fileInfo.classList.add('active');
+
+          showError('分析完成！请选择要提取的页面，或直接点击"提取全部"');
+          setTimeout(hideError, 3000);
+        } else {
+          showError(result.error || '分析失败');
+          progressSection.classList.remove('active');
+          fileInfo.classList.add('active');
+        }
+      } catch (error) {
+        showError('网络错误: ' + error.message);
+        progressSection.classList.remove('active');
+        fileInfo.classList.add('active');
+      }
+    }
+
+    // 生成页面选择器
+    function generatePageSelector(pages) {
+      pageGrid.innerHTML = '';
+      selectedPages.clear();
+
+      pages.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'page-item' + (p.hasText ? '' : ' empty');
+        div.textContent = p.page;
+        div.dataset.page = p.page;
+        div.dataset.hasText = p.hasText;
+
+        if (p.hasText) {
+          div.addEventListener('click', () => togglePage(p.page, div));
+          selectedPages.add(p.page);
+          div.classList.add('selected');
+        }
+
+        pageGrid.appendChild(div);
+      });
+
+      pageSelector.classList.add('active');
+      extractSelectedBtn.disabled = false;
+    }
+
+    // 切换页面选择
+    function togglePage(page, element) {
+      if (selectedPages.has(page)) {
+        selectedPages.delete(page);
+        element.classList.remove('selected');
+      } else {
+        selectedPages.add(page);
+        element.classList.add('selected');
+      }
+      updateExtractSelectedBtn();
+    }
+
+    // 全选/取消全选
+    function toggleSelectAll() {
+      const allSelected = selectedPages.size === getSelectablePages().size;
+      const pages = getSelectablePages();
+
+      if (allSelected) {
+        selectedPages.clear();
+        document.querySelectorAll('.page-item.selected').forEach(el => {
+          el.classList.remove('selected');
+        });
+      } else {
+        pages.forEach(p => selectedPages.add(p));
+        document.querySelectorAll('.page-item:not(.empty)').forEach(el => {
+          el.classList.add('selected');
+        });
+      }
+
+      updateExtractSelectedBtn();
+    }
+
+    // 获取可选页面
+    function getSelectablePages() {
+      const pages = new Set();
+      document.querySelectorAll('.page-item:not(.empty)').forEach(el => {
+        pages.add(parseInt(el.dataset.page));
+      });
+      return pages;
+    }
+
+    // 应用范围选择
+    function applyRange() {
+      const start = parseInt(rangeStart.value);
+      const end = parseInt(rangeEnd.value);
+
+      if (isNaN(start) || isNaN(end) || start > end) {
+        showError('请输入有效的页码范围');
+        return;
+      }
+
+      const pages = getSelectablePages();
+      selectedPages.clear();
+      document.querySelectorAll('.page-item.selected').forEach(el => {
+        el.classList.remove('selected');
+      });
+
+      for (let i = start; i <= end; i++) {
+        if (pages.has(i)) {
+          selectedPages.add(i);
+          const el = document.querySelector(`.page-item[data-page="${i}"]`);
+          if (el) el.classList.add('selected');
+        }
+      }
+
+      updateExtractSelectedBtn();
+    }
+
+    // 更新提取选中按钮状态
+    function updateExtractSelectedBtn() {
+      extractSelectedBtn.disabled = selectedPages.size === 0;
+    }
+
+    // 提取文本
+    async function extractText(mode) {
+      if (!currentFile) return;
+
+      const formData = new FormData();
+      formData.append('file', currentFile);
+
+      let url = '/api/pdf2text/extract';
+      let title = '正在提取全部内容...';
+
+      if (mode === 'selected') {
+        formData.append('pages', JSON.stringify([...selectedPages].sort((a, b) => a - b)));
+        url = '/api/pdf2text/extract-pages';
+        title = `正在提取 ${selectedPages.size} 页内容...`;
+      }
+
+      showProgress(title, 'extract');
+      progressSection.classList.add('active');
+      fileInfo.classList.remove('active');
+
+      simulateProgress();
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          extractedData = result.data;
+          displayResults();
+          progressSection.classList.remove('active');
+          previewSection.classList.add('active');
+        } else {
+          showError(result.error || '提取失败');
+          progressSection.classList.remove('active');
+          fileInfo.classList.add('active');
+        }
+      } catch (error) {
+        showError('网络错误: ' + error.message);
+        progressSection.classList.remove('active');
+        fileInfo.classList.add('active');
+      }
+    }
+
+    // 显示结果
+    function displayResults() {
+      const data = extractedData;
+
+      document.getElementById('totalPages').textContent = `${data.totalPages} 页`;
+      document.getElementById('totalChars').textContent = `${data.totalChars} 字符`;
+      document.getElementById('extractedPages').textContent = `${data.pages?.length || 1} 页`;
+
+      // 显示标签页
+      if (data.pages && data.pages.length > 1) {
+        tabs.style.display = 'flex';
+        pageNav.style.display = 'flex';
+        currentTab = 'all';
+        switchTab('all');
+      } else {
+        tabs.style.display = 'none';
+        pageNav.style.display = 'none';
+        previewContent.textContent = data.fullText || data.pages?.[0]?.text || '';
+      }
+    }
+
+    // 切换标签页
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+      });
+
+      if (tab === 'all') {
+        previewContent.textContent = extractedData.fullText;
+        pageNav.style.display = 'none';
+      } else {
+        currentPage = 1;
+        showPage(1);
+        pageNav.style.display = 'flex';
+      }
+    }
+
+    // 显示指定页面
+    function showPage(page) {
+      const pages = extractedData.pages;
+      if (!pages || pages.length === 0) return;
+
+      if (page < 1) page = 1;
+      if (page > pages.length) page = pages.length;
+      currentPage = page;
+
+      previewContent.textContent = pages[page - 1].text;
+      pageInfo.textContent = `${page} / ${pages.length}`;
+
+      prevPageBtn.disabled = page <= 1;
+      nextPageBtn.disabled = page >= pages.length;
+    }
+
+    // 页面导航
+    function navigatePage(delta) {
+      showPage(currentPage + delta);
+    }
+
+    // 模拟进度
+    function simulateProgress() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress > 95) progress = 95;
+        updateProgress(Math.floor(progress));
+        if (progress >= 95) clearInterval(interval);
+      }, 300);
+    }
+
+    // 更新进度
+    function updateProgress(percent, status) {
+      progressFill.style.width = `${percent}%`;
+      progressPercent.textContent = `${percent}%`;
+      if (status) progressStatus.textContent = status;
+    }
+
+    // 显示进度
+    function showProgress(title, type) {
+      progressTitle.textContent = title;
+      progressFill.style.width = '0%';
+      progressPercent.textContent = '0%';
+      progressStatus.textContent = '处理中...';
+    }
+
+    // 下载文本
+    function downloadText() {
+      if (!extractedData) return;
+
+      const text = extractedData.fullText || '';
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (currentFile?.name?.replace('.pdf', '') || 'document') + '.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 复制文本
+    async function copyText() {
+      if (!extractedData) return;
+
+      const text = extractedData.fullText || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.innerHTML = `
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          已复制
+        `;
+        setTimeout(() => {
+          copyBtn.innerHTML = `
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            复制
+          `;
+        }, 2000);
+      } catch (error) {
+        showError('复制失败');
+      }
+    }
+
+    // 显示错误
+    function showError(message) {
+      errorText.textContent = message;
+      errorMessage.classList.add('active');
+    }
+
+    // 隐藏错误
+    function hideError() {
+      errorMessage.classList.remove('active');
+    }
+
+    // 重置UI
+    function resetUI() {
+      currentFile = null;
+      pdfAnalysis = null;
+      extractedData = null;
+      selectedPages.clear();
+      currentPage = 1;
+
+      fileInput.value = '';
+      fileInfo.classList.remove('active');
+      progressSection.classList.remove('active');
+      previewSection.classList.remove('active');
+      pageSelector.classList.remove('active');
+      uploadArea.style.display = 'block';
+
+      progressFill.style.width = '0%';
+      previewContent.textContent = '';
+      tabs.style.display = 'none';
+      pageNav.style.display = 'none';
+
+      hideError();
+    }
+
+    // 格式化文件大小
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>

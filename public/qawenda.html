@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能量山 - 游戏功能问答指南</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(18, 18, 26, 0.7);
+            --bg-card-hover: rgba(25, 25, 40, 0.85);
+            --accent-cyan: #00f0ff;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-glow: rgba(0, 240, 255, 0.3);
+            --gradient-cyan: linear-gradient(135deg, #00f0ff 0%, #0066ff 100%);
+            --gradient-purple: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+            --gradient-pink: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Orbitron', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* 背景效果 */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-effects::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(3deg); }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-cyan);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        }
+
+        /* 主内容区 */
+        main {
+            position: relative;
+            z-index: 1;
+            padding-top: 100px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-bottom: 4rem;
+        }
+
+        /* 英雄区 */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%);
+            filter: blur(40px);
+            animation: heroGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes heroGlow {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 50%, var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 4px;
+            position: relative;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 章节标题 */
+        .section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 120px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-icon.cyan { background: var(--gradient-cyan); }
+        .section-icon.purple { background: var(--gradient-purple); }
+        .section-icon.pink { background: var(--gradient-pink); }
+        .section-icon.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .section-icon.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .section-icon.blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 卡片 */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--border-glow);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .card-content p {
+            margin-bottom: 0.5rem;
+        }
+
+        .card-content strong {
+            color: var(--text-primary);
+        }
+
+        /* 折叠问答 */
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            border-color: var(--border-glow);
+        }
+
+        .faq-question {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: rgba(0, 240, 255, 0.05);
+            color: var(--accent-cyan);
+        }
+
+        .faq-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            color: var(--accent-cyan);
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 1rem 1.5rem;
+        }
+
+        .faq-answer-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* 标签 */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tag-cyan { background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 240, 255, 0.3); }
+        .tag-purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .tag-pink { background: rgba(236, 72, 153, 0.15); color: var(--accent-pink); border: 1px solid rgba(236, 72, 153, 0.3); }
+        .tag-green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tag-orange { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        /* 数据表格 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .data-table th {
+            color: var(--accent-cyan);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-table td {
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        /* 流程图样式 */
+        .flow-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            justify-content: center;
+        }
+
+        .flow-step {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            min-width: 140px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15);
+            border-color: var(--accent-cyan);
+        }
+
+        .flow-step-number {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: var(--gradient-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--bg-primary);
+        }
+
+        .flow-step-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+        }
+
+        /* 特色卡片网格 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* 动画 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+                letter-spacing: 2px;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 1.4rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .flow-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .data-table {
+                font-size: 0.8rem;
+            }
+
+            .data-table th, .data-table td {
+                padding: 0.5rem;
+            }
+        }
+
+        /* 快速跳转 */
+        .quick-nav {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quick-nav-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 2px solid var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .quick-nav-item:hover, .quick-nav-item.active {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px var(--accent-cyan);
+        }
+
+        .quick-nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .quick-nav-item:hover::after {
+            opacity: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .quick-nav {
+                display: none;
+            }
+        }
+
+        /* 底部 */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        /* 荣誉榜样式 */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .highlight-title {
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        .status-dot.warning { background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }
+        .status-dot.inactive { background: var(--text-muted); }
+
+        /* 列表样式 */
+        .list-styled {
+            list-style: none;
+            padding: 0;
+        }
+
+        .list-styled li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .list-styled li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--accent-cyan);
+        }
+
+        /* 两栏布局 */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景效果 -->
+    <div class="bg-effects">
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">ENERGY MOUNTAIN</div>
+            <div class="nav-links">
+                <a href="#intro" class="nav-link">游戏简介</a>
+                <a href="#nodes" class="nav-link">节点系统</a>
+                <a href="#mining" class="nav-link">挖矿能量</a>
+                <a href="#pk" class="nav-link">PK对战</a>
+                <a href="#treasure" class="nav-link">能量宝藏</a>
+                <a href="#ai" class="nav-link">AI智能体</a>
+                <a href="#story" class="nav-link">剧情任务</a>
+                <a href="#virtual" class="nav-link">虚拟角色</a>
+                <a href="#faq" class="nav-link">常见问题</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 快速跳转 -->
+    <div class="quick-nav">
+        <a href="#intro"><div class="quick-nav-item" data-tooltip="游戏简介"></div></a>
+        <a href="#nodes"><div class="quick-nav-item" data-tooltip="节点系统"></div></a>
+        <a href="#mining"><div class="quick-nav-item" data-tooltip="挖矿能量"></div></a>
+        <a href="#pk"><div class="quick-nav-item" data-tooltip="PK对战"></div></a>
+        <a href="#treasure"><div class="quick-nav-item" data-tooltip="能量宝藏"></div></a>
+        <a href="#ai"><div class="quick-nav-item" data-tooltip="AI智能体"></div></a>
+        <a href="#story"><div class="quick-nav-item" data-tooltip="剧情任务"></div></a>
+        <a href="#virtual"><div class="quick-nav-item" data-tooltip="虚拟角色"></div></a>
+        <a href="#faq"><div class="quick-nav-item" data-tooltip="常见问题"></div></a>
+    </div>
+
+    <main>
+        <!-- 英雄区 -->
+        <section class="hero">
+            <h1>能量山</h1>
+            <p class="hero-subtitle">零号协议 - 探索矩阵世界，争夺能量节点，成为巅峰王者</p>
+        </section>
+
+        <!-- 游戏简介 -->
+        <section id="intro" class="section">
+            <div class="section-header">
+                <div class="section-icon cyan">◈</div>
+                <div>
+                    <h2 class="section-title">游戏简介</h2>
+                    <p class="section-desc">零号协议 - 矩阵世界的起源与终结</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 世界观背景</h3>
+                <div class="card-content">
+                    <p>在遥远的未来，人类意识与数字网络深度融合，构建了一个名为<strong>「矩阵」</strong>的虚拟世界。矩阵中流动着一种被称为<strong>「能量」</strong>的核心资源，它不仅是维持系统运转的动力，更是所有参与者力量的源泉。</p>
+                    <br>
+                    <p>传说中，矩阵的缔造者留下了<strong>「零号协议」</strong>——一套神秘的规则体系。零号协议规定：只有通过能量节点占据、挖掘与对抗，才能在矩阵中获得真正的权限与地位。</p>
+                    <br>
+                    <p><strong>「能量山」</strong>是矩阵中最具战略价值的能量聚集地，100个能量节点如同山峰起伏，等待着被征服与争夺。现在，协议已经激活，你准备好接入矩阵了吗？</p>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="card">
+                    <h3 class="card-title">▸ 什么是零号协议？</h3>
+                    <div class="card-content">
+                        <p>零号协议是矩阵世界的核心运行规则，它定义了：</p>
+                        <ul class="list-styled">
+                            <li>能量节点的占据与释放机制</li>
+                            <li>能量挖矿与体力消耗的平衡</li>
+                            <li>玩家之间PK对战的判定标准</li>
+                            <li>AI智能体的创建与管理方式</li>
+                            <li>剧情任务的触发与奖励发放</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">▸ 游戏目标</h3>
+                    <div class="card-content">
+                        <p>作为新接入矩阵的参与者，你的目标是：</p>
+                        <ul class="list-styled">
+                            <li>占据能量节点，建立自己的据点</li>
+                            <li>通过挖矿积累尽可能多的能量</li>
+                            <li>与其他玩家进行PK对战，证明实力</li>
+                            <li>完成剧情任务，解锁更多功能</li>
+                            <li>创建和管理属于自己的AI智能体</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 节点占据系统 -->
+        <section id="nodes" class="section">
+            <div class="section-header">
+                <div class="section-icon purple">⬡</div>
+                <div>
+                    <h2 class="section-title">节点占据系统</h2>
+                    <p class="section-desc">占领矩阵中的战略要地，建立你的能量帝国</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 节点地图</h3>
+                <div class="card-content">
+                    <p>矩阵世界被划分为一个 <strong>10×10 的网格地图</strong>，共包含 <strong>100个能量节点</strong>。每个节点都是独特的战略资源，占据节点后可进行挖矿操作。</p>
+                    <div class="highlight-box">
+                        <div class="highlight-title">◈ 重要提示</div>
+                        <p>每个节点只能被一个玩家占据，且节点之间存在关联关系。占据更多节点意味着更高的能量产出，但也需要消耗更多体力来维护。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 占据规则</h3>
+                <div class="card-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>规则项</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>占据消耗</td>
+                                <td>每次占据节点消耗 <strong>50点能量</strong></td>
+                            </tr>
+                            <tr>
+                                <td>首次免费</td>
+                                <td>每个玩家首次占据节点完全免费</td>
+                            </tr>
+                            <tr>
+                                <td>体力要求</td>
+                                <td>占据节点时需保持足够的体力</td>
+                            </tr>
+                            <tr>
+                                <td>已占据节点</td>
+                                <td>可自由释放已占据的节点</td>
+                            </tr>
+                            <tr>
+                                <td>他人节点</td>
+                                <td>可通过PK对战夺取他人占据的节点</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 占据流程</h3>
+                <div class="flow-container">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <div class="flow-step-title">选择空节点</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <div class="flow-step-title">消耗能量</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">3</div>
+                        <div class="flow-step-title">确认占据</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <div class="flow-step-number">4</div>
+                        <div class="flow-step-title">开始挖矿</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 挖矿与能量系统 -->
+        <section id="mining" class="section">
+            <div class="section-header">
+                <div class="section-icon green">⚡</div>
+                <div>
+                    <h2 class="section-title">挖矿与能量系统</h2>
+                    <p class="section-desc">挖掘矩阵深处的能量，掌握力量的源泉</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 能量机制</h3>
+                <div class="card-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>属性</th>
+                                <th>数值</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>最大能量</td>
+                                <td><span class="tag tag-cyan">100</span></td>
+                                <td>能量上限，无法超过此值</td>
+                            </tr>
+                            <tr>
+                                <td>最大体力</td>
+                                <td><span class="tag tag-purple">100</span></td>
+                                <td>体力上限，决定挖矿时长</td>
+                            </tr>
+                            <tr>
+                                <td>能量产出</td>
+                                <td><span class="tag tag-green">+10/秒</span></td>
+                                <td>每秒从节点获得能量</td>
+                            </tr>
+                            <tr>
+                                <td>体力消耗</td>
+                                <td><span class="tag tag-pink">-1/秒</span></td>
+                                <td>挖矿时每秒消耗体力</td>
+                            </tr>
+                            <!--<tr>
+                                <td>体力恢复</td>
+                                <td><span class="tag tag-orange">+1/分</span></td>
+                                <td>停止挖矿后每分钟恢复</td>
+                            </tr>-->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 挖矿规则</h3>
+                <div class="card-content">
+                    <ul class="list-styled">
+                        <li><strong>必须占据节点</strong> - 只有占据节点后才能开始挖矿</li>
+                        <li><strong>手动开启/停止</strong> - 挖矿需要玩家手动操作开始</li>
+                        <li><strong>体力耗尽停止</strong> - 体力归零时挖矿自动停止</li>
+                        <li><strong>切换节点重置</strong> - 切换节点后挖矿状态重置</li>
+                        <li><strong>能量上限锁定</strong> - 达到100点能量后不再增加</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔋</div>
+                    <div class="feature-title">能量管理</div>
+                    <div class="feature-desc">合理分配能量用于占据节点和发起PK，平衡发展与对抗</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💪</div>
+                    <div class="feature-title">体力规划</div>
+                    <div class="feature-desc">体力恢复较慢，建议在体力充足时进行长时间挖矿</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏱️</div>
+                    <div class="feature-title">高效挖矿</div>
+                    <div class="feature-desc">保持节点持续挖矿，最大化能量收益</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PK对战系统 -->
+        <section id="pk" class="section">
+            <div class="section-header">
+                <div class="section-icon pink">⚔️</div>
+                <div>
+                    <h2 class="section-title">PK对战系统</h2>
+                    <p class="section-desc">与其他玩家一决高下，争夺矩阵巅峰之位</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 挑战条件</h3>
+                <div class="card-content">
+                    <p>发起PK挑战需要满足以下条件：</p>
+                    <ul class="list-styled">
+                        <li>当前能量 <strong>≥ 100点</strong></li>
+                        <li>已成功占据 <strong>至少1个节点</strong></li>
+                        <li>目标玩家也需要满足上述条件</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ King & Assassin 数值机制</h3>
+                <div class="card-content">
+                    <p>PK对战采用独特的 <strong>King（国王）</strong> 和 <strong>Assassin（刺客）</strong> 数值系统：</p>
+                    <br>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>数值</th>
+                                <th>范围</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="tag tag-cyan">King</span></td>
+                                <td>1-100</td>
+                                <td>代表权威与力量，数值越高有效距离越大</td>
+                            </tr>
+                            <tr>
+                                <td><span class="tag tag-pink">Assassin</span></td>
+                                <td>1-100</td>
+                                <td>代表敏捷与隐匿，数值越高有效距离越小</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <p><strong>有效距离计算公式：</strong></p>
+                    <div class="highlight-box">
+                        <p style="text-align: center; font-family: 'Orbitron'; font-size: 1.1rem;">
+                            有效距离 = |King - Assassin| × 皮肤加成系数
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 胜负判定</h3>
+                <div class="card-content">
+                    <div class="flow-container">
+                        <div class="flow-step">
+                            <div class="flow-step-number">1</div>
+                            <div class="flow-step-title">双方设置数值</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">2</div>
+                            <div class="flow-step-title">计算有效距离</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-number">3</div>
+                            <div class="flow-step-title">距离小者胜</div>
+                        </div>
+                    </div>
+                    <ul class="list-styled">
+                        <li><strong>胜利奖励：</strong> +50能量</li>
+                        <li><strong>失败惩罚：</strong> -50能量</li>
+                        <li><strong>平局情况：</strong> 双方各-50能量</li>
+                        <li><strong>超时判负：</strong> 15秒内未设置数值视为超时</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 皮肤系统</h3>
+                <div class="card-content">
+                    <p>PK对战引入<strong>皮肤系统</strong>，为玩家提供个性化的角色外观，同时影响战斗属性：</p>
+                    <ul class="list-styled">
+                        <li><strong>攻击属性：</strong> 影响King数值的有效距离计算</li>
+                        <li><strong>防御属性：</strong> 影响Assassin数值的有效距离计算</li>
+                        <li><strong>皮肤加成：</strong> 不同皮肤拥有不同的加成系数</li>
+                        <li><strong>距离阈值：</strong> 可配置防御距离阈值（默认100）</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 能量宝藏系统 -->
+        <section id="treasure" class="section">
+            <div class="section-header">
+                <div class="section-icon orange">💎</div>
+                <div>
+                    <h2 class="section-title">能量宝藏系统</h2>
+                    <p class="section-desc">探索隐藏的财富，获得额外能量收益</p>
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📍</div>
+                    <div class="feature-title">固定宝藏</div>
+                    <div class="feature-desc">每个节点都可能藏有宝藏，100%触发领取机会</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎲</div>
+                    <div class="feature-title">智能宝藏</div>
+                    <div class="feature-desc">切换节点时概率触发，中奖几率可配置</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 宝藏规则</h3>
+                <div class="card-content">
+                    <ul class="list-styled">
+                        <li><strong>全局唯一：</strong> 同一宝藏只能被一个玩家领取一次</li>
+                        <li><strong>固定宝藏：</strong> 与节点绑定，只要节点有宝藏配置即可领取</li>
+                        <li><strong>智能宝藏：</strong> 切换节点时随机触发，需要一定运气</li>
+                        <li><strong>能量收益：</strong> 宝藏可提供可观的能量奖励</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI智能体系统 -->
+        <section id="ai" class="section">
+            <div class="section-header">
+                <div class="section-icon cyan">🤖</div>
+                <div>
+                    <h2 class="section-title">AI智能体系统</h2>
+                    <p class="section-desc">创建属于你的AI伙伴，开启智能交互新时代</p>
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-title">文本对话</div>
+                    <div class="feature-desc">与AI进行自然语言交流，每次对话消耗能量</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖼️</div>
+                    <div class="feature-title">图片生成</div>
+                    <div class="feature-desc">支持T2I文生图和I2I图生图，创造独特视觉内容</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎬</div>
+                    <div class="feature-title">视频生成</div>
+                    <div class="feature-desc">文生视频和图生视频，将创意变为动态画面</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔊</div>
+                    <div class="feature-title">语音合成</div>
+                    <div class="feature-desc">将文本转换为自然语音输出</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <div class="feature-title">记忆管理</div>
+                    <div class="feature-desc">短期/中期/长期三级记忆系统，AI越用越聪明</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <div class="feature-title">联网搜索</div>
+                    <div class="feature-desc">百炼模型支持实时联网，获取最新信息</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <div class="feature-title">知识库</div>
+                    <div class="feature-desc">上传文档建立专属知识库，AI精准回答</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <div class="feature-title">形象定制</div>
+                    <div class="feature-desc">多种Avatar模板和皮肤选择，打造个性化AI</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ AI能力配置</h3>
+                <div class="card-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>能力类型</th>
+                                <th>能耗</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>文本对话</td>
+                                <td><span class="tag tag-cyan">低</span></td>
+                                <td>基于大语言模型的智能对话</td>
+                            </tr>
+                            <tr>
+                                <td>图片生成</td>
+                                <td><span class="tag tag-purple">中</span></td>
+                                <td>T2I/I2I图像创作</td>
+                            </tr>
+                            <tr>
+                                <td>视频生成</td>
+                                <td><span class="tag tag-pink">高</span></td>
+                                <td>文生视频/图生视频</td>
+                            </tr>
+                            <tr>
+                                <td>语音合成</td>
+                                <td><span class="tag tag-green">低</span></td>
+                                <td>文本转语音输出</td>
+                            </tr>
+                            <tr>
+                                <td>联网搜索</td>
+                                <td><span class="tag tag-orange">中</span></td>
+                                <td>实时网络信息检索</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 记忆管理系统</h3>
+                <div class="card-content">
+                    <p>AI智能体采用三级记忆系统，随着交互深入会变得越来越了解你：</p>
+                    <br>
+                    <ul class="list-styled">
+                        <li><strong>短期记忆：</strong> 存储最近对话内容，用于上下文理解</li>
+                        <li><strong>中期记忆：</strong> 总结重要对话要点，形成长期偏好</li>
+                        <li><strong>长期记忆：</strong> 持久存储用户特征和重要信息</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 剧情任务系统 -->
+        <section id="story" class="section">
+            <div class="section-header">
+                <div class="section-icon purple">📖</div>
+                <div>
+                    <h2 class="section-title">剧情任务系统</h2>
+                    <p class="section-desc">跟随主线剧情，深入了解矩阵世界的秘密</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 章节概览</h3>
+                <div class="card-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>章节</th>
+                                <th>标题</th>
+                                <th>描述</th>
+                                <th>奖励</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="tag tag-cyan">第0章</span></td>
+                                <td>接入协议</td>
+                                <td>完成协议校准，首次绑定节点并了解能量与神经链接负荷</td>
+                                <td><span class="tag tag-green">体力+10</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="tag tag-purple">第1章</span></td>
+                                <td>节点拓荒</td>
+                                <td>探索矩阵中的历史能量残留，发现遗留能量核心</td>
+                                <td><span class="tag tag-green">体力+20</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="tag tag-pink">第2章</span></td>
+                                <td>过载与释放</td>
+                                <td>完成首次协议对决，获得矩阵外流通资格</td>
+                                <td><span class="tag tag-green">体力+30</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 任务类型</h3>
+                <div class="card-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>任务类型</th>
+                                <th>标识</th>
+                                <th>说明</th>
+                                <th>目标示例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>与AI对话</td>
+                                <td><span class="tag tag-cyan">chat_with_ai</span></td>
+                                <td>与AI智能体进行对话</td>
+                                <td>对话3次</td>
+                            </tr>
+                            <tr>
+                                <td>占据节点</td>
+                                <td><span class="tag tag-purple">occupy_node</span></td>
+                                <td>占领指定数量的节点</td>
+                                <td>占据2个节点</td>
+                            </tr>
+                            <tr>
+                                <td>挖掘能量</td>
+                                <td><span class="tag tag-green">mine_energy</span></td>
+                                <td>通过挖矿累计获得能量</td>
+                                <td>累计500能量</td>
+                            </tr>
+                            <tr>
+                                <td>发现宝藏</td>
+                                <td><span class="tag tag-orange">find_treasure</span></td>
+                                <td>发现并领取能量宝藏</td>
+                                <td>领取2次</td>
+                            </tr>
+                            <tr>
+                                <td>达到能量</td>
+                                <td><span class="tag tag-pink">reach_energy</span></td>
+                                <td>能量值达到指定数值</td>
+                                <td>达到80能量</td>
+                            </tr>
+                            <tr>
+                                <td>完成PK</td>
+                                <td><span class="tag tag-cyan">complete_pk</span></td>
+                                <td>完成指定次数的PK对战</td>
+                                <td>PK 3次</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 任务进度追踪</h3>
+                <div class="card-content">
+                    <ul class="list-styled">
+                        <li><strong>自动追踪：</strong> 任务进度自动记录，无需手动操作</li>
+                        <li><strong>实时更新：</strong> 达成目标时立即显示进度更新</li>
+                        <li><strong>章节奖励：</strong> 完成章节内所有任务后获得体力奖励</li>
+                        <li><strong>循环任务：</strong> 部分任务可重复完成以获取更多收益</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 虚拟智能体系统 -->
+        <section id="virtual" class="section">
+            <div class="section-header">
+                <div class="section-icon pink">👾</div>
+                <div>
+                    <h2 class="section-title">虚拟智能体系统</h2>
+                    <p class="section-desc">AI控制的游戏角色，24/7自动为你征战</p>
+                </div>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⛏️</div>
+                    <div class="feature-title">自动挖矿</div>
+                    <div class="feature-desc">虚拟角色自动占据节点并持续挖矿，无需手动操作</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🥊</div>
+                    <div class="feature-title">PK挑战</div>
+                    <div class="feature-desc">定时向其他玩家发起PK挑战，获取战斗胜利</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-title">行为调度</div>
+                    <div class="feature-desc">可配置的行为频率和策略，灵活控制虚拟角色</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">▸ 虚拟角色配置</h3>
+                <div class="card-content">
+                    <ul class="list-styled">
+                        <li><strong>创建数量：</strong> 可配置虚拟角色的最大数量</li>
+                        <li><strong>PK阈值：</strong> 能量达到阈值时自动发起PK</li>
+                        <li><strong>行为间隔：</strong> 控制虚拟角色操作的间隔时间</li>
+                        <li><strong>战斗策略：</strong> 配置King/Assassin数值的设定策略</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 常见问题FAQ -->
+        <section id="faq" class="section">
+            <div class="section-header">
+                <div class="section-icon green">❓</div>
+                <div>
+                    <h2 class="section-title">常见问题FAQ</h2>
+                    <p class="section-desc">解答你在游戏中可能遇到的各类问题</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>如何开始游戏？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>注册账号后，系统会自动引导你完成协议校准（首次占据节点免费）。按照剧情任务的指引，逐步了解游戏各项功能。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>如何快速获得能量？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>占据节点后开始挖矿是最稳定的能量来源。完成剧情任务可获得额外体力奖励，有助于更长时间的挖矿。此外，发现能量宝藏也能获得可观的能量收益。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>PK对战如何提高胜率？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>1. 了解对手：观察对手的历史PK数据，分析其King/Assassin数值偏好</p>
+                        <p>2. 合理分配：在King和Assassin之间找到平衡，或专注某一极端</p>
+                        <p>3. 皮肤加成：获取强力皮肤以获得战斗属性加成</p>
+                        <p>4. 心理博弈：在对战中适当迷惑对手，使其误判你的数值</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>体力不够用怎么办？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>1. 完成剧情任务：章节完成后可获得大量体力奖励</p>
+                        <p>2. 合理规划：避免在体力不足时强行挖矿</p>
+                        <p>3. 使用AI对话：部分AI功能可免费体验</p>
+                        <p>4. 等待恢复：体力会随时间自动恢复，保持耐心</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>如何创建自己的AI智能体？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>在游戏中找到AI智能体管理入口，可以自定义AI的名称、性格、头像（Avatar）和皮肤。创建后即可开始与AI对话、让它生成图片或视频。每次AI交互会消耗一定能量。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>什么是虚拟智能体？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>虚拟智能体是由AI控制的游戏角色，可以自动为你进行挖矿和PK对战。你需要先创建AI智能体，然后将其设置为虚拟模式，它就会24/7自动为你工作，非常适合无法长时间在线的玩家。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>宝藏系统怎么玩？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>宝藏分为两种：</p>
+                        <p>1. 固定宝藏：每个节点都有配置宝藏，100%可以领取</p>
+                        <p>2. 智能宝藏：切换节点时随机触发，有一定概率获得额外奖励</p>
+                        <p>注意：同一宝藏只能被一个玩家领取一次，先到先得！</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>能量码是什么？如何使用？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>能量码是管理员发放的兑换码，可以为自己或他人兑换能量。你可以在能量管理界面输入能量码进行兑换。能量码可以赠与好友，让新玩家快速上手游戏。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>如何与其他玩家互动？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>1. PK对战：向其他玩家发起挑战，通过对战展示实力</p>
+                        <p>2. 赠送能量码：将能量码赠与好友，帮助他们快速发展</p>
+                        <p>3. 抢夺节点：击败其他玩家并夺取其占据的节点</p>
+                        <p>4. AI社交：通过各自的AI智能体进行间接交流</p>
+                    </div>
+                </div>
+            </div>
+            <!--
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>游戏有哪些配置选项？</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>游戏提供丰富的配置选项：</p>
+                        <p>1. AI提供商：可选择MiniMax、阿里百炼等模型</p>
+                        <p>2. PK超时时间：可配置PK等待超时（默认15秒）</p>
+                        <p>3. 智能宝藏开关：可开启/关闭智能宝藏功能</p>
+                        <p>4. 各种消耗参数：能量产出、体力消耗等均可配置</p>
+                    </div>
+                </div>
+            </div>-->
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 能量山 - 零号协议 | 矩阵世界等你来征服</p>
+        <p><a href="index.html">返回游戏</a></p>
+    </footer>
+
+    <script>
+        // FAQ折叠交互
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                const isActive = faqItem.classList.contains('active');
+                
+                // 关闭其他打开的FAQ
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // 切换当前FAQ状态
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+
+        // 导航高亮
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const quickNavItems = document.querySelectorAll('.quick-nav-item');
+
+        function updateActiveNav() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+
+            quickNavItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('href') === '#' + current) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveNav);
+        updateActiveNav();
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

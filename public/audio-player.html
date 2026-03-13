@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>播放中 | 能量山播客</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --player-bg: #1a1a2e;
+            --player-primary: #e91e63;
+            --player-primary-dark: #c2185b;
+            --player-text: #ffffff;
+            --player-text-secondary: rgba(255, 255, 255, 0.7);
+            --player-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: var(--player-text);
+        }
+
+        .player-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .player-container.buffering::before {
+            content: '缓冲中...';
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .back-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .back-nav a {
+            color: var(--player-text);
+            text-decoration: none;
+            font-size: 24px;
+        }
+
+        .back-nav span {
+            font-size: 16px;
+            color: var(--player-text-secondary);
+        }
+
+        .album-cover {
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 30px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, var(--player-primary), #9c27b0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            position: relative;
+        }
+
+        .album-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .album-cover.playing {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .player-container.buffering .album-cover {
+            animation: pulse 1s ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .track-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .track-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-podcast {
+            font-size: 14px;
+            color: var(--player-text-secondary);
+        }
+
+        .progress-container {
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar:hover {
+            height: 8px;
+        }
+
+        .progress-current {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--player-primary), #ff4081);
+            border-radius: 3px;
+            transition: width 0.1s linear;
+        }
+
+        .progress-times {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--player-text-secondary);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--player-text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            color: var(--player-primary);
+            transform: scale(1.1);
+        }
+
+        .control-btn.play {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--player-primary), #ff4081);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 30px rgba(233, 30, 99, 0.4);
+        }
+
+        .control-btn.play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(233, 30, 99, 0.5);
+        }
+
+        .control-btn.skip {
+            font-size: 32px;
+            opacity: 0.8;
+        }
+
+        .control-btn.prev {
+            font-size: 32px;
+            opacity: 0.8;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .volume-icon {
+            color: var(--player-text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .volume-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .volume-current {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: var(--player-primary);
+            border-radius: 2px;
+        }
+
+        .speed-control {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .speed-btn {
+            padding: 6px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--player-border);
+            background: transparent;
+            color: var(--player-text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .speed-btn.active {
+            background: var(--player-primary);
+            border-color: var(--player-primary);
+            color: white;
+        }
+
+        .speed-btn:hover {
+            border-color: var(--player-primary);
+        }
+
+        .queue-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .queue-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .queue-count {
+            font-size: 12px;
+            color: var(--player-text-secondary);
+        }
+
+        .queue-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .queue-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .queue-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .queue-item.active {
+            background: rgba(233, 30, 99, 0.15);
+        }
+
+        .queue-item-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--player-primary), #9c27b0);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .queue-item-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .queue-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-item-title {
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .queue-item-duration {
+            font-size: 12px;
+            color: var(--player-text-secondary);
+        }
+
+        /* 全局底部播放器 */
+        .global-player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--player-border);
+            padding: 12px 20px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .global-player-bar.show {
+            display: block;
+        }
+
+        .global-player-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .global-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--player-primary), #9c27b0);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .global-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .global-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .global-title {
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .global-podcast {
+            font-size: 12px;
+            color: var(--player-text-secondary);
+        }
+
+        .global-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .global-btn {
+            background: none;
+            border: none;
+            color: var(--player-text);
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .global-btn.play {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--player-primary);
+            font-size: 16px;
+        }
+
+        .global-progress {
+            flex: 1;
+            max-width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .global-progress-current {
+            height: 100%;
+            background: var(--player-primary);
+            border-radius: 2px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            color: var(--player-text-secondary);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container" id="playerContainer">
+        <div class="back-nav">
+            <a href="podcast.html">&#8592;</a>
+            <span>返回播客广场</span>
+        </div>
+
+        <div id="playerContent">
+            <div class="album-cover" id="albumCover">&#127911;</div>
+            
+            <div class="track-info">
+                <div class="track-title" id="trackTitle">选择要播放的剧集</div>
+                <div class="track-podcast" id="trackPodcast">从播客详情页开始播放</div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-current" id="progressCurrent" style="width: 0%"></div>
+                </div>
+                <div class="progress-times">
+                    <span id="currentTime">0:00</span>
+                    <span id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn prev" onclick="skipPrevious()">&#9198;</button>
+                <button class="control-btn play" id="playBtn" onclick="togglePlay()">&#9654;</button>
+                <button class="control-btn skip" onclick="skipNext()">&#9197;</button>
+            </div>
+
+            <div class="volume-container">
+                <span class="volume-icon" onclick="toggleMute()">&#128266;</span>
+                <div class="volume-bar" id="volumeBar">
+                    <div class="volume-current" id="volumeCurrent" style="width: 80%"></div>
+                </div>
+            </div>
+
+            <div class="speed-control">
+                <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
+                <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
+                <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
+                <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+            </div>
+
+            <div class="queue-section" id="queueSection" style="display: none;">
+                <div class="queue-header">
+                    <span class="queue-title">播放队列</span>
+                    <span class="queue-count" id="queueCount">0 首</span>
+                </div>
+                <div class="queue-list" id="queueList"></div>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">&#127911;</div>
+            <div class="empty-text">暂无播放内容</div>
+        </div>
+    </div>
+
+    <audio id="audioElement"></audio>
+
+    <script>
+        const API_BASE = '';
+        let audio = document.getElementById('audioElement');
+        let currentEpisode = null;
+        let playlist = [];
+        let currentIndex = -1;
+        let isPlaying = false;
+        let playerChannel = null;
+        let currentNetworkType = 'unknown';
+        let retryCount = 0;
+        const MAX_RETRY = 3;
+
+        // 初始化
+        function init() {
+            // 检查是否有播放状态
+            const savedState = localStorage.getItem('podcast_playback');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    if (state.episode) {
+                        currentEpisode = state.episode;
+                        if (state.currentTime) {
+                            audio.currentTime = state.currentTime;
+                        }
+                        renderPlayer();
+                        if (state.isPlaying) {
+                            play();
+                        }
+                    }
+                    if (state.playlist) {
+                        playlist = state.playlist;
+                        currentIndex = state.currentIndex || 0;
+                        renderQueue();
+                    }
+                } catch (e) {
+                    console.error('恢复播放状态失败:', e);
+                }
+            }
+
+            // 初始化BroadcastChannel
+            initChannel();
+
+            // 初始化网络状态检测
+            initNetworkDetection();
+
+            // 事件监听
+            setupEventListeners();
+        }
+
+        // 初始化网络状态检测
+        function initNetworkDetection() {
+            const updateNetworkStatus = () => {
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (conn) {
+                    currentNetworkType = conn.effectiveType || 'unknown';
+                    conn.addEventListener('change', updateNetworkStatus);
+                } else {
+                    currentNetworkType = 'unknown';
+                }
+                updateAudioPreload();
+            };
+
+            if (navigator.connection) {
+                updateNetworkStatus();
+            }
+        }
+
+        // 根据网速更新预加载策略
+        function updateAudioPreload() {
+            const strategies = {
+                '4g': 'auto',
+                '3g': 'auto',
+                '2g': 'metadata',
+                'slow-2g': 'metadata',
+                'unknown': 'auto'
+            };
+            // 默认使用 auto，确保完整加载音频
+            audio.preload = strategies[currentNetworkType] || 'auto';
+        }
+
+        // 获取网络类型显示文本
+        function getNetworkTypeText() {
+            const typeMap = {
+                '4g': '4G',
+                '3g': '3G',
+                '2g': '2G',
+                'slow-2g': '2G',
+                'unknown': 'WiFi'
+            };
+            return typeMap[currentNetworkType] || 'WiFi';
+        }
+
+        // 初始化BroadcastChannel
+        function initChannel() {
+            try {
+                playerChannel = new BroadcastChannel('podcast_player');
+                playerChannel.onmessage = (e) => {
+                    const { type, episode, playlist: list, index, action, currentTime } = e.data;
+                    
+                    if (type === 'play') {
+                        playEpisode(episode, list, index);
+                    } else if (type === 'toggle') {
+                        togglePlay();
+                    } else if (type === 'state') {
+                        syncState(currentTime, isPlaying);
+                    }
+                };
+            } catch (e) {
+                console.log('BroadcastChannel not supported');
+            }
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            audio.addEventListener('timeupdate', () => updateProgress());
+            audio.addEventListener('loadedmetadata', () => updateTotalTime());
+            audio.addEventListener('ended', () => playNext());
+
+            // 音频数据加载完成，可以流畅播放
+            audio.addEventListener('canplaythrough', () => {
+                console.log('[AudioPlayer] 音频已缓冲完成，可以流畅播放');
+                const player = document.getElementById('playerContainer');
+                if (player) player.classList.remove('buffering');
+            });
+
+            // 初始数据加载完成
+            audio.addEventListener('loadeddata', () => {
+                console.log('[AudioPlayer] 音频数据已加载');
+            });
+
+            // 等待更多数据
+            audio.addEventListener('waiting', () => {
+                console.log('[AudioPlayer] 等待更多数据...');
+                const player = document.getElementById('playerContainer');
+                if (player) player.classList.add('buffering');
+            });
+
+            // 播放进度更新（用于检测是否在播放中卡顿）
+            audio.addEventListener('progress', () => {
+                // progress事件表示正在缓冲数据
+                if (audio.buffered.length > 0) {
+                    const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+                    const duration = audio.duration || 1;
+                    const bufferPercent = (bufferedEnd / duration) * 100;
+                    // console.log('[AudioPlayer] 缓冲进度:', bufferPercent.toFixed(1) + '%');
+                }
+            });
+
+            audio.addEventListener('playing', () => {
+                // 开始播放
+                console.log('[AudioPlayer] 开始播放');
+                const player = document.getElementById('playerContainer');
+                if (player) player.classList.remove('buffering');
+                retryCount = 0;
+            });
+
+            audio.addEventListener('stalled', () => {
+                // 播放停滞，可能是网络问题
+                console.warn('[AudioPlayer] 播放停滞，可能是网络问题');
+                const player = document.getElementById('playerContainer');
+                if (player) player.classList.add('buffering');
+            });
+
+            audio.addEventListener('error', (e) => {
+                console.error('音频加载错误:', e);
+                handleAudioError();
+            });
+            audio.addEventListener('play', () => {
+                isPlaying = true;
+                updatePlayButton();
+                document.getElementById('albumCover').classList.add('playing');
+                saveState();
+            });
+            audio.addEventListener('pause', () => {
+                isPlaying = false;
+                updatePlayButton();
+                document.getElementById('albumCover').classList.remove('playing');
+                saveState();
+            });
+
+            // 进度条点击
+            document.getElementById('progressBar').addEventListener('click', (e) => {
+                const rect = e.target.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audio.currentTime = percent * audio.duration;
+            });
+
+            // 音量条点击
+            document.getElementById('volumeBar').addEventListener('click', (e) => {
+                const rect = e.target.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audio.volume = Math.max(0, Math.min(1, percent));
+                updateVolumeUI();
+            });
+
+            // 页面关闭时保存状态
+            window.addEventListener('beforeunload', () => {
+                saveState();
+            });
+        }
+
+        // 播放剧集
+        function playEpisode(episode, list = null, index = -1) {
+            currentEpisode = episode;
+            if (list) {
+                playlist = list;
+                currentIndex = index;
+            }
+
+            // 根据网速设置预加载策略
+            updateAudioPreload();
+
+            audio.src = episode.audio_url;
+            renderPlayer();
+
+            // 显示加载状态
+            const player = document.getElementById('playerContainer');
+            if (player) player.classList.add('buffering');
+
+            play();
+            renderQueue();
+            saveState();
+            broadcastState();
+
+            // 预加载后续剧集
+            preloadNextEpisodes();
+        }
+
+        // 预加载后续剧集
+        function preloadNextEpisodes() {
+            const strategy = audio.preload;
+            if (strategy === 'none' || playlist.length === 0) return;
+
+            // 预加载接下来2集
+            for (let i = 1; i <= 2; i++) {
+                const nextIndex = currentIndex + i;
+                if (nextIndex < playlist.length) {
+                    const nextEpisode = playlist[nextIndex];
+                    if (nextEpisode && nextEpisode.audio_url) {
+                        const preloadAudio = new Audio();
+                        preloadAudio.preload = strategy;
+                        preloadAudio.src = nextEpisode.audio_url;
+                        console.log('[AudioPlayer] 预加载剧集:', nextEpisode.title);
+                    }
+                }
+            }
+        }
+
+        // 处理音频错误
+        function handleAudioError() {
+            if (retryCount < MAX_RETRY) {
+                retryCount++;
+                console.log(`[AudioPlayer] 加载失败，尝试重试 (${retryCount}/${MAX_RETRY})`);
+
+                setTimeout(() => {
+                    audio.load();
+                    audio.play().catch(e => console.error('重试播放失败:', e));
+                }, 2000 * retryCount);
+            } else {
+                const player = document.getElementById('playerContainer');
+                if (player) player.classList.remove('buffering');
+                alert('音频加载失败，请检查网络后刷新页面重试');
+            }
+        }
+
+        // 播放
+        function play() {
+            audio.play().catch(e => console.error('播放失败:', e));
+        }
+
+        // 暂停
+        function pause() {
+            audio.pause();
+        }
+
+        // 切换播放/暂停
+        function togglePlay() {
+            if (!currentEpisode) return;
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+            broadcastState();
+        }
+
+        // 上一首
+        function skipPrevious() {
+            if (playlist.length === 0) return;
+            currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+            playEpisode(playlist[currentIndex], playlist, currentIndex);
+        }
+
+        // 下一首
+        function skipNext() {
+            playNext();
+        }
+
+        // 播放下一首
+        function playNext() {
+            if (playlist.length === 0) return;
+            currentIndex = (currentIndex + 1) % playlist.length;
+            playEpisode(playlist[currentIndex], playlist, currentIndex);
+        }
+
+        // 设置播放速度
+        function setSpeed(speed) {
+            audio.playbackRate = speed;
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === speed + 'x');
+            });
+        }
+
+        // 切换静音
+        function toggleMute() {
+            audio.muted = !audio.muted;
+            updateVolumeUI();
+        }
+
+        // 更新音量UI
+        function updateVolumeUI() {
+            const volume = audio.muted ? 0 : audio.volume;
+            document.getElementById('volumeCurrent').style.width = (volume * 100) + '%';
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            if (!audio.duration) return;
+            const percent = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('progressCurrent').style.width = percent + '%';
+            document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
+            
+            // 保存播放进度
+            if (currentEpisode) {
+                localStorage.setItem('podcast_current_time', audio.currentTime);
+            }
+        }
+
+        // 更新总时间
+        function updateTotalTime() {
+            document.getElementById('totalTime').textContent = formatTime(audio.duration);
+        }
+
+        // 更新播放按钮
+        function updatePlayButton() {
+            document.getElementById('playBtn').innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9654;';
+        }
+
+        // 渲染播放器
+        function renderPlayer() {
+            if (!currentEpisode) {
+                document.getElementById('playerContent').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('playerContent').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+
+            document.getElementById('trackTitle').textContent = currentEpisode.title || '未知标题';
+            document.getElementById('trackPodcast').textContent = currentEpisode.podcast_title || '播客';
+
+            const coverEl = document.getElementById('albumCover');
+            if (currentEpisode.cover_image) {
+                coverEl.innerHTML = `<img src="${currentEpisode.cover_image}">`;
+            } else {
+                coverEl.innerHTML = '&#127911;';
+            }
+        }
+
+        // 渲染播放队列
+        function renderQueue() {
+            if (playlist.length === 0) {
+                document.getElementById('queueSection').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('queueSection').style.display = 'block';
+            document.getElementById('queueCount').textContent = playlist.length + ' 首';
+
+            const listEl = document.getElementById('queueList');
+            listEl.innerHTML = playlist.map((ep, idx) => `
+                <div class="queue-item ${idx === currentIndex ? 'active' : ''}" onclick="playEpisodeByIndex(${idx})">
+                    <div class="queue-item-cover">
+                        ${ep.cover_image ? `<img src="${ep.cover_image}">` : '&#127911;'}
+                    </div>
+                    <div class="queue-item-info">
+                        <div class="queue-item-title">${ep.title}</div>
+                        <div class="queue-item-duration">${formatTime(ep.duration || 0)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 按索引播放
+        function playEpisodeByIndex(index) {
+            currentIndex = index;
+            playEpisode(playlist[index], playlist, index);
+        }
+
+        // 保存播放状态
+        function saveState() {
+            if (!currentEpisode) return;
+            
+            const state = {
+                episode: currentEpisode,
+                currentTime: audio.currentTime,
+                isPlaying: isPlaying,
+                playlist: playlist,
+                currentIndex: currentIndex
+            };
+            localStorage.setItem('podcast_playback', JSON.stringify(state));
+        }
+
+        // 同步状态
+        function syncState(currentTime, playing) {
+            if (currentTime !== undefined) {
+                audio.currentTime = currentTime;
+            }
+            if (playing !== undefined) {
+                if (playing && !isPlaying) play();
+                else if (!playing && isPlaying) pause();
+            }
+        }
+
+        // 广播状态
+        function broadcastState() {
+            if (playerChannel) {
+                playerChannel.postMessage({
+                    type: 'state',
+                    currentTime: audio.currentTime,
+                    isPlaying: isPlaying
+                });
+            }
+        }
+
+        // 格式化时间
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins + ':' + secs.toString().padStart(2, '0');
+        }
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

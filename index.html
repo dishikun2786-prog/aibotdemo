@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能量山：零号协议 | AI智能体矩阵网络 - 挖能量换好礼</title>
+    <meta name="description" content="接入AI智能体矩阵网络，挖掘能量，参与策略对战，兑换宏骏隆公众号商城积分商品奖励">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff00;
+            --bg-dark: #050505;
+            --glass-bg: rgba(16, 20, 24, 0.85);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            /* 动态网格背景 */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: bgScroll 20s linear infinite;
+        }
+
+        @keyframes bgScroll {
+            from { background-position: 0 0; }
+            to { background-position: 40px 40px; }
+        }
+
+        /* CRT 扫描线特效层 */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 40px;
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-blue);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon-blue);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* 移动端菜单按钮 */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 2px;
+            background: var(--neon-blue);
+            transition: all 0.3s;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        /* 语言切换 */
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 16px;
+        }
+
+        .lang-btn {
+            border: 1px solid rgba(0, 243, 255, 0.35);
+            background: rgba(0, 243, 255, 0.06);
+            color: #cfeff2;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .lang-btn:hover {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
+        }
+
+        .lang-btn.active {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+            background: rgba(188, 19, 254, 0.12);
+            box-shadow: 0 0 14px rgba(188, 19, 254, 0.25);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 12px 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-gold {
+            border-color: var(--neon-gold);
+            color: var(--neon-gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .btn-gold:hover {
+            background: var(--neon-gold);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-gold);
+        }
+
+        .btn-large {
+            padding: 18px 50px;
+            font-size: 1.1rem;
+        }
+
+        /* 浮动客服按钮 */
+        .customer-service-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(188, 19, 254, 0.4);
+            transition: all 0.3s ease;
+            z-index: 999;
+            animation: csPulse 2s ease-in-out infinite;
+        }
+
+        .customer-service-btn span {
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .customer-service-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(188, 19, 254, 0.6), 0 0 20px var(--neon-blue);
+        }
+
+        .customer-service-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes csPulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(188, 19, 254, 0.4); }
+            50% { box-shadow: 0 4px 30px rgba(188, 19, 254, 0.6), 0 0 15px rgba(0, 243, 255, 0.3); }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .customer-service-btn {
+                right: 15px;
+                bottom: 15px;
+                width: 55px;
+                height: 55px;
+            }
+            .customer-service-btn span {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Hero区域 */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 243, 255, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px var(--neon-blue), 0 0 40px var(--neon-blue);
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--neon-purple);
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: #ccc;
+            max-width: 800px;
+            line-height: 1.8;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 通用区域样式 */
+        .section {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            letter-spacing: 3px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 1.1rem;
+            margin-bottom: 60px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 赛博风卡片 */
+        .cyber-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(5px);
+            position: relative;
+            padding: 40px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cyber-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+        }
+
+        .cyber-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--neon-blue);
+            border-left: 2px solid var(--neon-blue);
+        }
+
+        .cyber-card::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--neon-blue);
+            border-right: 2px solid var(--neon-blue);
+        }
+
+        /* 故事背景区域 */
+        .story-section {
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 243, 255, 0.05) 50%, transparent 100%);
+        }
+
+        .story-timeline {
+            display: grid;
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .story-item {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .story-year {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--neon-purple);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .story-content {
+            flex: 1;
+            padding: 30px;
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .story-content h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+        }
+
+        .story-content p {
+            color: #ccc;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .story-protocol-phases {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(0, 243, 255, 0.2);
+        }
+        .story-phases-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--neon-purple);
+            margin: 0 0 10px 0;
+        }
+        .story-phases-desc {
+            color: #888;
+            font-size: 0.95rem;
+            margin: 0 0 24px 0;
+        }
+        .story-phases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .story-phase-item {
+            padding: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--neon-purple);
+        }
+        .story-phase-num {
+            font-size: 0.75rem;
+            color: var(--neon-purple);
+            letter-spacing: 1px;
+        }
+        .story-phase-item h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--neon-blue);
+            margin: 6px 0 8px 0;
+        }
+        .story-phase-item p {
+            color: #aaa;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* 功能展示区域 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .feature-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #888;
+            line-height: 1.8;
+        }
+
+        /* 奖励兑换区域（重点） */
+        .rewards-section {
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 215, 0, 0.1) 50%, transparent 100%);
+            position: relative;
+        }
+
+        .rewards-highlight {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .rewards-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: var(--neon-gold);
+            text-shadow: 0 0 20px var(--neon-gold);
+            margin-bottom: 20px;
+        }
+
+        .rewards-formula {
+            font-size: 1.5rem;
+            color: #fff;
+            margin: 30px 0;
+            font-weight: bold;
+        }
+
+        .rewards-formula span {
+            color: var(--neon-gold);
+            margin: 0 15px;
+        }
+
+        .rewards-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 60px 0;
+        }
+
+        .flow-step {
+            flex: 1;
+            min-width: 200px;
+            max-width: 250px;
+            text-align: center;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: var(--neon-gold);
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .flow-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid var(--neon-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: transform 0.3s;
+        }
+
+        .flow-step:hover .flow-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .flow-step h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-gold);
+            margin-bottom: 10px;
+        }
+
+        .flow-step p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .rewards-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .product-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--neon-gold);
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .product-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .product-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-gold);
+            margin-bottom: 10px;
+        }
+
+        /* 游戏特色区域 */
+        .highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .highlight-item {
+            padding: 30px;
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .highlight-item h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+        }
+
+        /* 快速开始区域 */
+        .cta-section {
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 243, 255, 0.1) 100%);
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: rgba(5, 5, 5, 0.95);
+            border-top: 1px solid var(--border-color);
+            padding: 60px 20px 30px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--neon-blue);
+        }
+
+        .footer-copyright {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 30px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: rgba(5, 5, 5, 0.98);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid var(--border-color);
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                gap: 20px;
+            }
+
+            .nav-links.active {
+                transform: translateX(0);
+            }
+
+            .nav-links a {
+                font-size: 1rem;
+                padding: 10px 0;
+                border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+            }
+
+            .lang-switch {
+                margin-left: 10px;
+                gap: 8px;
+            }
+
+            .lang-btn {
+                padding: 7px 9px;
+                font-size: 0.82rem;
+            }
+
+            .story-item {
+                flex-direction: column;
+            }
+
+            .story-year {
+                text-align: left;
+            }
+
+            .rewards-flow {
+                flex-direction: column;
+            }
+
+            .flow-step::after {
+                content: '↓';
+                right: auto;
+                top: auto;
+                bottom: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .features-grid,
+            .highlights-grid,
+            .rewards-products {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 滚动动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="logo" data-i18n="logo">能量山</div>
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="lang-switch" aria-label="Language switch">
+            <button class="lang-btn active" type="button" data-lang="zh" id="langZh">中文</button>
+            <button class="lang-btn" type="button" data-lang="vi" id="langVi">Tiếng Việt</button>
+        </div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#story" data-i18n="nav.story">故事背景</a></li>
+            <li><a href="#features" data-i18n="nav.features">核心功能</a></li>
+            <li><a href="#rewards" data-i18n="nav.rewards">奖励兑换</a></li>
+            <li><a href="#highlights" data-i18n="nav.highlights">游戏特色</a></li>
+            <li><a href="supply-chain.html" data-i18n="nav.supplyChain">供应链招募</a></li>
+            <li><a href="#start" data-i18n="nav.start">快速开始</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero区域 -->
+    <section class="hero">
+        <h1 class="hero-title" data-i18n="hero.title">能量山：零号协议</h1>
+        <p class="hero-subtitle" data-i18n="hero.subtitle">PROTOCOL: ZERO</p>
+        <p class="hero-description" data-i18n-html="hero.descHtml">
+            2026年，AI智能体已全面融入互联网生态。一个神秘的AI智能体矩阵网络被发现——<br>
+            <strong style="color: var(--neon-blue);">零号协议</strong>。<br>
+            作为神经链接者，接入矩阵，占据节点，挖掘能量，与其他玩家和AI智能体进行策略对战。<br>
+            你挖掘的能量，可以在<strong style="color: var(--neon-gold);">宏骏隆公众号商城</strong>兑换积分商品奖励！
+        </p>
+        <div class="hero-cta">
+            <a href="game.html" class="btn btn-large" data-i18n="hero.ctaPlay">立即接入矩阵</a>
+            <a href="#story" class="btn btn-large" data-i18n="hero.ctaStory">了解故事背景</a>
+        </div>
+    </section>
+
+    <!-- 故事背景区域 -->
+    <section id="story" class="section story-section">
+        <h2 class="section-title" data-i18n="story.title">故事背景</h2>
+        <p class="section-subtitle" data-i18n="story.subtitle">探索AI智能体矩阵网络的秘密</p>
+        
+        <div class="story-timeline">
+            <div class="story-item fade-in">
+                <div class="story-year">2026</div>
+                <div class="story-content">
+                    <h3 data-i18n="story.item1.title">AI智能体时代</h3>
+                    <p data-i18n="story.item1.body">AI智能体已经全面融入互联网生态，它们以矩阵网络的形式存在，每个节点都蕴含着巨大的能量。人类与AI智能体的交互方式正在发生革命性的变化。</p>
+                </div>
+            </div>
+            
+            <div class="story-item fade-in">
+                <div class="story-year" data-i18n="story.year.discovery">发现</div>
+                <div class="story-content">
+                    <h3 data-i18n="story.item2.title">零号协议的觉醒</h3>
+                    <p data-i18n="story.item2.body">一个名为"零号协议"的神秘AI智能体矩阵网络被意外发现。这个网络由100个能量节点构成，每个节点都连接着不同的AI智能体。网络中的能量可以被人类通过"神经链接"技术进行挖掘和利用。</p>
+                </div>
+            </div>
+            
+            <div class="story-item fade-in">
+                <div class="story-year" data-i18n="story.year.now">现在</div>
+                <div class="story-content">
+                    <h3 data-i18n="story.item3.title">成为神经链接者</h3>
+                    <p data-i18n="story.item3.body">你被选中成为神经链接者，可以接入零号协议矩阵网络。通过占据节点，你可以挖掘能量。当能量过载时，必须通过策略对战释放能量。你挖掘的能量不仅可以在矩阵网络中流通，更可以在宏骏隆公众号商城兑换实物奖励！</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="story-protocol-phases">
+            <h3 class="story-phases-title" data-i18n="story.phases.title">协议阶段</h3>
+            <p class="story-phases-desc" data-i18n="story.phases.desc">在游戏内完成以下阶段，即可逐步解锁正式链接者身份与矩阵外流通资格。</p>
+            <div class="story-phases-grid">
+                <div class="story-phase-item">
+                    <span class="story-phase-num" data-i18n="story.phases.ch0Num">第 0 章</span>
+                    <h4 data-i18n="story.phases.ch0Title">接入协议</h4>
+                    <p data-i18n="story.phases.ch0Desc">完成协议校准：首次绑定节点并了解能量与神经链接负荷。</p>
+                </div>
+                <div class="story-phase-item">
+                    <span class="story-phase-num" data-i18n="story.phases.ch1Num">第一章</span>
+                    <h4 data-i18n="story.phases.ch1Title">节点拓荒</h4>
+                    <p data-i18n="story.phases.ch1Desc">探索矩阵中的历史能量残留，发现遗留能量核心（能量宝藏）。</p>
+                </div>
+                <div class="story-phase-item">
+                    <span class="story-phase-num" data-i18n="story.phases.ch2Num">第二章</span>
+                    <h4 data-i18n="story.phases.ch2Title">过载与释放</h4>
+                    <p data-i18n="story.phases.ch2Desc">完成首次协议对决，获得矩阵外流通资格，能量可兑换商城奖励。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心功能展示区域 -->
+    <section id="features" class="section">
+        <h2 class="section-title" data-i18n="features.title">核心功能</h2>
+        <p class="section-subtitle" data-i18n="features.subtitle">体验AI智能体矩阵网络的完整玩法</p>
+        
+        <div class="features-grid">
+            <div class="cyber-card feature-card fade-in">
+                <div class="feature-icon">⚡</div>
+                <h3 data-i18n="features.card1.title">能量挖掘</h3>
+                <p data-i18n="features.card1.body">占据矩阵网络中的节点，每秒自动产出5点能量。能量上限为100，达到上限后可以发起PK对战。简单操作，持续收益！</p>
+            </div>
+            
+            <div class="cyber-card feature-card fade-in">
+                <div class="feature-icon">⚔️</div>
+                <h3 data-i18n="features.card2.title">策略PK对战</h3>
+                <p data-i18n="features.card2.body">能量达到100时必须通过PK释放。设置King和Assassin数值，通过策略预判对手位置，距离更近者获胜。策略与运气的完美结合！</p>
+            </div>
+            
+            <div class="cyber-card feature-card fade-in">
+                <div class="feature-icon">💎</div>
+                <h3 data-i18n="features.card3.title">能量宝藏</h3>
+                <p data-i18n="features.card3.body">矩阵网络中隐藏着能量宝藏节点，占据这些节点可以立即获得大量能量奖励。每个宝藏仅可被领取一次，先占先得！</p>
+            </div>
+            
+            <div class="cyber-card feature-card fade-in">
+                <div class="feature-icon">🔋</div>
+                <h3 data-i18n="features.card4.title">体力系统</h3>
+                <p data-i18n="features.card4.body">初始体力100点，挖矿时每秒消耗1点。体力为0时无法继续挖矿。体力每分钟自动恢复1点，合理规划你的挖矿策略！</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 奖励兑换区域（重点） -->
+    <section id="rewards" class="section rewards-section">
+        <div class="rewards-highlight">
+            <h2 class="rewards-title" data-i18n="rewards.title">能量兑换商城奖励</h2>
+            <div class="rewards-formula" data-i18n-html="rewards.formulaHtml">
+                挖能量 <span>=</span> 赚积分 <span>=</span> 换好礼
+            </div>
+            <p style="color: #ccc; font-size: 1.1rem; max-width: 800px; margin: 0 auto;" data-i18n-html="rewards.descHtml">
+                你在矩阵网络中挖掘的能量，可以在<strong style="color: var(--neon-gold);">宏骏隆公众号商城</strong>兑换积分，使用积分兑换各种精美商品奖励！
+            </p>
+        </div>
+
+        <div class="rewards-flow">
+            <div class="flow-step fade-in">
+                <div class="flow-icon">🎮</div>
+                <h4 data-i18n="rewards.flow1.title">参与游戏</h4>
+                <p data-i18n="rewards.flow1.body">占据节点，挖掘能量，参与PK对战</p>
+            </div>
+            
+            <div class="flow-step fade-in">
+                <div class="flow-icon">⚡</div>
+                <h4 data-i18n="rewards.flow2.title">积累能量</h4>
+                <p data-i18n="rewards.flow2.body">通过挖矿和PK胜利获得能量</p>
+            </div>
+            
+            <div class="flow-step fade-in">
+                <div class="flow-icon">🔄</div>
+                <h4 data-i18n="rewards.flow3.title">兑换积分</h4>
+                <p data-i18n="rewards.flow3.body">在宏骏隆公众号商城将能量兑换为积分</p>
+            </div>
+            
+            <div class="flow-step fade-in">
+                <div class="flow-icon">🎁</div>
+                <h4 data-i18n="rewards.flow4.title">领取奖励</h4>
+                <p data-i18n="rewards.flow4.body">使用积分兑换心仪的商品奖励</p>
+            </div>
+        </div>
+
+        <div class="rewards-products">
+            <div class="product-card fade-in">
+                <div class="product-icon">🛍️</div>
+                <h4 data-i18n="rewards.product1.title">精美商品</h4>
+                <p data-i18n="rewards.product1.body">兑换各类精美实物商品</p>
+            </div>
+            
+            <div class="product-card fade-in">
+                <div class="product-icon">💳</div>
+                <h4 data-i18n="rewards.product2.title">积分卡券</h4>
+                <p data-i18n="rewards.product2.body">兑换各类优惠券和卡券</p>
+            </div>
+            
+            <div class="product-card fade-in">
+                <div class="product-icon">🎫</div>
+                <h4 data-i18n="rewards.product3.title">特权服务</h4>
+                <p data-i18n="rewards.product3.body">兑换专属特权和服务</p>
+            </div>
+            
+            <div class="product-card fade-in">
+                <div class="product-icon">🎯</div>
+                <h4 data-i18n="rewards.product4.title">限时好礼</h4>
+                <p data-i18n="rewards.product4.body">兑换限时特供商品</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 游戏特色区域 -->
+    <section id="highlights" class="section">
+        <h2 class="section-title" data-i18n="highlights.title">游戏特色</h2>
+        <p class="section-subtitle" data-i18n="highlights.subtitle">为什么选择能量山？</p>
+        
+        <div class="highlights-grid">
+            <div class="highlight-item fade-in">
+                <h4 data-i18n-html="highlights.item1.titleHtml">🌐 实时多人对战</h4>
+                <p data-i18n="highlights.item1.body">与全球玩家实时对战，体验真正的竞技乐趣</p>
+            </div>
+            
+            <div class="highlight-item fade-in">
+                <h4 data-i18n-html="highlights.item2.titleHtml">🧠 策略性玩法</h4>
+                <p data-i18n="highlights.item2.body">PK对战需要策略预判，考验你的智慧</p>
+            </div>
+            
+            <div class="highlight-item fade-in">
+                <h4 data-i18n-html="highlights.item3.titleHtml">🎨 赛博朋克风格</h4>
+                <p data-i18n="highlights.item3.body">独特的视觉设计，沉浸式游戏体验</p>
+            </div>
+            
+            <div class="highlight-item fade-in">
+                <h4 data-i18n-html="highlights.item4.titleHtml">⚖️ 公平竞技机制</h4>
+                <p data-i18n="highlights.item4.body">所有玩家在同一起跑线，公平竞争</p>
+            </div>
+            
+            <div class="highlight-item fade-in">
+                <h4 data-i18n-html="highlights.item5.titleHtml">🎁 真实奖励兑换</h4>
+                <p data-i18n="highlights.item5.body">能量可兑换实物奖励，玩得开心赚得实惠</p>
+            </div>
+            
+            <div class="highlight-item fade-in">
+                <h4 data-i18n-html="highlights.item6.titleHtml">🤖 AI智能体主题</h4>
+                <p data-i18n="highlights.item6.body">结合当下AI热点，体验未来科技感</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 快速开始区域 -->
+    <section id="start" class="cta-section">
+        <h2 class="section-title" data-i18n="start.title">准备接入矩阵？</h2>
+        <p class="section-subtitle" data-i18n="start.subtitle">立即开始你的能量挖掘之旅，兑换丰厚奖励！</p>
+        
+        <div class="cta-buttons">
+            <a href="game.html" class="btn btn-large" data-i18n="start.ctaPlay">立即开始游戏</a>
+            <a href="#story" class="btn btn-large" data-i18n="start.ctaMore">了解更多</a>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#story" data-i18n="nav.story">故事背景</a>
+                <a href="#features" data-i18n="nav.features">核心功能</a>
+                <a href="#rewards" data-i18n="nav.rewards">奖励兑换</a>
+                <a href="#highlights" data-i18n="nav.highlights">游戏特色</a>
+                <a href="supply-chain.html" data-i18n="nav.supplyChain">供应链招募</a>
+                <a href="game.html" data-i18n="footer.play">开始游戏</a>
+            </div>
+            <div class="footer-copyright">
+                <p data-i18n="footer.title">能量山：零号协议 | PROJECT: ZERO</p>
+                <p data-i18n="footer.exchange">能量可兑换宏骏隆公众号商城积分商品奖励</p>
+                <p style="margin-top: 10px;" data-i18n="footer.copyright">© 2026 能量山矩阵网络. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const i18n = {
+            zh: {
+                meta: {
+                    title: '能量山：零号协议 | AI智能体矩阵网络 - 挖能量换好礼',
+                    description: '接入AI智能体矩阵网络，挖掘能量，参与策略对战，兑换宏骏隆公众号商城积分商品奖励',
+                },
+                logo: '能量山',
+                nav: {
+                    story: '故事背景',
+                    features: '核心功能',
+                    rewards: '奖励兑换',
+                    highlights: '游戏特色',
+                    supplyChain: '供应链招募',
+                    start: '快速开始',
+                },
+                hero: {
+                    title: '能量山：零号协议',
+                    subtitle: 'PROTOCOL: ZERO',
+                    descHtml:
+                        '2026年，AI智能体已全面融入互联网生态。一个神秘的AI智能体矩阵网络被发现——<br>' +
+                        '<strong style="color: var(--neon-blue);">零号协议</strong>。<br>' +
+                        '作为神经链接者，接入矩阵，占据节点，挖掘能量，与其他玩家和AI智能体进行策略对战。<br>' +
+                        '你挖掘的能量，可以在<strong style="color: var(--neon-gold);">宏骏隆公众号商城</strong>兑换积分商品奖励！',
+                    ctaPlay: '立即接入矩阵',
+                    ctaStory: '了解故事背景',
+                },
+                story: {
+                    title: '故事背景',
+                    subtitle: '探索AI智能体矩阵网络的秘密',
+                    year: { discovery: '发现', now: '现在' },
+                    item1: {
+                        title: 'AI智能体时代',
+                        body: 'AI智能体已经全面融入互联网生态，它们以矩阵网络的形式存在，每个节点都蕴含着巨大的能量。人类与AI智能体的交互方式正在发生革命性的变化。',
+                    },
+                    item2: {
+                        title: '零号协议的觉醒',
+                        body: '一个名为"零号协议"的神秘AI智能体矩阵网络被意外发现。这个网络由100个能量节点构成，每个节点都连接着不同的AI智能体。网络中的能量可以被人类通过"神经链接"技术进行挖掘和利用。',
+                    },
+                    item3: {
+                        title: '成为神经链接者',
+                        body: '你被选中成为神经链接者，可以接入零号协议矩阵网络。通过占据节点，你可以挖掘能量。当能量过载时，必须通过策略对战释放能量。你挖掘的能量不仅可以在矩阵网络中流通，更可以在宏骏隆公众号商城兑换实物奖励！',
+                    },
+                    phases: {
+                        title: '协议阶段',
+                        desc: '在游戏内完成以下阶段，即可逐步解锁正式链接者身份与矩阵外流通资格。',
+                        ch0Num: '第 0 章',
+                        ch0Title: '接入协议',
+                        ch0Desc: '完成协议校准：首次绑定节点并了解能量与神经链接负荷。',
+                        ch1Num: '第一章',
+                        ch1Title: '节点拓荒',
+                        ch1Desc: '探索矩阵中的历史能量残留，发现遗留能量核心（能量宝藏）。',
+                        ch2Num: '第二章',
+                        ch2Title: '过载与释放',
+                        ch2Desc: '完成首次协议对决，获得矩阵外流通资格，能量可兑换商城奖励。',
+                    },
+                },
+                features: {
+                    title: '核心功能',
+                    subtitle: '体验AI智能体矩阵网络的完整玩法',
+                    card1: {
+                        title: '能量挖掘',
+                        body: '占据矩阵网络中的节点，每秒自动产出5点能量。能量上限为100，达到上限后可以发起PK对战。简单操作，持续收益！',
+                    },
+                    card2: {
+                        title: '策略PK对战',
+                        body: '能量达到100时必须通过PK释放。设置King和Assassin数值，通过策略预判对手位置，距离更近者获胜。策略与运气的完美结合！',
+                    },
+                    card3: {
+                        title: '能量宝藏',
+                        body: '矩阵网络中隐藏着能量宝藏节点，占据这些节点可以立即获得大量能量奖励。每个宝藏仅可被领取一次，先占先得！',
+                    },
+                    card4: {
+                        title: '体力系统',
+                        body: '初始体力100点，挖矿时每秒消耗1点。体力为0时无法继续挖矿。体力每分钟自动恢复1点，合理规划你的挖矿策略！',
+                    },
+                },
+                rewards: {
+                    title: '能量兑换商城奖励',
+                    formulaHtml: '挖能量 <span>=</span> 赚积分 <span>=</span> 换好礼',
+                    descHtml:
+                        '你在矩阵网络中挖掘的能量，可以在<strong style="color: var(--neon-gold);">宏骏隆公众号商城</strong>兑换积分，使用积分兑换各种精美商品奖励！',
+                    flow1: { title: '参与游戏', body: '占据节点，挖掘能量，参与PK对战' },
+                    flow2: { title: '积累能量', body: '通过挖矿和PK胜利获得能量' },
+                    flow3: { title: '兑换积分', body: '在宏骏隆公众号商城将能量兑换为积分' },
+                    flow4: { title: '领取奖励', body: '使用积分兑换心仪的商品奖励' },
+                    product1: { title: '精美商品', body: '兑换各类精美实物商品' },
+                    product2: { title: '积分卡券', body: '兑换各类优惠券和卡券' },
+                    product3: { title: '特权服务', body: '兑换专属特权和服务' },
+                    product4: { title: '限时好礼', body: '兑换限时特供商品' },
+                },
+                highlights: {
+                    title: '游戏特色',
+                    subtitle: '为什么选择能量山？',
+                    item1: { titleHtml: '🌐 实时多人对战', body: '与全球玩家实时对战，体验真正的竞技乐趣' },
+                    item2: { titleHtml: '🧠 策略性玩法', body: 'PK对战需要策略预判，考验你的智慧' },
+                    item3: { titleHtml: '🎨 赛博朋克风格', body: '独特的视觉设计，沉浸式游戏体验' },
+                    item4: { titleHtml: '⚖️ 公平竞技机制', body: '所有玩家在同一起跑线，公平竞争' },
+                    item5: { titleHtml: '🎁 真实奖励兑换', body: '能量可兑换实物奖励，玩得开心赚得实惠' },
+                    item6: { titleHtml: '🤖 AI智能体主题', body: '结合当下AI热点，体验未来科技感' },
+                },
+                start: {
+                    title: '准备接入矩阵？',
+                    subtitle: '立即开始你的能量挖掘之旅，兑换丰厚奖励！',
+                    ctaPlay: '立即开始游戏',
+                    ctaMore: '了解更多',
+                },
+                footer: {
+                    play: '开始游戏',
+                    title: '能量山：零号协议 | PROJECT: ZERO',
+                    exchange: '能量可兑换宏骏隆公众号商城积分商品奖励',
+                    copyright: '© 2026 能量山矩阵网络. All rights reserved.',
+                },
+            },
+            vi: {
+                meta: {
+                    title: 'Núi Năng Lượng: Giao thức Số 0 | Mạng lưới AI Agent - Đào năng lượng đổi quà',
+                    description:
+                        'Kết nối vào mạng lưới AI Agent, đào năng lượng, đấu chiến thuật, đổi điểm thưởng để nhận quà tại cửa hàng WeChat của Hồng Quân Long',
+                },
+                logo: 'Núi Năng Lượng',
+                nav: {
+                    story: 'Bối cảnh',
+                    features: 'Tính năng',
+                    rewards: 'Đổi thưởng',
+                    highlights: 'Điểm nổi bật',
+                    supplyChain: 'Tuyển nhà cung ứng',
+                    start: 'Bắt đầu',
+                },
+                hero: {
+                    title: 'Núi Năng Lượng: Giao thức Số 0',
+                    subtitle: 'PROTOCOL: ZERO',
+                    descHtml:
+                        'Năm 2026, AI Agent đã hòa vào hệ sinh thái Internet. Một mạng lưới ma trận bí ẩn được phát hiện—<br>' +
+                        '<strong style="color: var(--neon-blue);">Giao thức Số 0</strong>.<br>' +
+                        'Bạn là “người liên kết thần kinh”, kết nối vào ma trận, chiếm nút, đào năng lượng và đấu chiến thuật với người chơi khác.<br>' +
+                        'Năng lượng bạn đào được có thể đổi điểm tại <strong style="color: var(--neon-gold);">cửa hàng WeChat Hồng Quân Long</strong> để nhận quà!',
+                    ctaPlay: 'Kết nối ngay',
+                    ctaStory: 'Xem bối cảnh',
+                },
+                story: {
+                    title: 'Bối cảnh',
+                    subtitle: 'Khám phá bí mật của ma trận AI Agent',
+                    year: { discovery: 'Phát hiện', now: 'Hiện tại' },
+                    item1: {
+                        title: 'Kỷ nguyên AI Agent',
+                        body: 'AI Agent hiện diện khắp Internet dưới dạng ma trận. Mỗi nút chứa năng lượng lớn, mở ra một cách tương tác hoàn toàn mới giữa con người và AI.',
+                    },
+                    item2: {
+                        title: 'Sự thức tỉnh của Protocol Zero',
+                        body: 'Một ma trận AI bí ẩn mang tên “Protocol Zero” được phát hiện tình cờ. Ma trận gồm 100 nút năng lượng, mỗi nút kết nối với các AI Agent khác nhau. Con người có thể “đào” năng lượng thông qua công nghệ liên kết thần kinh.',
+                    },
+                    item3: {
+                        title: 'Trở thành người liên kết',
+                        body: 'Bạn được chọn để kết nối vào Protocol Zero. Chiếm nút để đào năng lượng; khi năng lượng đạt ngưỡng, bạn phải tham gia đấu chiến thuật để “xả” năng lượng. Năng lượng không chỉ lưu thông trong ma trận mà còn có thể đổi quà thật!',
+                    },
+                    phases: {
+                        title: 'Giai đoạn giao thức',
+                        desc: 'Hoàn thành các giai đoạn sau trong game để mở khóa dần thân phận người liên kết chính thức và quyền lưu thông năng lượng ra ngoài ma trận.',
+                        ch0Num: 'Chương 0',
+                        ch0Title: 'Kết nối giao thức',
+                        ch0Desc: 'Hoàn thành hiệu chuẩn giao thức: lần đầu liên kết nút và nắm quy tắc năng lượng cùng tải liên kết thần kinh.',
+                        ch1Num: 'Chương 1',
+                        ch1Title: 'Khai phá nút',
+                        ch1Desc: 'Khám phá lượng năng lượng lịch sử còn sót trong ma trận, phát hiện lõi năng lượng di sản (kho báu năng lượng).',
+                        ch2Num: 'Chương 2',
+                        ch2Title: 'Quá tải và giải phóng',
+                        ch2Desc: 'Hoàn thành trận đấu giao thức đầu tiên, nhận quyền lưu thông ra ngoài ma trận; năng lượng có thể đổi thưởng tại cửa hàng.',
+                    },
+                },
+                features: {
+                    title: 'Tính năng',
+                    subtitle: 'Trải nghiệm trọn vẹn lối chơi của ma trận AI Agent',
+                    card1: {
+                        title: 'Đào năng lượng',
+                        body: 'Chiếm một nút trong ma trận để nhận +5 năng lượng mỗi giây. Tối đa 100 năng lượng; khi đầy bạn có thể bắt đầu PK. Thao tác đơn giản, lợi ích rõ ràng!',
+                    },
+                    card2: {
+                        title: 'PK chiến thuật',
+                        body: 'Khi năng lượng đạt 100, bạn cần PK để giải phóng. Thiết lập King và Assassin, dự đoán đối thủ; khoảng cách nhỏ hơn sẽ thắng. Chiến thuật + may mắn!',
+                    },
+                    card3: {
+                        title: 'Kho báu năng lượng',
+                        body: 'Một số nút ẩn chứa kho báu. Chiếm đúng nút sẽ nhận thưởng năng lượng lớn ngay lập tức. Mỗi kho báu chỉ nhận một lần—nhanh tay kẻo lỡ!',
+                    },
+                    card4: {
+                        title: 'Thể lực',
+                        body: 'Thể lực ban đầu 100; đào mỗi giây tốn 1. Hết thể lực sẽ ngừng đào. Tự hồi 1 điểm mỗi phút—hãy tối ưu chiến lược của bạn!',
+                    },
+                },
+                rewards: {
+                    title: 'Đổi thưởng tại cửa hàng',
+                    formulaHtml: 'Đào năng lượng <span>=</span> Đổi điểm <span>=</span> Nhận quà',
+                    descHtml:
+                        'Năng lượng bạn đào được có thể đổi thành điểm tại <strong style="color: var(--neon-gold);">cửa hàng WeChat Hồng Quân Long</strong>, dùng điểm để đổi các phần thưởng hấp dẫn!',
+                    flow1: { title: 'Tham gia', body: 'Chiếm nút, đào năng lượng, tham gia PK' },
+                    flow2: { title: 'Tích lũy', body: 'Đào và thắng PK để tăng năng lượng' },
+                    flow3: { title: 'Đổi điểm', body: 'Đổi năng lượng thành điểm trong cửa hàng' },
+                    flow4: { title: 'Nhận quà', body: 'Dùng điểm đổi phần thưởng bạn thích' },
+                    product1: { title: 'Hàng hóa', body: 'Đổi nhiều loại quà tặng thực' },
+                    product2: { title: 'Voucher', body: 'Đổi phiếu ưu đãi và coupon' },
+                    product3: { title: 'Đặc quyền', body: 'Đổi các dịch vụ/đặc quyền' },
+                    product4: { title: 'Quà giới hạn', body: 'Đổi các phần quà theo sự kiện' },
+                },
+                highlights: {
+                    title: 'Điểm nổi bật',
+                    subtitle: 'Vì sao chọn Núi Năng Lượng?',
+                    item1: { titleHtml: '🌐 Nhiều người chơi realtime', body: 'Đấu realtime với người chơi khác để tận hưởng tính cạnh tranh' },
+                    item2: { titleHtml: '🧠 Lối chơi chiến thuật', body: 'PK cần dự đoán và ra quyết định thông minh' },
+                    item3: { titleHtml: '🎨 Phong cách cyberpunk', body: 'Thiết kế hình ảnh độc đáo, trải nghiệm nhập vai' },
+                    item4: { titleHtml: '⚖️ Cạnh tranh công bằng', body: 'Mọi người xuất phát như nhau, công bằng minh bạch' },
+                    item5: { titleHtml: '🎁 Đổi quà thật', body: 'Đổi năng lượng thành quà tặng, chơi vui có thưởng' },
+                    item6: { titleHtml: '🤖 Chủ đề AI Agent', body: 'Bắt trend AI Agent, cảm giác công nghệ tương lai' },
+                },
+                start: {
+                    title: 'Sẵn sàng kết nối?',
+                    subtitle: 'Bắt đầu hành trình đào năng lượng và đổi quà ngay hôm nay!',
+                    ctaPlay: 'Chơi ngay',
+                    ctaMore: 'Tìm hiểu thêm',
+                },
+                footer: {
+                    play: 'Chơi game',
+                    title: 'Núi Năng Lượng: Giao thức Số 0 | PROJECT: ZERO',
+                    exchange: 'Năng lượng có thể đổi điểm và quà tại cửa hàng WeChat Hồng Quân Long',
+                    copyright: '© 2026 Protocol Zero Network. All rights reserved.',
+                },
+            },
+        };
+
+        function getByPath(obj, path) {
+            return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
+        }
+
+        function setLanguage(lang) {
+            const dict = i18n[lang] || i18n.zh;
+            const normalizedLang = lang === 'vi' ? 'vi' : 'zh';
+
+            document.documentElement.lang = normalizedLang === 'vi' ? 'vi' : 'zh-CN';
+
+            document.title = dict.meta.title;
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.setAttribute('content', dict.meta.description);
+
+            document.querySelectorAll('[data-i18n]').forEach((el) => {
+                const key = el.getAttribute('data-i18n');
+                const val = getByPath(dict, key);
+                if (typeof val === 'string') el.textContent = val;
+            });
+
+            document.querySelectorAll('[data-i18n-html]').forEach((el) => {
+                const key = el.getAttribute('data-i18n-html');
+                const val = getByPath(dict, key);
+                if (typeof val === 'string') el.innerHTML = val;
+            });
+
+            document.querySelectorAll('.lang-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.getAttribute('data-lang') === normalizedLang);
+            });
+
+            localStorage.setItem('landingLang', normalizedLang);
+        }
+
+        // 移动端菜单切换
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        const langZh = document.getElementById('langZh');
+        const langVi = document.getElementById('langVi');
+
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // 点击菜单项后关闭移动端菜单
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    menuToggle.classList.remove('active');
+                    navLinks.classList.remove('active');
+                }
+            });
+        });
+
+        langZh.addEventListener('click', () => setLanguage('zh'));
+        langVi.addEventListener('click', () => setLanguage('vi'));
+
+        // 初始化语言
+        const savedLang = localStorage.getItem('landingLang');
+        if (savedLang === 'vi') {
+            setLanguage('vi');
+        } else {
+            setLanguage('zh');
+        }
+
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 导航栏滚动效果
+        let lastScroll = 0;
+        const navbar = document.querySelector('.navbar');
+        
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                navbar.style.background = 'rgba(5, 5, 5, 0.98)';
+            } else {
+                navbar.style.background = 'rgba(5, 5, 5, 0.9)';
+            }
+            
+            lastScroll = currentScroll;
+        });
+    </script>
+    <!-- 浮动客服按钮 -->
+    <a href="http://aibotdemo.skym178.com:443/agent/chat/av_mlzy49x6fa3cde95?token=link_mm50fu8ue04977c294d0" 
+       target="_blank" 
+       class="customer-service-btn"
+       title="联系客服">
+        <span>客服</span>
+    </a>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

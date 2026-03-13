@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>能量市场 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --trade-bg: #f0f2f5;
+            --trade-card-bg: rgba(255, 255, 255, 0.92);
+            --trade-primary: #4a90e2;
+            --trade-primary-dark: #3a7bc8;
+            --trade-accent: #67c23a;
+            --trade-text: #1a1a1a;
+            --trade-text-secondary: #606266;
+            --trade-text-light: #909399;
+            --trade-border: rgba(0, 0, 0, 0.08);
+            --trade-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --trade-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --trade-radius: 12px;
+            --trade-radius-lg: 16px;
+            --trade-danger: #f56c6c;
+            --trade-warning: #e6a23c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--trade-bg);
+            color: var(--trade-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            z-index: 0;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--trade-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--trade-bg);
+            color: var(--trade-text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .back-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--trade-text);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--trade-primary);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .nav-link:hover {
+            background: var(--trade-primary-dark);
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            background: var(--trade-card-bg);
+            border-radius: 24px;
+            box-shadow: var(--trade-shadow);
+            overflow: hidden;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            color: var(--trade-text);
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--trade-text-light);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--trade-text-light);
+            font-size: 16px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--trade-card-bg);
+            border: 1px solid var(--trade-border);
+            color: var(--trade-text-secondary);
+            font-size: 13px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--trade-primary);
+            color: white;
+            border-color: var(--trade-primary);
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 84px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 90;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 28px rgba(245, 87, 108, 0.5);
+        }
+
+        .ad-card {
+            background: var(--trade-card-bg);
+            border-radius: var(--trade-radius-lg);
+            box-shadow: var(--trade-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .ad-card:hover {
+            box-shadow: var(--trade-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .ad-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .ad-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .ad-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ad-author {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--trade-text);
+            margin-bottom: 2px;
+        }
+
+        .ad-time {
+            font-size: 12px;
+            color: var(--trade-text-light);
+        }
+
+        .ad-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--trade-text-light);
+        }
+
+        .energy-amount {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .energy-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--trade-primary);
+        }
+
+        .energy-unit {
+            font-size: 16px;
+            color: var(--trade-text-secondary);
+        }
+
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--trade-danger);
+        }
+
+        .price-per-unit {
+            font-size: 13px;
+            color: var(--trade-text-light);
+        }
+
+        .ad-desc {
+            font-size: 14px;
+            color: var(--trade-text-secondary);
+            margin-bottom: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ad-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid var(--trade-border);
+        }
+
+        .view-count {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--trade-text-light);
+        }
+
+        .buy-btn {
+            padding: 10px 24px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .buy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--trade-text-light);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--trade-text-light);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--trade-card-bg);
+            border: 1px solid var(--trade-border);
+            color: var(--trade-text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn.active {
+            background: var(--trade-primary);
+            color: white;
+            border-color: var(--trade-primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--trade-radius-lg);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--trade-border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--trade-bg);
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--trade-text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--trade-border);
+            border-radius: var(--trade-radius);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--trade-primary);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--trade-text-light);
+            margin-top: 4px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--trade-border);
+            border-radius: var(--trade-radius);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--trade-primary);
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            color: var(--trade-text-light);
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: var(--trade-text-light);
+        }
+
+        .upload-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: var(--trade-radius);
+            display: none;
+        }
+
+        .upload-preview.active {
+            display: block;
+        }
+
+        .fee-info {
+            background: rgba(74, 144, 226, 0.1);
+            border-radius: var(--trade-radius);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .fee-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .fee-row:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--trade-radius);
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 2000;
+            transition: all 0.3s;
+        }
+
+        .toast.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: var(--trade-accent);
+        }
+
+        .toast.error {
+            background: var(--trade-danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="back-btn" onclick="history.back()">&#8592;</button>
+            <span class="navbar-title">能量市场</span>
+        </div>
+        <div class="navbar-right">
+            <button class="nav-link" onclick="goToMyAds()">我的广告</button>
+            <button class="nav-link" onclick="goToMyTrades()">我的交易</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="search-bar">
+            <div class="search-input-wrapper">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索卖家用户名...">
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" data-sort="created_at">最新</button>
+            <button class="filter-btn" data-sort="price_per_energy" data-order="asc">价格低</button>
+            <button class="filter-btn" data-sort="price_per_energy" data-order="desc">价格高</button>
+            <button class="filter-btn" data-sort="energy_amount">能量多</button>
+            <button class="filter-btn" data-sort="view_count">热门</button>
+        </div>
+
+        <div id="adList"></div>
+        <div id="loading" class="loading">加载中...</div>
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">&#128176;</div>
+            <div class="empty-text">暂无能量出售广告</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <button class="fab" onclick="showPublishModal()">+</button>
+
+    <!-- 发布广告弹窗 -->
+    <div class="modal-overlay" id="publishModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">发布能量出售广告</span>
+                <button class="modal-close" onclick="hidePublishModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- 用户能量信息 -->
+                <div class="form-group" id="userEnergyInfo" style="background: var(--trade-bg); padding: 12px; border-radius: var(--trade-radius); margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 13px; color: var(--trade-text-secondary);">我的能量</span>
+                        <span style="font-size: 18px; font-weight: 700; color: var(--trade-primary);" id="userTotalEnergy">加载中...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <span style="font-size: 13px; color: var(--trade-text-light);">可用能量</span>
+                        <span style="font-size: 16px; font-weight: 600; color: var(--trade-accent);" id="userAvailableEnergy">---</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">能量数量</label>
+                    <input type="number" class="form-input" id="energyAmount" placeholder="请输入能量数量" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">单价 (元/能量)</label>
+                    <input type="number" class="form-input" id="pricePerEnergy" placeholder="请输入单价" min="0.01" step="0.01">
+                    <div class="form-hint">买家支付的总价 = 能量数量 × 单价</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">收款码</label>
+                    <div class="upload-area" onclick="document.getElementById('qrCodeInput').click()">
+                        <div class="upload-icon">&#128247;</div>
+                        <div class="upload-text">点击上传收款码图片</div>
+                        <input type="file" id="qrCodeInput" accept="image/*" style="display: none;" onchange="handleQrCodeUpload(this)">
+                        <img id="qrCodePreview" class="upload-preview">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">广告描述 (可选)</label>
+                    <input type="text" class="form-input" id="adDescription" placeholder="请输入广告描述" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">有效期</label>
+                    <select class="form-input" id="expiresHours">
+                        <option value="24">24小时</option>
+                        <option value="48">48小时</option>
+                        <option value="72">72小时</option>
+                        <option value="168">7天</option>
+                    </select>
+                </div>
+                <div class="fee-info" id="feeInfo" style="display: none;">
+                    <div class="fee-row">
+                        <span>能量数量</span>
+                        <span id="feeEnergyAmount">0</span>
+                    </div>
+                    <div class="fee-row">
+                        <span>单价</span>
+                        <span>¥<span id="feePricePerEnergy">0</span>/能量</span>
+                    </div>
+                    <div class="fee-row">
+                        <span>总价</span>
+                        <span>¥<span id="feeTotalPrice">0</span></span>
+                    </div>
+                    <div class="fee-row">
+                        <span>手续费 (5%)</span>
+                        <span><span id="feeAmount">0</span>能量</span>
+                    </div>
+                    <div class="fee-row">
+                        <span>预计扣除总能量</span>
+                        <span><span id="feeNetIncome">0</span>能量</span>
+                    </div>
+                </div>
+                <button class="submit-btn" id="submitBtn" onclick="submitAd()">发布广告</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script>
+        const API_BASE = window.location.origin;
+        let token = AuthManager.getToken();
+        let currentPage = 1;
+        let currentSort = 'created_at';
+        let currentOrder = 'desc';
+        let currentKeyword = '';
+        let qrCodeUrl = '';
+        let socket = null;
+
+        function init() {
+            if (!token) {
+                showToast('请先登录', 'error');
+                setTimeout(() => window.location.href = 'game.html', 1500);
+                return;
+            }
+            loadAds();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // 搜索
+            document.getElementById('searchInput').addEventListener('input', debounce((e) => {
+                currentKeyword = e.target.value;
+                currentPage = 1;
+                loadAds();
+            }, 500));
+
+            // 筛选按钮
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSort = btn.dataset.sort || 'created_at';
+                    currentOrder = btn.dataset.order || 'desc';
+                    currentPage = 1;
+                    loadAds();
+                });
+            });
+
+            // 计算费用
+            document.getElementById('energyAmount').addEventListener('input', calculateFee);
+            document.getElementById('pricePerEnergy').addEventListener('input', calculateFee);
+        }
+
+        async function loadAds() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('adList').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'none';
+
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 10,
+                    sort: currentSort,
+                    order: currentOrder
+                });
+                if (currentKeyword) params.append('keyword', currentKeyword);
+
+                const response = await fetch(`${API_BASE}/api/energy-trade/ads?${params}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const result = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (result.success) {
+                    renderAds(result.data.list);
+                    renderPagination(result.data.pagination);
+                } else {
+                    showToast(result.error || '加载失败', 'error');
+                }
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                showToast('网络错误', 'error');
+            }
+        }
+
+        function renderAds(ads) {
+            if (!ads || ads.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            const html = ads.map(ad => `
+                <div class="ad-card" onclick="purchaseAd(${ad.id})">
+                    <div class="ad-header">
+                        <div class="ad-avatar">${escapeHtml(ad.username).charAt(0).toUpperCase()}</div>
+                        <div class="ad-info">
+                            <div class="ad-author">${escapeHtml(ad.username)}</div>
+                            <div class="ad-time">${formatTime(ad.created_at)}</div>
+                        </div>
+                        <div class="ad-stats">
+                            <span>&#128065; ${ad.view_count}</span>
+                        </div>
+                    </div>
+                    <div class="energy-amount">
+                        <span class="energy-value">${ad.energy_amount}</span>
+                        <span class="energy-unit">能量</span>
+                    </div>
+                    <div class="price-info">
+                        <div>
+                            <span class="price">¥${parseFloat(ad.total_price).toFixed(2)}</span>
+                            <span class="price-per-unit">(¥${parseFloat(ad.price_per_energy).toFixed(2)}/能量)</span>
+                        </div>
+                    </div>
+                    ${ad.description ? `<div class="ad-desc">${escapeHtml(ad.description)}</div>` : ''}
+                    <div class="ad-footer">
+                        <div class="view-count">
+                            <span>&#128065; ${ad.view_count}人浏览</span>
+                        </div>
+                        <button class="buy-btn">立即购买</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('adList').innerHTML = html;
+        }
+
+        function renderPagination(pagination) {
+            if (pagination.totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<button class="page-btn" onclick="goPage(${pagination.page - 1})" ${pagination.page === 1 ? 'disabled' : ''}>&laquo; 上一页</button>`;
+            
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                if (i === 1 || i === pagination.totalPages || (i >= pagination.page - 1 && i <= pagination.page + 1)) {
+                    html += `<button class="page-btn ${i === pagination.page ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+                } else if (i === pagination.page - 2 || i === pagination.page + 2) {
+                    html += `<span>...</span>`;
+                }
+            }
+
+            html += `<button class="page-btn" onclick="goPage(${pagination.page + 1})" ${pagination.page === pagination.totalPages ? 'disabled' : ''}>下一页 &raquo;</button>`;
+
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadAds();
+            window.scrollTo(0, 0);
+        }
+
+        async function purchaseAd(adId) {
+            event.stopPropagation();
+
+            // 检查登录状态
+            if (!token) {
+                showToast('请先登录', 'error');
+                setTimeout(() => window.location.href = 'game.html', 1500);
+                return;
+            }
+
+            // 先检查是否设置了支付密码
+            const hasPayPassword = await checkPayPassword();
+            if (!hasPayPassword) {
+                if (confirm('您还未设置支付密码，购买能量广告需要验证支付密码。是否前往设置？')) {
+                    window.location.href = '/member.html';
+                }
+                return;
+            }
+
+            // 弹出支付密码输入框
+            const payPassword = await showPayPasswordInput();
+            if (!payPassword) {
+                return; // 用户取消
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/energy-trade/ads/${adId}/purchase`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pay_password: payPassword })
+                });
+
+                // 检查认证状态
+                if (response.status === 401 || response.status === 403) {
+                    showToast('登录已过期，请重新登录', 'error');
+                    localStorage.removeItem('authToken');
+                    setTimeout(() => window.location.href = 'game.html', 1500);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('购买成功，进入交易聊天室...', 'success');
+                    setTimeout(() => {
+                        window.location.href = `energy-trade-chat.html?trade_id=${result.data.trade_id}&trade_no=${result.data.trade_no}`;
+                    }, 1500);
+                } else if (result.need_pay_password) {
+                    if (confirm('您还未设置支付密码，购买能量广告需要验证支付密码。是否前往设置？')) {
+                        window.location.href = '/member.html';
+                    }
+                } else if (result.require_pay_password) {
+                    showToast('请输入支付密码', 'error');
+                    purchaseAd(adId); // 重新输入
+                } else {
+                    showToast(result.error || '购买失败', 'error');
+                }
+            } catch (err) {
+                showToast('网络错误', 'error');
+            }
+        }
+
+        // 检查是否设置了支付密码
+        async function checkPayPassword() {
+            if (!token) return false;
+
+            try {
+                const res = await fetch(API_BASE + '/api/auth/has-pay-password', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                return data.success && data.data.has_pay_password;
+            } catch (err) {
+                console.error('检查支付密码失败:', err);
+                return false;
+            }
+        }
+
+        // 弹出支付密码输入框
+        let payPasswordResolve = null;
+
+        function showPayPasswordInput() {
+            return new Promise((resolve) => {
+                payPasswordResolve = resolve;
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                `;
+
+                overlay.innerHTML = `
+                    <div style="background: white; border-radius: 12px; padding: 24px; width: 300px; text-align: center;">
+                        <h3 style="margin: 0 0 16px; font-size: 16px;">请输入支付密码</h3>
+                        <input type="password" id="payPasswordInput"
+                            style="width: 100%; padding: 12px; font-size: 18px; letter-spacing: 8px; text-align: center;
+                                   border: 1px solid #ddd; border-radius: 8px; outline: none; ime-mode: disabled;"
+                            placeholder="6位数字" maxlength="6" autocomplete="off">
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button onclick="cancelPayPassword()"
+                                style="flex: 1; padding: 12px; border: none; border-radius: 8px;
+                                       background: #f0f0f0; cursor: pointer;">取消</button>
+                            <button onclick="confirmPayPassword()"
+                                style="flex: 1; padding: 12px; border: none; border-radius: 8px;
+                                       background: #4CAF50; color: white; cursor: pointer;">确认</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+
+                const input = overlay.querySelector('#payPasswordInput');
+                input.focus();
+
+                // 只允许输入数字
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+
+                // 回车确认
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        confirmPayPassword();
+                    }
+                });
+
+                // 保存 overlay 引用用于关闭
+                overlay.dataset.payPasswordOverlay = 'true';
+            });
+        }
+
+        // 确认支付密码
+        function confirmPayPassword() {
+            const overlay = document.querySelector('[data-pay-password-overlay="true"]');
+            if (!overlay) return;
+
+            const input = document.getElementById('payPasswordInput');
+            const pwd = input ? input.value : '';
+
+            if (!/^\d{6}$/.test(pwd)) {
+                alert('请输入6位数字支付密码');
+                return;
+            }
+
+            overlay.remove();
+            if (payPasswordResolve) {
+                payPasswordResolve(pwd);
+                payPasswordResolve = null;
+            }
+        }
+
+        // 取消支付密码
+        function cancelPayPassword() {
+            const overlay = document.querySelector('[data-pay-password-overlay="true"]');
+            if (overlay) {
+                overlay.remove();
+            }
+            if (payPasswordResolve) {
+                payPasswordResolve(null);
+                payPasswordResolve = null;
+            }
+        }
+
+        function showPublishModal() {
+            document.getElementById('publishModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // 加载用户能量信息
+            loadUserEnergyInfo();
+        }
+
+        async function loadUserEnergyInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/api/energy-trade/user/energy`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('userTotalEnergy').textContent = result.data.total_energy;
+                    document.getElementById('userAvailableEnergy').textContent = result.data.available_energy;
+                }
+            } catch (err) {
+                console.error('加载用户能量信息失败:', err);
+            }
+        }
+
+        function hidePublishModal() {
+            document.getElementById('publishModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // 重置表单
+            document.getElementById('energyAmount').value = '';
+            document.getElementById('pricePerEnergy').value = '';
+            document.getElementById('adDescription').value = '';
+            document.getElementById('expiresHours').value = '24';
+            document.getElementById('qrCodePreview').classList.remove('active');
+            document.getElementById('qrCodePreview').src = '';
+            document.getElementById('feeInfo').style.display = 'none';
+            qrCodeUrl = '';
+        }
+
+        async function handleQrCodeUpload(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/energy-trade/upload/image`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    qrCodeUrl = result.data.url;
+                    document.getElementById('qrCodePreview').src = result.data.url;
+                    document.getElementById('qrCodePreview').classList.add('active');
+                } else {
+                    showToast(result.error || '上传失败', 'error');
+                }
+            } catch (err) {
+                showToast('上传失败', 'error');
+            }
+        }
+
+        function calculateFee() {
+            const energy = parseInt(document.getElementById('energyAmount').value) || 0;
+            const price = parseFloat(document.getElementById('pricePerEnergy').value) || 0;
+
+            if (energy > 0 && price > 0) {
+                const total = energy * price;
+                const feeEnergy = Math.floor(energy * 0.05); // 手续费能量
+                const totalDeduction = energy + feeEnergy; // 预计扣除总能量
+
+                document.getElementById('feeEnergyAmount').textContent = energy;
+                document.getElementById('feePricePerEnergy').textContent = price.toFixed(2);
+                document.getElementById('feeTotalPrice').textContent = total.toFixed(2);
+                document.getElementById('feeAmount').textContent = feeEnergy;
+                document.getElementById('feeNetIncome').textContent = totalDeduction;
+                document.getElementById('feeInfo').style.display = 'block';
+            } else {
+                document.getElementById('feeInfo').style.display = 'none';
+            }
+        }
+
+        async function submitAd() {
+            const energyAmount = parseInt(document.getElementById('energyAmount').value);
+            const pricePerEnergy = parseFloat(document.getElementById('pricePerEnergy').value);
+            const description = document.getElementById('adDescription').value;
+            const expiresHours = parseInt(document.getElementById('expiresHours').value);
+
+            if (!energyAmount || energyAmount <= 0) {
+                showToast('请输入有效的能量数量', 'error');
+                return;
+            }
+            if (!pricePerEnergy || pricePerEnergy <= 0) {
+                showToast('请输入有效的单价', 'error');
+                return;
+            }
+            if (!qrCodeUrl) {
+                showToast('请上传收款码', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '发布中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/energy-trade/ads`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        energy_amount: energyAmount,
+                        price_per_energy: pricePerEnergy,
+                        payment_qr_code: qrCodeUrl,
+                        description: description,
+                        expires_hours: expiresHours
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('发布成功！' + result.message, 'success');
+                    hidePublishModal();
+                    loadAds();
+                } else {
+                    showToast(result.error || '发布失败', 'error');
+                }
+            } catch (err) {
+                showToast('网络错误', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '发布广告';
+            }
+        }
+
+        function goToMyTrades() {
+            window.location.href = 'energy-my-trades.html';
+        }
+
+        function goToMyAds() {
+            window.location.href = 'energy-my-ads.html';
+        }
+
+        function formatTime(time) {
+            const date = new Date(time);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // XSS防护函数
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast active ' + type;
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        init();
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,3220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>玩家广场 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --plaza-bg: #f0f2f5;
+            --plaza-card-bg: rgba(255, 255, 255, 0.92);
+            --plaza-primary: #4a90e2;
+            --plaza-primary-dark: #3a7bc8;
+            --plaza-accent: #67c23a;
+            --plaza-text: #1a1a1a;
+            --plaza-text-secondary: #606266;
+            --plaza-text-light: #909399;
+            --plaza-border: rgba(0, 0, 0, 0.08);
+            --plaza-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --plaza-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --plaza-radius: 12px;
+            --plaza-radius-lg: 16px;
+            --plaza-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--plaza-bg);
+            color: var(--plaza-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* 背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a18cd1 100%);
+            z-index: 0;
+        }
+
+        /* 顶部导航 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--plaza-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--plaza-bg);
+            color: var(--plaza-text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--plaza-text);
+        }
+
+        .nav-icon-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--plaza-bg);
+            color: var(--plaza-text);
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .nav-icon-link:hover {
+            background: #e91e63;
+            color: white;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .online-count {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--plaza-text-light);
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--plaza-accent);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--plaza-primary), #a18cd1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 搜索栏 */
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            background: var(--plaza-card-bg);
+            border-radius: 24px;
+            box-shadow: var(--plaza-shadow);
+            overflow: hidden;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            color: var(--plaza-text);
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--plaza-text-light);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--plaza-text-light);
+            font-size: 16px;
+        }
+
+        /* 发布按钮 */
+        .fab {
+            position: fixed;
+            bottom: 84px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--plaza-primary), #764ba2);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 90;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 28px rgba(74, 144, 226, 0.5);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* 帖子卡片 */
+        .post-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .post-card:hover {
+            box-shadow: var(--plaza-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .post-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #a18cd1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .post-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-author {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--plaza-text);
+            margin-bottom: 2px;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: var(--plaza-text-light);
+        }
+
+        /* 用户数据小标签 */
+        .post-author-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .user-stats-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .stat-item.energy {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ff9800;
+        }
+
+        .stat-item.contribution {
+            background: rgba(156, 39, 176, 0.15);
+            color: #9c27b0;
+        }
+
+        .stat-item.fortune {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+        }
+
+        .stat-icon {
+            font-size: 10px;
+        }
+
+        .post-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--plaza-text);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .post-content {
+            font-size: 14px;
+            color: var(--plaza-text-secondary);
+            line-height: 1.7;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-images {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .post-images.grid-1 { grid-template-columns: 1fr; }
+        .post-images.grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .post-images.grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+        .post-image {
+            width: 100%;
+            aspect-ratio: 16/10;
+            object-fit: cover;
+            border-radius: var(--plaza-radius-sm);
+            background: var(--plaza-bg);
+        }
+
+        .post-images.grid-1 .post-image {
+            aspect-ratio: 16/9;
+            max-height: 240px;
+        }
+
+        .post-images.grid-2 .post-image,
+        .post-images.grid-3 .post-image {
+            aspect-ratio: 1;
+        }
+
+        .post-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-top: 12px;
+            border-top: 1px solid var(--plaza-border);
+        }
+
+        .post-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--plaza-text-light);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .post-stat:hover {
+            color: var(--plaza-primary);
+        }
+
+        .post-stat.liked {
+            color: #e74c3c;
+        }
+
+        .post-stat-icon {
+            font-size: 16px;
+        }
+
+        /* 加载更多 */
+        .load-more {
+            text-align: center;
+            padding: 30px;
+            color: var(--plaza-text-light);
+            font-size: 14px;
+        }
+
+        .load-more.loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid var(--plaza-border);
+            border-top-color: var(--plaza-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--plaza-text-light);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 15px;
+        }
+
+        /* 发布弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 200;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg) var(--plaza-radius-lg) 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--plaza-border);
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--plaza-bg);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--plaza-text-light);
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e8e8e8;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--plaza-text);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--plaza-border);
+            border-radius: var(--plaza-radius-sm);
+            font-size: 15px;
+            color: var(--plaza-text);
+            background: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--plaza-primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--plaza-text-light);
+            margin-top: 6px;
+        }
+
+        /* 验证码 */
+        .captcha-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .captcha-input {
+            flex: 1;
+        }
+
+        .captcha-image {
+            width: 120px;
+            height: 40px;
+            border-radius: var(--plaza-radius-sm);
+            cursor: pointer;
+            border: 1px solid var(--plaza-border);
+        }
+
+        .captcha-refresh {
+            font-size: 12px;
+            color: var(--plaza-primary);
+            cursor: pointer;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--plaza-border);
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: var(--plaza-bg);
+            color: var(--plaza-text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--plaza-primary), #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 详情页 */
+        .detail-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--plaza-bg);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .detail-page.active {
+            transform: translateX(0);
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--plaza-card-bg);
+            border-bottom: 1px solid var(--plaza-border);
+        }
+
+        .detail-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--plaza-bg);
+            color: var(--plaza-text);
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+
+        .detail-title {
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 48px;
+        }
+
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px 100px;
+        }
+
+        .detail-post {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-post-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .detail-post-content {
+            font-size: 15px;
+            line-height: 1.8;
+            color: var(--plaza-text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* 评论区域 */
+        .comments-section {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            padding: 20px;
+        }
+
+        .comments-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--plaza-border);
+        }
+
+        .comment-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--plaza-border);
+        }
+
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+
+        .comment-item.pending {
+            opacity: 0.7;
+        }
+
+        .comment-item.pending .comment-content {
+            font-style: italic;
+        }
+
+        .comment-pending {
+            color: #999;
+            font-size: 0.8em;
+            margin-left: 4px;
+        }
+
+        .comment-item.nested {
+            margin-left: 40px;
+            padding-left: 12px;
+            border-left: 2px solid var(--plaza-border);
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #a18cd1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+
+        .comment-author {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--plaza-text);
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: var(--plaza-text-light);
+            margin-left: 8px;
+        }
+
+        .comment-reply-to {
+            font-size: 12px;
+            color: var(--plaza-primary);
+            margin-left: 8px;
+        }
+
+        .comment-reply-to strong {
+            font-weight: 500;
+        }
+
+        .comment-content {
+            font-size: 14px;
+            color: var(--plaza-text-secondary);
+            line-height: 1.6;
+            margin-left: 42px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 16px;
+            margin-left: 42px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+
+        .comment-action {
+            font-size: 12px;
+            color: var(--plaza-text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .comment-action:hover {
+            color: var(--plaza-primary);
+        }
+
+        .comment-action.liked {
+            color: #e74c3c;
+        }
+
+        /* 评论输入框 */
+        .comment-input-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--plaza-card-bg);
+            border-top: 1px solid var(--plaza-border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid var(--plaza-border);
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            background: var(--plaza-bg);
+        }
+
+        .comment-input:focus {
+            border-color: var(--plaza-primary);
+        }
+
+        .comment-submit {
+            padding: 8px 16px;
+            background: var(--plaza-primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* 通知 */
+        .notification {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--plaza-card-bg);
+            padding: 14px 20px;
+            border-radius: var(--plaza-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 300;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 90%;
+        }
+
+        .notification.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .notification-icon {
+            font-size: 20px;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            color: var(--plaza-text);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 400;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 图片预览 */
+        .image-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .image-preview-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .image-preview-img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+        }
+
+        .image-preview-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px 12px 80px;
+            }
+
+            .post-card {
+                padding: 16px;
+            }
+
+            .post-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .post-title {
+                font-size: 16px;
+            }
+
+            .post-content {
+                font-size: 13px;
+            }
+
+            .detail-post {
+                padding: 16px;
+            }
+
+            .detail-post-title {
+                font-size: 18px;
+            }
+
+            .detail-body {
+                padding: 16px 12px 100px;
+            }
+
+            .modal-content {
+                max-height: 95vh;
+            }
+
+            /* 底部导航栏移动端适配 */
+            .bottom-nav {
+                height: 56px;
+            }
+
+            .bottom-nav-item {
+                padding: 6px 12px;
+                font-size: 10px;
+            }
+
+            .bottom-nav-icon {
+                font-size: 20px;
+            }
+        }
+
+        /* 标准手机屏幕 (375px) */
+        @media (max-width: 375px) {
+            .container {
+                padding: 12px 10px 80px;
+            }
+
+            .bottom-nav {
+                height: 54px;
+            }
+
+            .bottom-nav-item {
+                padding: 4px 10px;
+                font-size: 9px;
+            }
+
+            .bottom-nav-icon {
+                font-size: 18px;
+            }
+
+            .navbar-title {
+                font-size: 16px;
+            }
+
+            .post-card {
+                padding: 12px;
+            }
+
+            .comment-actions {
+                margin-left: 36px;
+                gap: 12px;
+            }
+        }
+
+        /* 小屏手机 (320px) */
+        @media (max-width: 320px) {
+            .container {
+                padding: 10px 8px 80px;
+            }
+
+            .bottom-nav {
+                height: 52px;
+            }
+
+            .bottom-nav-item {
+                padding: 4px 8px;
+                font-size: 8px;
+            }
+
+            .bottom-nav-icon {
+                font-size: 16px;
+            }
+
+            .post-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+
+            .post-title {
+                font-size: 14px;
+            }
+
+            .comment-actions {
+                margin-left: 32px;
+                gap: 8px;
+            }
+
+            .fab {
+                bottom: 76px;
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+        }
+
+        /* 大屏手机 (414px) */
+        @media (max-width: 414px) and (min-width: 376px) {
+            .container {
+                padding: 16px 14px 80px;
+            }
+
+            .bottom-nav {
+                height: 58px;
+            }
+        }
+
+        /* 菜单按钮组 */
+        .post-menus {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--plaza-border);
+        }
+
+        .menu-btn {
+            padding: 6px 14px;
+            background: linear-gradient(135deg, var(--plaza-primary), #764ba2);
+            color: white;
+            border-radius: 16px;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .menu-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* 菜单编辑区 */
+        .menu-editor {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--plaza-bg);
+            border-radius: var(--plaza-radius-sm);
+        }
+
+        .menu-editor-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--plaza-text);
+            margin-bottom: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .menu-item .form-input {
+            flex: 1;
+        }
+
+        .menu-delete {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #fee;
+            color: #f56c6c;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .menu-delete:hover {
+            background: #fdd;
+        }
+
+        .add-menu-btn {
+            padding: 8px 16px;
+            background: var(--plaza-card-bg);
+            color: var(--plaza-primary);
+            border: 1px dashed var(--plaza-primary);
+            border-radius: var(--plaza-radius-sm);
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .add-menu-btn:hover {
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        .add-menu-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .menu-hint {
+            font-size: 12px;
+            color: var(--plaza-text-light);
+            margin-top: 8px;
+        }
+
+        /* 自由PK团样式 */
+        .free-pk-config {
+            margin-top: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(142, 90, 180, 0.1));
+            border-radius: 12px;
+            border: 1px solid rgba(155, 89, 182, 0.3);
+        }
+
+        .free-pk-section {
+            margin-top: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(142, 90, 180, 0.1));
+            border-radius: 12px;
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .free-pk-section:hover {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.15), rgba(142, 90, 180, 0.15));
+            transform: translateY(-1px);
+        }
+
+        .free-pk-title {
+            font-weight: 600;
+            color: #9c27b0;
+        }
+
+        .free-pk-status {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .free-pk-status.waiting { color: #ff9800; }
+        .free-pk-status.ongoing { color: #4caf50; }
+        .free-pk-status.completed { color: #9c27b0; }
+        .free-pk-status.expired { color: #999; }
+
+        .pk-participant {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .pk-participant.winner {
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            border: 2px solid #ffd700;
+        }
+
+        .pk-participant.eliminated {
+            background: linear-gradient(135deg, #9e9e9e, #757575);
+            border: 2px solid #f44336;
+        }
+
+        .pk-participant.ongoing {
+            background: linear-gradient(135deg, #9c27b0, #ba68c8);
+        }
+
+        .pk-participant-empty {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px dashed rgba(155, 89, 182, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(155, 89, 182, 0.5);
+            font-size: 18px;
+        }
+
+        .pk-result-winner {
+            margin-top: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 193, 7, 0.2));
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #ffd700;
+        }
+
+        .pk-progress-item {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .pk-winner-badge {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .pk-loser-badge {
+            background: #f44336;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        /* 回复状态 */
+        .reply-status {
+            display: none;
+            padding: 8px 16px;
+            background: var(--plaza-bg);
+            font-size: 13px;
+            color: var(--plaza-text-secondary);
+            border-bottom: 1px solid var(--plaza-border);
+        }
+
+        .reply-status .cancel-reply {
+            font-size: 12px;
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--plaza-card-bg);
+            border-top: 1px solid var(--plaza-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+            z-index: 95;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--plaza-text-light);
+            font-size: 11px;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .bottom-nav-item:hover {
+            background: var(--plaza-bg);
+        }
+
+        .bottom-nav-item.active {
+            color: var(--plaza-primary);
+        }
+
+        .bottom-nav-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        /* 调整顶部导航 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--plaza-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 主容器 - 为底部导航栏留空间 */
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+
+    <!-- 顶部导航 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="game.html" class="back-btn">&larr;</a>
+            <span class="navbar-title">玩家广场</span>
+            <a href="podcast.html" class="nav-icon-link" title="播客广场">&#127911;</a>
+            <a href="energy-market.html" class="nav-icon-link" title="能量市场" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;">&#9889;</a>
+        </div>
+        <div class="navbar-right">
+            <div class="user-avatar" id="userAvatar" title="我的主页">?</div>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+            <div class="search-input-wrapper">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索帖子...">
+            </div>
+        </div>
+
+        <!-- 帖子列表 -->
+        <div id="postList">
+            <div class="load-more loading">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 发布按钮 -->
+    <button class="fab" id="fabBtn" title="发布帖子">+</button>
+
+    <!-- 发布弹窗 -->
+    <div class="modal-overlay" id="postModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">发布帖子</span>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" class="form-input" id="postTitle" placeholder="请输入帖子标题" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">内容</label>
+                    <textarea class="form-input form-textarea" id="postContent" placeholder="分享你的想法..."></textarea>
+                    <div class="form-hint">支持 emoji 表情</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">验证码</label>
+                    <div class="captcha-wrapper">
+                        <input type="text" class="form-input captcha-input" id="captchaCode" placeholder="请输入验证码" maxlength="4">
+                        <div>
+                            <img class="captcha-image" id="captchaImage" src="" alt="验证码">
+                            <div class="captcha-refresh" id="refreshCaptcha">换一张</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="add-menu-btn" id="toggleMenuEditor">+ 添加菜单（可选）</button>
+                    <div class="menu-editor" id="menuEditor" style="display: none;">
+                        <div class="menu-editor-title">自定义菜单</div>
+                        <div id="menuList"></div>
+                        <button type="button" class="add-menu-btn" id="addMenuBtn" style="margin-top: 8px;">+ 添加菜单</button>
+                        <div class="menu-hint">最多添加6个菜单，每个菜单名称最多20个字符</div>
+                    </div>
+                </div>
+                
+                <!-- 自由PK团配置 -->
+                <div class="form-group" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--plaza-border);">
+                    <label class="toggle-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="enableFreePK" style="width: 18px; height: 18px;">
+                        <span style="font-weight: 600; color: var(--plaza-text);">⚔️ 创建自由PK团</span>
+                    </label>
+                    <div class="form-hint" style="margin-top: 8px;">发起多人PK对战，最终获胜者获得所有能量</div>
+                </div>
+                
+                <!-- PK团配置（选中时显示） -->
+                <div class="free-pk-config" id="freePKConfig" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" style="color: #9c27b0;">参与能量（消耗）</label>
+                        <input type="number" class="form-input" id="pkEnergyCost" value="50" min="10" max="1000" style="border-color: #9c27b0;">
+                        <div class="form-hint">每次PK消耗的能量，成功者获得全部</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: #9c27b0;">参与人数</label>
+                        <input type="number" class="form-input" id="pkMaxParticipants" value="4" min="2" max="10" style="border-color: #9c27b0;">
+                        <div class="form-hint">2-10人，人数满后自动开始PK</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: #9c27b0;">有效时间（小时）</label>
+                        <input type="number" class="form-input" id="pkValidHours" value="24" min="1" max="72" style="border-color: #9c27b0;">
+                        <div class="form-hint">1-72小时，超时后PK团过期</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: #9c27b0;">⚔️ 你的PK数值</label>
+                        <div style="margin-top: 8px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px;">攻击 (King): <span id="creatorKingValue" style="color: #9c27b0; font-weight: bold;">50</span></label>
+                            <input type="range" id="creatorKingInput" min="1" max="100" value="50" style="width: 100%; accent-color: #9c27b0;" oninput="document.getElementById('creatorKingValue').textContent = this.value">
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px;">防御 (Assassin): <span id="creatorAssassinValue" style="color: #9c27b0; font-weight: bold;">50</span></label>
+                            <input type="range" id="creatorAssassinInput" min="1" max="100" value="50" style="width: 100%; accent-color: #9c27b0;" oninput="document.getElementById('creatorAssassinValue').textContent = this.value">
+                        </div>
+                        <div class="form-hint">距离100越远越强（100-King-Assassin的绝对值越小越强）</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPost">取消</button>
+                <button class="btn btn-primary" id="submitPost">发布</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情页 -->
+    <div class="detail-page" id="detailPage">
+        <div class="detail-header">
+            <button class="detail-back" id="detailBack">&larr;</button>
+            <span class="detail-title">帖子详情</span>
+        </div>
+        <div class="detail-body" id="detailBody">
+            <!-- 帖子详情和评论内容 -->
+        </div>
+        <div class="comment-input-wrapper">
+            <input type="text" class="comment-input" id="commentInput" placeholder="写评论...">
+            <button class="comment-submit" id="commentSubmit">发送</button>
+        </div>
+    </div>
+
+    <!-- 图片预览 -->
+    <div class="image-preview-overlay" id="imagePreview">
+        <button class="image-preview-close" id="imagePreviewClose">&times;</button>
+        <img class="image-preview-img" id="previewImg" src="" alt="预览">
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification">
+        <span class="notification-icon">&#128276;</span>
+        <span class="notification-text" id="notificationText"></span>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script>
+        // 全局配置
+        const API_BASE = window.location.origin;
+        let currentUser = null;
+        let currentPostId = null;
+        let currentPage = 1;
+        let isLoading = false;
+        let searchKeyword = '';
+        let captchaId = '';
+        let replyingTo = null; // 当前回复的评论 { id, username }
+
+        // Socket 连接
+        let plazaSocket = null;
+
+        // 统一登录函数 - 使用游戏页面的登录弹窗
+        function openLoginPopup() {
+            window.open('game.html?mode=auth', '_blank', 'width=450,height=600,scrollbars=yes');
+        }
+
+        // 监听登录成功消息
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'auth_login_success') {
+                // 登录成功，刷新页面
+                localStorage.setItem('authToken', event.data.token);
+                window.location.reload();
+            }
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkLogin();
+            await loadCaptcha();
+            await loadPosts();
+            initSocket();
+            initEventListeners();
+        });
+
+        // 检查登录状态
+        async function checkLogin() {
+            const token = AuthManager.getToken();
+            if (!token) {
+                showToast('请先登录');
+                openLoginPopup();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plaza/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = data.data;
+                    document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+                }
+            } catch (err) {
+                console.error('获取用户信息失败:', err);
+            }
+        }
+
+        // 加载验证码
+        async function loadCaptcha() {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/captcha`);
+                const data = await res.json();
+                if (data.success) {
+                    captchaId = data.captchaId;
+                    document.getElementById('captchaImage').src = data.image;
+                }
+            } catch (err) {
+                console.error('获取验证码失败:', err);
+            }
+        }
+
+        // 加载帖子列表
+        async function loadPosts(append = false) {
+            if (isLoading) return;
+            isLoading = true;
+
+            const token = AuthManager.getToken();
+            const url = `${API_BASE}/api/plaza/posts?page=${currentPage}&limit=20${searchKeyword ? '&keyword=' + encodeURIComponent(searchKeyword) : ''}`;
+
+            try {
+                const res = await fetch(url, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const { posts, pagination } = data.data;
+                    renderPosts(posts, append);
+
+                    // 初始化懒加载
+                    initImageLazyLoad();
+
+                    // 加载PK团状态
+                    posts.forEach(post => {
+                        if (post.hasFreePKGroup && post.freePKGroupId) {
+                            loadFreePKGroup(post.freePKGroupId);
+                        }
+                    });
+
+                    if (currentPage >= pagination.totalPages) {
+                        document.getElementById('postList').querySelector('.load-more')?.remove();
+                    }
+                }
+            } catch (err) {
+                console.error('加载帖子失败:', err);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // 渲染帖子列表
+        function renderPosts(posts, append = false) {
+            const container = document.getElementById('postList');
+            if (!append) {
+                container.innerHTML = '';
+            }
+
+            if (posts.length === 0 && !append) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128172;</div>
+                        <div class="empty-text">还没有帖子，快来发布第一个吧！</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const postsHtml = posts.map(post => {
+                const avatarChar = post.username ? post.username.charAt(0).toUpperCase() : '?';
+                const timeAgo = formatTimeAgo(post.created_at);
+                const imagesHtml = renderImages(post.images);
+                const menusHtml = renderMenus(post.menus);
+                const freePKHtml = renderFreePKSection(post);
+
+                return `
+                    <div class="post-card" data-id="${post.id}">
+                        <div class="post-header">
+                            <div class="post-avatar">${avatarChar}</div>
+                            <div class="post-info">
+                                <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                                <div class="post-time">${timeAgo}</div>
+                            </div>
+                        </div>
+                        <div class="post-title">${escapeHtml(post.title)}</div>
+                        <div class="post-content">${escapeHtml(post.content)}</div>
+                        ${imagesHtml}
+                        ${menusHtml}
+                        ${freePKHtml}
+                        <div class="post-stats">
+                            <div class="post-stat ${post.isLiked ? 'liked' : ''}" data-id="${post.id}" data-type="post" data-liked="${post.isLiked}">
+                                <span class="post-stat-icon">${post.isLiked ? '&#10084;' : '&#9825;'}</span>
+                                <span>${post.likes_count || 0}</span>
+                            </div>
+                            <div class="post-stat">
+                                <span class="post-stat-icon">&#128172;</span>
+                                <span>${post.comments_count || 0}</span>
+                            </div>
+                            <div class="post-stat">
+                                <span class="post-stat-icon">&#128065;</span>
+                                <span>${post.views_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML += postsHtml;
+
+            // 添加加载更多
+            const loadMore = document.createElement('div');
+            loadMore.className = 'load-more';
+            loadMore.textContent = '加载更多';
+            loadMore.onclick = () => {
+                currentPage++;
+                loadPosts(true);
+            };
+            container.appendChild(loadMore);
+        }
+
+        // 渲染图片（带懒加载）
+        function renderImages(images) {
+            if (!images || images.length === 0) return '';
+
+            const gridClass = images.length === 1 ? 'grid-1' : images.length === 2 ? 'grid-2' : 'grid-3';
+
+            return `
+                <div class="post-images ${gridClass}">
+                    ${images.slice(0, 9).map((img, idx) => `
+                        <img class="post-image lazy" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="${img}" alt="图片${idx + 1}" data-idx="${idx}" onclick="previewImage('${img}')">
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 渲染菜单按钮组
+        function renderMenus(menus) {
+            if (!menus || menus.length === 0) return '';
+            return `
+                <div class="post-menus">
+                    ${menus.map(menu => `
+                        <a href="${escapeHtml(menu.url)}" class="menu-btn" target="_blank" onclick="event.stopPropagation();">${escapeHtml(menu.name)}</a>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 渲染自由PK团区域
+        function renderFreePKSection(post) {
+            if (!post.hasFreePKGroup || !post.freePKGroupId) return '';
+
+            // 需要异步加载PK团状态，这里先显示占位符
+            return `
+                <div class="free-pk-section" id="freePK_${post.freePKGroupId}" onclick="event.stopPropagation(); loadFreePKGroup('${post.freePKGroupId}')">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span class="free-pk-title">⚔️ 自由PK团</span>
+                        <span class="pk-loading" style="color: #9c27b0; font-size: 12px;">加载中...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 加载PK团状态
+        async function loadFreePKGroup(groupId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/${groupId}`);
+                const data = await res.json();
+                if (data.success) {
+                    updateFreePKSection(groupId, data.data);
+                }
+            } catch (err) {
+                console.error('加载PK团失败:', err);
+            }
+        }
+
+        // 更新PK团区域
+        function updateFreePKSection(groupId, groupData) {
+            const container = document.getElementById(`freePK_${groupId}`);
+            if (!container) return;
+
+            const statusText = {
+                'waiting': '等待中',
+                'ongoing': 'PK进行中',
+                'completed': '已结束',
+                'expired': '已过期'
+            };
+
+            const participants = groupData.participants || [];
+            const filledCount = participants.length;
+            const totalCount = groupData.maxParticipants;
+
+            let participantsHtml = '';
+            for (let i = 0; i < totalCount; i++) {
+                if (i < filledCount) {
+                    const p = participants[i];
+                    const statusClass = p.status === 'winner' ? 'winner' : p.status === 'eliminated' ? 'eliminated' : 'ongoing';
+                    participantsHtml += `
+                        <div class="pk-participant ${statusClass}">
+                            ${p.username.charAt(0).toUpperCase()}
+                        </div>
+                    `;
+                } else {
+                    participantsHtml += `
+                        <div class="pk-participant-empty">+</div>
+                    `;
+                }
+            }
+
+            container.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span class="free-pk-title">⚔️ 自由PK团</span>
+                    <span class="free-pk-status ${groupData.status}">${statusText[groupData.status]}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                    ${participantsHtml}
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #666;">
+                    <span>已参与: ${filledCount}/${totalCount}</span>
+                    <span>奖池: ${groupData.energyCost * filledCount}能量</span>
+                </div>
+            `;
+        }
+
+        // 图片懒加载观察器
+        function initImageLazyLoad() {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const src = img.dataset.src;
+                        if (src) {
+                            img.src = src;
+                            img.classList.remove('lazy');
+                            observer.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px 0px',
+                threshold: 0.01
+            });
+
+            // 观察所有懒加载图片
+            document.querySelectorAll('img.lazy').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // 生成单个帖子卡片HTML（用于乐观更新）
+        function renderPostCardHtml(post) {
+            const avatarChar = post.username ? post.username.charAt(0).toUpperCase() : '?';
+            const timeAgo = post.created_at ? formatTimeAgo(post.created_at) : '刚刚';
+            const imagesHtml = renderImages(post.images);
+            const menusHtml = renderMenus(post.menus);
+            const freePKHtml = renderFreePKSection(post);
+
+            return `
+                <div class="post-card" data-id="${post.id}" style="animation: slideIn 0.3s ease;">
+                    <div class="post-header">
+                        <div class="post-avatar">${avatarChar}</div>
+                        <div class="post-info">
+                            <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                            <div class="post-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                    <div class="post-title">${escapeHtml(post.title)}</div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                    ${imagesHtml}
+                    ${menusHtml}
+                    ${freePKHtml}
+                    <div class="post-stats">
+                        <div class="post-stat ${post.isLiked ? 'liked' : ''}" data-id="${post.id}" data-type="post" data-liked="${post.isLiked}">
+                            <span class="post-stat-icon">${post.isLiked ? '&#10084;' : '&#9825;'}</span>
+                            <span>${post.likes_count || 0}</span>
+                        </div>
+                        <div class="post-stat">
+                            <span class="post-stat-icon">&#128172;</span>
+                            <span>${post.comments_count || 0}</span>
+                        </div>
+                        <div class="post-stat">
+                            <span class="post-stat-icon">&#128065;</span>
+                            <span>${post.views_count || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 格式化时间
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 7) return `${days}天前`;
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 图片预览
+        function previewImage(src) {
+            document.getElementById('previewImg').src = src;
+            document.getElementById('imagePreview').classList.add('active');
+        }
+
+        // 初始化Socket
+        function initSocket() {
+            const token = AuthManager.getToken();
+            if (!token) return;
+
+            try {
+                plazaSocket = io(`${API_BASE}/plaza`, {
+                    auth: { token },
+                    transports: ['websocket', 'polling']
+                });
+
+                plazaSocket.on('connect', () => {
+                    console.log('[Plaza] Socket connected');
+                });
+
+                plazaSocket.on('connect_error', (err) => {
+                    console.error('[Plaza] Socket connection error:', err.message);
+                });
+
+                plazaSocket.on('online_users', (data) => {
+                    console.log('[Plaza] Online users:', data.count);
+                    const onlineCountEl = document.getElementById('onlineCount');
+                    if (onlineCountEl) {
+                        onlineCountEl.textContent = data.count;
+                    }
+                });
+
+                plazaSocket.on('new_post', (data) => {
+                    // 新帖子通知（可以刷新或插入到列表顶部）
+                    if (currentPage === 1 && !searchKeyword) {
+                        loadPosts();
+                    }
+                });
+
+                // 监听点赞更新（其他用户点赞时实时更新）
+                plazaSocket.on('like_update', (data) => {
+                    const { targetId, targetType, likes_count } = data;
+                    // 更新帖子列表中的点赞数
+                    document.querySelectorAll(`.post-stat[data-id="${targetId}"][data-type="post"]`).forEach(el => {
+                        const countSpan = el.querySelector('span:last-child');
+                        if (countSpan) {
+                            countSpan.textContent = ' ' + likes_count;
+                        }
+                    });
+                    // 如果在详情页，也更新详情页的点赞数
+                    if (document.getElementById('detailPage').classList.contains('active')) {
+                        const detailLikeBtn = document.getElementById('detailLikeBtn');
+                        if (detailLikeBtn && detailLikeBtn.dataset.id === targetId) {
+                            const countSpan = detailLikeBtn.querySelector('span:nth-child(2)');
+                            if (countSpan) {
+                                countSpan.textContent = ' ' + likes_count;
+                            }
+                        }
+                    }
+                });
+
+                plazaSocket.on('like_notification', (data) => {
+                    showNotification(data.message);
+                });
+
+                // 监听排行榜更新（PK团结束后实时更新）
+                plazaSocket.on('leaderboard_update', (data) => {
+                    console.log('[Plaza] 排行榜更新:', data);
+                    // 可以选择刷新排行榜数据
+                    if (typeof loadLeaderboardData === 'function') {
+                        loadLeaderboardData();
+                    }
+                });
+
+                // 监听PK团状态更新（包括进行中、完成、失败、过期等状态）
+                plazaSocket.on('free_pk_update', (data) => {
+                    console.log('[Plaza] PK团状态更新:', data);
+                    const { groupId, status, message } = data;
+                    // 刷新PK团状态显示
+                    loadFreePKGroup(groupId);
+                    // 如果在详情页，也刷新详情页
+                    if (document.getElementById('detailPage').classList.contains('active') && currentPostId) {
+                        loadDetailFreePK(groupId);
+                    }
+                    // 处理各种状态
+                    if (status === 'completed') {
+                        showToast('PK已完成！请查看结果');
+                    } else if (status === 'failed') {
+                        showToast(message || 'PK执行失败，请重试', 'error');
+                    } else if (status === 'expired') {
+                        showToast(message || 'PK团已过期', 'warning');
+                    }
+                });
+
+                // 监听PK完成详细结果
+                plazaSocket.on('pk_complete', (data) => {
+                    console.log('[Plaza] PK完成:', data);
+                    const { groupId, winnerUsername, totalPrize } = data;
+                    // 刷新PK团状态
+                    loadFreePKGroup(groupId);
+                    // 如果在详情页，刷新详情
+                    if (document.getElementById('detailPage').classList.contains('active') && currentPostId) {
+                        loadDetailFreePK(groupId);
+                    }
+                    // 显示获胜通知
+                    if (winnerUsername && totalPrize) {
+                        showNotification(`${winnerUsername} 获得胜利！获得 ${totalPrize} 能量`);
+                    }
+                });
+
+                plazaSocket.on('disconnect', () => {
+                    console.log('[Plaza] Socket disconnected');
+                });
+            } catch (err) {
+                console.error('[Plaza] Socket连接失败:', err);
+            }
+        }
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 我的PK团记录
+            document.getElementById('navMyPK').addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!currentUser) {
+                    showToast('请先登录');
+                    openLoginPopup();
+                    return;
+                }
+                await showMyPKRecords();
+            });
+
+            // 发布按钮
+            document.getElementById('fabBtn').addEventListener('click', () => {
+                if (!currentUser) {
+                    showToast('请先登录');
+                    openLoginPopup();
+                    return;
+                }
+                document.getElementById('postModal').classList.add('active');
+            });
+
+            // 关闭弹窗
+            document.getElementById('modalClose').addEventListener('click', closePostModal);
+            document.getElementById('cancelPost').addEventListener('click', closePostModal);
+            document.getElementById('postModal').addEventListener('click', (e) => {
+                if (e.target.id === 'postModal') closePostModal();
+            });
+
+            // 刷新验证码
+            document.getElementById('refreshCaptcha').addEventListener('click', loadCaptcha);
+            document.getElementById('captchaImage').addEventListener('click', loadCaptcha);
+
+            // 发布帖子
+            document.getElementById('submitPost').addEventListener('click', submitPost);
+
+            // 搜索
+            let searchTimer;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    searchKeyword = e.target.value.trim();
+                    currentPage = 1;
+                    loadPosts();
+                }, 500);
+            });
+
+            // 帖子点击（事件委托）
+            document.getElementById('postList').addEventListener('click', async (e) => {
+                const card = e.target.closest('.post-card');
+                if (card) {
+                    const postId = card.dataset.id;
+                    await openDetail(postId);
+                    return;
+                }
+
+                const stat = e.target.closest('.post-stat');
+                if (stat && stat.dataset.id) {
+                    e.stopPropagation();
+                    await handleLike(stat.dataset.id, stat.dataset.type, stat);
+                    return;
+                }
+            });
+
+            // 详情页返回
+            document.getElementById('detailBack').addEventListener('click', closeDetail);
+
+            // 评论发送
+            document.getElementById('commentSubmit').addEventListener('click', submitComment);
+            document.getElementById('commentInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitComment();
+            });
+
+            // 回复按钮点击（事件委托，绑定到 document 上确保动态内容也能响应）
+            document.addEventListener('click', async (e) => {
+                // 只在详情页显示时处理回复按钮
+                if (!document.getElementById('detailPage').classList.contains('active')) return;
+
+                const replyBtn = e.target.closest('.reply-btn');
+                if (replyBtn) {
+                    e.stopPropagation();
+                    const commentId = replyBtn.dataset.id;
+                    const username = replyBtn.dataset.username;
+                    handleReply(commentId, username);
+                    return;
+                }
+
+                // 取消回复按钮
+                const cancelReplyBtn = e.target.closest('.cancel-reply');
+                if (cancelReplyBtn) {
+                    e.stopPropagation();
+                    cancelReply();
+                    return;
+                }
+            });
+
+            // 图片预览关闭
+            document.getElementById('imagePreviewClose').addEventListener('click', () => {
+                document.getElementById('imagePreview').classList.remove('active');
+            });
+            document.getElementById('imagePreview').addEventListener('click', (e) => {
+                if (e.target.id === 'imagePreview') {
+                    document.getElementById('imagePreview').classList.remove('active');
+                }
+            });
+        }
+
+        // 关闭发布弹窗
+        function closePostModal() {
+            document.getElementById('postModal').classList.remove('active');
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postContent').value = '';
+            document.getElementById('captchaCode').value = '';
+            // 重置菜单
+            menus = [];
+            document.getElementById('menuEditor').style.display = 'none';
+            document.getElementById('toggleMenuEditor').style.display = 'block';
+            renderMenuItems();
+            // 重置自由PK团
+            document.getElementById('enableFreePK').checked = false;
+            document.getElementById('freePKConfig').style.display = 'none';
+            document.getElementById('pkEnergyCost').value = 50;
+            document.getElementById('pkMaxParticipants').value = 4;
+            document.getElementById('pkValidHours').value = 24;
+            document.getElementById('creatorKingInput').value = 50;
+            document.getElementById('creatorAssassinInput').value = 50;
+            document.getElementById('creatorKingValue').textContent = 50;
+            document.getElementById('creatorAssassinValue').textContent = 50;
+        }
+
+        // 自由PK团开关
+        document.getElementById('enableFreePK').addEventListener('change', function() {
+            document.getElementById('freePKConfig').style.display = this.checked ? 'block' : 'none';
+        });
+
+        // 菜单管理
+        let menus = [];
+
+        // 切换菜单编辑器显示
+        document.getElementById('toggleMenuEditor').addEventListener('click', function() {
+            this.style.display = 'none';
+            document.getElementById('menuEditor').style.display = 'block';
+            if (menus.length === 0) {
+                addMenuItem();
+            }
+        });
+
+        // 添加菜单
+        document.getElementById('addMenuBtn').addEventListener('click', addMenuItem);
+
+        function addMenuItem() {
+            if (menus.length >= 6) {
+                showToast('最多只能添加6个菜单');
+                return;
+            }
+            menus.push({ name: '', url: '' });
+            renderMenuItems();
+            updateAddMenuBtn();
+        }
+
+        function deleteMenuItem(index) {
+            menus.splice(index, 1);
+            renderMenuItems();
+            updateAddMenuBtn();
+        }
+
+        function updateMenuItem(index, field, value) {
+            menus[index][field] = value;
+        }
+
+        function renderMenuItems() {
+            const container = document.getElementById('menuList');
+            container.innerHTML = menus.map((menu, index) => `
+                <div class="menu-item">
+                    <input type="text" class="form-input" placeholder="菜单名称" value="${escapeHtml(menu.name)}"
+                        onchange="updateMenuItem(${index}, 'name', this.value)" maxlength="20">
+                    <input type="text" class="form-input" placeholder="跳转链接（https://...）" value="${escapeHtml(menu.url)}"
+                        onchange="updateMenuItem(${index}, 'url', this.value)">
+                    <button type="button" class="menu-delete" onclick="deleteMenuItem(${index})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function updateAddMenuBtn() {
+            const btn = document.getElementById('addMenuBtn');
+            btn.disabled = menus.length >= 6;
+        }
+
+        // 提交帖子
+        async function submitPost() {
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const captchaCode = document.getElementById('captchaCode').value.trim();
+
+            if (!title) {
+                showToast('请输入帖子标题');
+                return;
+            }
+            if (!content) {
+                showToast('请输入帖子内容');
+                return;
+            }
+            if (!captchaCode) {
+                showToast('请输入验证码');
+                return;
+            }
+
+            // 验证菜单
+            const validMenus = [];
+            for (const menu of menus) {
+                if (menu.name && menu.url) {
+                    try {
+                        new URL(menu.url);
+                        validMenus.push(menu);
+                    } catch (e) {
+                        showToast('菜单链接格式不正确');
+                        return;
+                    }
+                } else if (menu.name || menu.url) {
+                    showToast('菜单名称和链接必须同时填写');
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('submitPost');
+            btn.disabled = true;
+            btn.textContent = '发布中...';
+
+            try {
+                const token = AuthManager.getToken();
+                const res = await fetch(`${API_BASE}/api/plaza/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        captchaId,
+                        captchaCode,
+                        menus: validMenus
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // 检查是否创建自由PK团
+                    const enableFreePK = document.getElementById('enableFreePK').checked;
+                    let postData = data.data;
+                    
+                    if (enableFreePK) {
+                        // 创建自由PK团
+                        const energyCost = parseInt(document.getElementById('pkEnergyCost').value) || 50;
+                        const maxParticipants = parseInt(document.getElementById('pkMaxParticipants').value) || 4;
+                        const validHours = parseInt(document.getElementById('pkValidHours').value) || 24;
+                        const king = parseInt(document.getElementById('creatorKingInput').value) || 50;
+                        const assassin = parseInt(document.getElementById('creatorAssassinInput').value) || 50;
+                        
+                        const pkRes = await fetch(`${API_BASE}/api/plaza/free-pk/create`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                postId: postData.id,
+                                energyCost,
+                                maxParticipants,
+                                validHours,
+                                king,
+                                assassin
+                            })
+                        });
+                        
+                        const pkData = await pkRes.json();
+                        if (pkData.success) {
+                            postData.hasFreePKGroup = true;
+                            postData.freePKGroupId = pkData.data.groupId;
+                            showToast('发布成功，自由PK团已创建！');
+                        } else {
+                            showToast('发布成功，但PK团创建失败：' + pkData.error);
+                        }
+                    } else {
+                        showToast('发布成功');
+                    }
+
+                    // 乐观更新：直接插入新帖子到列表顶部
+                    const postsContainer = document.getElementById('postList');
+                    if (postsContainer && currentPage === 1 && !searchKeyword) {
+                        newPost = postData;
+                        newPost.isLiked = false;
+                        newPost.created_at = new Date().toISOString();
+                        const postHtml = renderPostCardHtml(newPost);
+                        // 插入到容器开头
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = postHtml;
+                        const newElement = tempDiv.firstElementChild;
+                        postsContainer.insertBefore(newElement, postsContainer.firstChild);
+                        // 初始化懒加载
+                        initImageLazyLoad();
+                    }
+
+                    closePostModal();
+                    loadCaptcha();
+                } else {
+                    showToast(data.error || '发布失败');
+                    loadCaptcha();
+                }
+            } catch (err) {
+                console.error('发布帖子失败:', err);
+                showToast('发布失败，请重试');
+                loadCaptcha();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '发布';
+            }
+        }
+
+        // 打开详情页
+        async function openDetail(postId) {
+            currentPostId = postId;
+            const token = AuthManager.getToken();
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plaza/posts/${postId}`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    renderDetail(data.data);
+                    document.getElementById('detailPage').classList.add('active');
+                } else {
+                    showToast(data.error || '加载失败');
+                }
+            } catch (err) {
+                console.error('加载帖子详情失败:', err);
+                showToast('加载失败');
+            }
+        }
+
+        // 渲染详情页
+        function renderDetail(post) {
+            const avatarChar = post.username ? post.username.charAt(0).toUpperCase() : '?';
+            const timeAgo = formatTimeAgo(post.created_at);
+            const imagesHtml = renderImages(post.images);
+            const menusHtml = renderMenus(post.menus);
+
+            const html = `
+                <div class="detail-post">
+                    <div class="post-header">
+                        <div class="post-avatar">${avatarChar}</div>
+                        <div class="post-info">
+                            <div class="post-author-row">
+                                <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                                <div class="user-stats-mini">
+                                    <span class="stat-item energy" title="能量">
+                                        <span class="stat-icon">&#9889;</span>
+                                        <span>${post.user_energy || 0}</span>
+                                    </span>
+                                    <span class="stat-item contribution" title="贡献值">
+                                        <span class="stat-icon">&#128101;</span>
+                                        <span>${post.contribution_score || 0}</span>
+                                    </span>
+                                    <span class="stat-item fortune" title="福力值">
+                                        <span class="stat-icon">&#127808;</span>
+                                        <span>${post.fortune_score || 0}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="post-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                    <div class="detail-post-title">${escapeHtml(post.title)}</div>
+                    <div class="detail-post-content">${escapeHtml(post.content)}</div>
+                    ${imagesHtml}
+                    ${menusHtml}
+                    <div class="post-stats">
+                        <div class="post-stat ${post.isLiked ? 'liked' : ''}" id="detailLikeBtn" data-id="${post.id}" data-type="post" data-liked="${post.isLiked}">
+                            <span class="post-stat-icon">${post.isLiked ? '&#10084;' : '&#9825;'}</span>
+                            <span>${post.likes_count || 0}</span>
+                        </div>
+                        <div class="post-stat">
+                            <span class="post-stat-icon">&#128172;</span>
+                            <span>${post.comments_count || 0}</span>
+                        </div>
+                        <div class="post-stat">
+                            <span class="post-stat-icon">&#128065;</span>
+                            <span>${post.views_count || 0}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                ${post.hasFreePKGroup ? `<div id="detailFreePK" class="free-pk-detail-section"></div>` : ''}
+                
+                <div class="comments-section">
+                    <div class="comments-header">评论 <span id="commentCount">0</span></div>
+                    <div id="commentsList">
+                        <div class="load-more loading">加载中...</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailBody').innerHTML = html;
+
+            // 点赞事件
+            document.getElementById('detailLikeBtn').addEventListener('click', async function() {
+                await handleLike(this.dataset.id, this.dataset.type, this);
+            });
+
+            // 加载PK团详情（如果存在）
+            if (post.hasFreePKGroup && post.freePKGroupId) {
+                loadDetailFreePK(post.freePKGroupId);
+            }
+
+            // 加载评论
+            loadComments(post.id);
+        }
+
+        // 加载详情页PK团
+        async function loadDetailFreePK(groupId) {
+            const container = document.getElementById('detailFreePK');
+            if (!container) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/${groupId}`);
+                const data = await res.json();
+                if (data.success) {
+                    renderDetailFreePK(container, data.data);
+                }
+            } catch (err) {
+                console.error('加载PK团详情失败:', err);
+            }
+        }
+
+        // 渲染详情页PK团
+        function renderDetailFreePK(container, group) {
+            const statusText = {
+                'waiting': '等待中',
+                'ongoing': 'PK进行中',
+                'completed': '已结束',
+                'expired': '已过期'
+            };
+
+            const statusColors = {
+                'waiting': '#ff9800',
+                'ongoing': '#4caf50',
+                'completed': '#9c27b0',
+                'expired': '#999'
+            };
+
+            const participants = group.participants || [];
+            const winner = participants.find(p => p.status === 'winner');
+
+            let participantsHtml = '';
+            for (let i = 0; i < group.maxParticipants; i++) {
+                if (i < participants.length) {
+                    const p = participants[i];
+                    const isWinner = p.status === 'winner';
+                    const isEliminated = p.status === 'eliminated' || p.status === 'pk_lose';
+                    participantsHtml += `
+                        <div class="participant-slot" style="text-align: center;">
+                            <div class="avatar" style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #9c27b0, #ba68c8); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold; margin: 0 auto 8px; border: 3px solid ${isWinner ? '#ffd700' : isEliminated ? '#f44336' : '#9c27b0'};">
+                                ${p.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div style="font-size: 12px; color: #333;">${escapeHtml(p.username)}</div>
+                            <div style="font-size: 10px; color: ${isWinner ? '#ffd700' : isEliminated ? '#f44336' : '#4caf50'};">
+                                ${isWinner ? '🏆 获胜' : isEliminated ? '淘汰' : p.status === 'pk_win' ? '晋级' : '待战'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    participantsHtml += `
+                        <div class="participant-slot" style="text-align: center;">
+                            <div class="avatar" style="width: 50px; height: 50px; border-radius: 50%; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 24px; margin: 0 auto 8px;">
+                                +
+                            </div>
+                            <div style="font-size: 12px; color: #999;">空位</div>
+                        </div>
+                    `;
+                }
+            }
+
+            // PK过程记录
+            let pkProgressHtml = '';
+            if (group.pkResults && group.pkResults.length > 0) {
+                pkProgressHtml = `
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
+                        <div style="font-weight: 600; margin-bottom: 10px; color: #333;">📋 PK对战详情</div>
+                        ${group.pkResults.map(r => {
+                            // 计算攻击距离（与游戏PK一致：|100 - king - assassin|）
+                            const attackerDist = Math.abs(100 - (r.attackerKing || 0) - (r.attackerAssassin || 0));
+                            const defenderDist = Math.abs(100 - (r.defenderKing || 0) - (r.defenderAssassin || 0));
+                            const isAttackerWin = r.result === 'attacker_win' || (r.result === 'draw' && r.winnerId === r.attackerId);
+                            
+                            return `
+                            <div style="padding: 10px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; font-size: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="color: ${isAttackerWin ? '#4caf50' : '#f44336'}; font-weight: 600;">
+                                            ${escapeHtml(r.attackerUsername)}
+                                        </span>
+                                        <span style="color: #999;">vs</span>
+                                        <span style="color: ${!isAttackerWin ? '#4caf50' : '#f44336'}; font-weight: 600;">
+                                            ${escapeHtml(r.defenderUsername)}
+                                        </span>
+                                    </div>
+                                    <span style="background: ${isAttackerWin ? '#4caf50' : '#f44336'}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">
+                                        ${isAttackerWin ? escapeHtml(r.attackerUsername) + ' 胜' : escapeHtml(r.defenderUsername) + ' 胜'}
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; color: #666; font-size: 11px;">
+                                    <div>
+                                        <span>攻击: ${r.attackerKing || 0}</span> | 
+                                        <span>防御: ${r.attackerAssassin || 0}</span> | 
+                                        <span>距离: <strong>${attackerDist}</strong></span>
+                                    </div>
+                                    <div>
+                                        <span>攻击: ${r.defenderKing || 0}</span> | 
+                                        <span>防御: ${r.defenderAssassin || 0}</span> | 
+                                        <span>距离: <strong>${defenderDist}</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            // 最终结果
+            let resultHtml = '';
+            if (group.status === 'completed' && winner) {
+                resultHtml = `
+                    <div style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 193, 7, 0.2)); border-radius: 12px; text-align: center; border: 2px solid #ffd700;">
+                        <div style="font-size: 24px; margin-bottom: 8px;">🏆</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #9c27b0;">${escapeHtml(winner.username)} 获胜！</div>
+                        <div style="color: #ff9800; margin-top: 4px;">获得 ${group.totalPrize} 能量</div>
+                    </div>
+                `;
+            }
+
+            // 加入按钮
+            let joinButtonHtml = '';
+            if (group.status === 'waiting' && currentUser) {
+                const hasJoined = participants.some(p => p.userId === currentUser.id);
+                if (!hasJoined) {
+                    joinButtonHtml = `
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 16px; background: linear-gradient(135deg, #9c27b0, #ba68c8);" onclick="showJoinPKModal('${group.groupId}', ${group.energyCost})">
+                            ⚔️ 加入PK团（消耗${group.energyCost}能量）
+                        </button>
+                    `;
+                }
+            }
+
+            // 手动开始PK按钮（只有创建者可以发起）
+            let startButtonHtml = '';
+            if (group.status === 'waiting' && currentUser && group.creatorId === currentUser.id && participants.length >= 2) {
+                startButtonHtml = `
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 8px; border-color: #9c27b0; color: #9c27b0;" onclick="startFreePK('${group.groupId}')">
+                        ⚡ 手动开始PK（至少2人）
+                    </button>
+                `;
+            }
+
+            container.innerHTML = `
+                <div style="margin: 16px 0; padding: 16px; background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(142, 90, 180, 0.1)); border-radius: 12px; border: 1px solid rgba(155, 89, 182, 0.3);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                        <span style="font-weight: 600; color: #9c27b0; font-size: 16px;">⚔️ 自由PK团</span>
+                        <span style="color: ${statusColors[group.status]}; font-weight: 500;">${statusText[group.status]}</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #666; margin-bottom: 16px;">
+                        <span>参与能量: <strong>${group.energyCost}</strong></span>
+                        <span>已参与: <strong>${participants.length}/${group.maxParticipants}</strong></span>
+                        <span>奖池: <strong>${group.energyCost * participants.length}</strong></span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+                        ${participantsHtml}
+                    </div>
+                    
+                    ${pkProgressHtml}
+                    ${resultHtml}
+                    ${joinButtonHtml}
+                    ${startButtonHtml}
+                </div>
+            `;
+        }
+
+        // 显示加入PK弹窗
+        function showJoinPKModal(groupId, energyCost) {
+            const modalHtml = `
+                <div class="modal-overlay active" id="joinPKModal">
+                    <div class="modal-content" style="max-width: 400px;">
+                        <div class="modal-header">
+                            <span class="modal-title">⚔️ 加入自由PK团</span>
+                            <button class="modal-close" onclick="document.getElementById('joinPKModal').remove()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                                需要消耗 <strong style="color: #9c27b0; font-size: 18px;">${energyCost}</strong> 能量
+                            </p>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #333;">
+                                    攻击 (King): <span id="joinKingValue" style="color: #9c27b0; font-weight: bold;">50</span>
+                                </label>
+                                <input type="range" id="joinKingInput" min="1" max="100" value="50" style="width: 100%; accent-color: #9c27b0;" oninput="document.getElementById('joinKingValue').textContent = this.value">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: #333;">
+                                    防御 (Assassin): <span id="joinAssassinValue" style="color: #9c27b0; font-weight: bold;">50</span>
+                                </label>
+                                <input type="range" id="joinAssassinInput" min="1" max="100" value="50" style="width: 100%; accent-color: #9c27b0;" oninput="document.getElementById('joinAssassinValue').textContent = this.value">
+                            </div>
+                            <p style="font-size: 12px; color: #999; text-align: center;">距离100越远越强</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="document.getElementById('joinPKModal').remove()">取消</button>
+                            <button class="btn btn-primary" style="background: linear-gradient(135deg, #9c27b0, #ba68c8);" onclick="joinFreePK('${groupId}')">确认加入</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // 加入自由PK团
+        async function joinFreePK(groupId) {
+            const king = parseInt(document.getElementById('joinKingInput').value) || 50;
+            const assassin = parseInt(document.getElementById('joinAssassinInput').value) || 50;
+
+            try {
+                const token = AuthManager.getToken();
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ groupId, king, assassin })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('joinPKModal').remove();
+
+                    // 检查PK是否已经开始
+                    if (data.data && data.data.pkStarted) {
+                        showToast('加入成功，PK即将开始！');
+                        // 等待2秒后刷新查看结果
+                        setTimeout(() => {
+                            loadFreePKGroup(groupId);
+                        }, 2000);
+                    } else {
+                        showToast(data.message || '加入成功，等待其他参与者...');
+                        // 3秒后刷新状态
+                        setTimeout(() => {
+                            loadFreePKGroup(groupId);
+                        }, 3000);
+                    }
+                } else {
+                    showToast(data.error || '加入失败');
+                }
+            } catch (err) {
+                console.error('加入PK团失败:', err);
+                showToast('加入失败，请重试');
+            }
+        }
+
+        // 手动开始PK团
+        async function startFreePK(groupId) {
+            if (!confirm('确认开始PK？至少需要2人参与。')) {
+                return;
+            }
+
+            try {
+                const token = AuthManager.getToken();
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ groupId })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || 'PK已开始，请稍候...');
+                    // 等待2秒后刷新查看结果
+                    setTimeout(() => {
+                        loadFreePKGroup(groupId);
+                    }, 2000);
+                } else {
+                    showToast(data.error || '开始失败');
+                }
+            } catch (err) {
+                console.error('开始PK失败:', err);
+                showToast('开始失败，请重试');
+            }
+        }
+
+        // 加载评论
+        async function loadComments(postId) {
+            try {
+                const token = AuthManager.getToken();
+                const res = await fetch(`${API_BASE}/api/plaza/posts/${postId}/comments`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('commentCount').textContent = data.data.length;
+                    renderComments(data.data);
+                }
+            } catch (err) {
+                console.error('加载评论失败:', err);
+            }
+        }
+
+        // 渲染评论
+        function renderComments(comments) {
+            const container = document.getElementById('commentsList');
+
+            if (comments.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-text">还没有评论，快来抢沙发吧！</div></div>';
+                return;
+            }
+
+            const renderComment = (comment, isNested = false) => {
+                const avatarChar = comment.username ? comment.username.charAt(0).toUpperCase() : '?';
+                const timeAgo = formatTimeAgo(comment.created_at);
+                // 如果有 replyTo 且不是一级评论，显示回复目标
+                const replyToHtml = (comment.replyTo && comment.parentId !== '0')
+                    ? `<span class="comment-reply-to">回复 <strong>@${escapeHtml(comment.replyTo)}</strong></span>`
+                    : '';
+                let html = `
+                    <div class="comment-item ${isNested ? 'nested' : ''}" data-id="${comment.id}">
+                        <div class="comment-header">
+                            <div class="comment-avatar">${avatarChar}</div>
+                            <span class="comment-author">${escapeHtml(comment.username || '匿名')}</span>
+                            ${replyToHtml}
+                            <span class="comment-time">${timeAgo}</span>
+                        </div>
+                        <div class="comment-content">${escapeHtml(comment.content)}</div>
+                        <div class="comment-actions">
+                            <div class="comment-action ${comment.isLiked ? 'liked' : ''}" data-id="${comment.id}" data-type="comment">
+                                ${comment.isLiked ? '&#10084;' : '&#9825;'} ${comment.likes_count || 0}
+                            </div>
+                            ${!isNested ? `<div class="comment-action reply-btn" data-id="${comment.id}" data-username="${escapeHtml(comment.username || '匿名')}">&#128172; 回复</div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (comment.children && comment.children.length > 0) {
+                    comment.children.forEach(child => {
+                        html += renderComment(child, true);
+                    });
+                }
+
+                return html;
+            };
+
+            container.innerHTML = comments.map(c => renderComment(c)).join('');
+
+            // 点赞事件
+            container.querySelectorAll('.comment-action[data-type="comment"]').forEach(el => {
+                el.addEventListener('click', async function() {
+                    await handleLike(this.dataset.id, this.dataset.type, this);
+                    loadComments(currentPostId);
+                });
+            });
+        }
+
+        // 提交评论
+        async function submitComment() {
+            const content = document.getElementById('commentInput').value.trim();
+            if (!content) {
+                showToast('请输入评论内容');
+                return;
+            }
+
+            const btn = document.getElementById('commentSubmit');
+            const input = document.getElementById('commentInput');
+            btn.disabled = true;
+            btn.textContent = '发送中...';
+
+            // 乐观更新：创建临时评论元素
+            const tempId = 'temp-' + Date.now();
+            const tempComment = {
+                id: tempId,
+                username: currentUser.username,
+                content: content,
+                created_at: new Date().toISOString(),
+                isLiked: false,
+                likes_count: 0,
+                isPending: true
+            };
+
+            // 立即显示评论
+            const container = document.getElementById('commentsList');
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) {
+                container.innerHTML = '';
+            }
+            const tempHtml = renderSingleComment(tempComment, false);
+            container.insertAdjacentHTML('afterbegin', tempHtml);
+
+            try {
+                const token = AuthManager.getToken();
+                const requestBody = {
+                    postId: currentPostId,
+                    content
+                };
+                // 如果是回复评论，添加 parentId
+                if (replyingTo) {
+                    requestBody.parentId = replyingTo.id;
+                }
+
+                const res = await fetch(`${API_BASE}/api/plaza/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('commentInput').value = '';
+                    // 成功后清除回复状态
+                    cancelReply();
+                    // 替换临时评论为真实评论
+                    const tempEl = document.getElementById(tempId);
+                    if (tempEl) {
+                        tempEl.outerHTML = renderSingleComment(data.data, false);
+                    }
+                } else {
+                    // 失败，移除临时评论
+                    const tempEl = document.getElementById(tempId);
+                    if (tempEl) tempEl.remove();
+                    showToast(data.error || '评论失败');
+                }
+            } catch (err) {
+                // 失败，移除临时评论
+                const tempEl = document.getElementById(tempId);
+                if (tempEl) tempEl.remove();
+                console.error('评论失败:', err);
+                showToast('评论失败，请重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '发送';
+            }
+        }
+
+        // 渲染单条评论（用于乐观更新）
+        function renderSingleComment(comment, isNested = false) {
+            const avatarChar = comment.username ? comment.username.charAt(0).toUpperCase() : '?';
+            const timeAgo = comment.created_at ? formatTimeAgo(comment.created_at) : '刚刚';
+            const pendingClass = comment.isPending ? 'pending' : '';
+            // 如果有 replyTo 且不是一级评论，显示回复目标
+            const replyToHtml = (comment.replyTo && comment.parentId !== '0')
+                ? `<span class="comment-reply-to">回复 <strong>@${escapeHtml(comment.replyTo)}</strong></span>`
+                : '';
+
+            return `
+                <div class="comment-item ${isNested ? 'nested' : ''} ${pendingClass}" data-id="${comment.id}" ${comment.isPending ? 'id="' + comment.id + '"' : ''}>
+                    <div class="comment-header">
+                        <div class="comment-avatar">${avatarChar}</div>
+                        <span class="comment-author">${escapeHtml(comment.username || '匿名')}</span>
+                        ${replyToHtml}
+                        ${comment.isPending ? '<span class="comment-pending">[发送中]</span>' : ''}
+                        <span class="comment-time">${timeAgo}</span>
+                    </div>
+                    <div class="comment-content">${escapeHtml(comment.content)}</div>
+                    <div class="comment-actions">
+                        <div class="comment-action ${comment.isLiked ? 'liked' : ''}" data-id="${comment.id}" data-type="comment">
+                            ${comment.isLiked ? '&#10084;' : '&#9825;'} ${comment.likes_count || 0}
+                        </div>
+                        ${!isNested ? `<div class="comment-action reply-btn" data-id="${comment.id}" data-username="${escapeHtml(comment.username || '匿名')}">&#128172; 回复</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 点赞
+        async function handleLike(targetId, targetType, element) {
+            const token = AuthManager.getToken();
+            if (!token) {
+                showToast('请先登录');
+                openLoginPopup();
+                return;
+            }
+
+            // 防止重复点击
+            if (element.classList.contains('liking')) return;
+            element.classList.add('liking');
+
+            // 乐观更新：先保存当前状态
+            const wasLiked = element.classList.contains('liked');
+            const countSpan = element.classList.contains('comment-action')
+                ? element : element.querySelector('span:last-child') || element.querySelector('span:nth-child(2)');
+            const currentCount = countSpan ? parseInt(countSpan.textContent.trim()) || 0 : 0;
+
+            // 立即更新UI
+            element.classList.toggle('liked', !wasLiked);
+            const newCount = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+            if (element.classList.contains('comment-action')) {
+                element.innerHTML = `${!wasLiked ? '&#10084;' : '&#9825;'} ${newCount}`;
+            } else {
+                const span = element.querySelector('span:last-child');
+                if (span) span.textContent = ' ' + newCount;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plaza/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        targetId: targetId,
+                        targetType
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const isLiked = data.data.isLiked;
+                    const likesCount = data.data.likes_count;
+
+                    // 使用服务器返回的准确数值更新UI
+                    if (element.classList.contains('post-stat')) {
+                        element.classList.toggle('liked', isLiked);
+                        const span = element.querySelector('span:last-child');
+                        if (span) span.textContent = ' ' + likesCount;
+                    } else if (element.classList.contains('comment-action')) {
+                        element.classList.toggle('liked', isLiked);
+                        element.innerHTML = `${isLiked ? '&#10084;' : '&#9825;'} ${likesCount}`;
+                    } else if (element.id === 'detailLikeBtn') {
+                        element.classList.toggle('liked', isLiked);
+                        const span = element.querySelector('span:nth-child(2)');
+                        if (span) span.textContent = ' ' + likesCount;
+                    }
+
+                    // 发送通知
+                    if (plazaSocket && isLiked) {
+                        plazaSocket.emit('like_notify', {
+                            targetType,
+                            targetId: targetId,
+                            authorId: currentUser.id
+                        });
+                    }
+                } else {
+                    // 服务器返回错误，回滚状态
+                    element.classList.toggle('liked', wasLiked);
+                    if (element.classList.contains('comment-action')) {
+                        element.innerHTML = `${wasLiked ? '&#10084;' : '&#9825;'} ${currentCount}`;
+                    } else {
+                        const span = element.querySelector('span:last-child');
+                        if (span) span.textContent = ' ' + currentCount;
+                    }
+                    showToast(data.error || '操作失败');
+                }
+            } catch (err) {
+                // 网络错误，回滚状态
+                element.classList.toggle('liked', wasLiked);
+                if (element.classList.contains('comment-action')) {
+                    element.innerHTML = `${wasLiked ? '&#10084;' : '&#9825;'} ${currentCount}`;
+                } else {
+                    const span = element.querySelector('span:last-child');
+                    if (span) span.textContent = ' ' + currentCount;
+                }
+                console.error('点赞失败:', err);
+                showToast('网络错误，请重试');
+            } finally {
+                element.classList.remove('liking');
+            }
+        }
+
+        // 关闭详情页
+        function closeDetail() {
+            document.getElementById('detailPage').classList.remove('active');
+            currentPostId = null;
+            currentPage = 1;
+            replyingTo = null; // 重置回复状态
+            loadPosts();
+        }
+
+        // 处理回复
+        function handleReply(commentId, username) {
+            replyingTo = { id: commentId, username: username };
+            const input = document.getElementById('commentInput');
+            input.placeholder = `回复 @${username}:`;
+            input.focus();
+            updateReplyStatus();
+        }
+
+        // 取消回复
+        function cancelReply() {
+            replyingTo = null;
+            const input = document.getElementById('commentInput');
+            input.placeholder = '写评论...';
+            updateReplyStatus();
+        }
+
+        // 更新回复状态显示
+        function updateReplyStatus() {
+            let statusEl = document.getElementById('replyStatus');
+            if (!statusEl) {
+                // 创建回复状态元素
+                const inputWrapper = document.querySelector('.comment-input-wrapper');
+                statusEl = document.createElement('div');
+                statusEl.id = 'replyStatus';
+                statusEl.className = 'reply-status';
+                inputWrapper.parentNode.insertBefore(statusEl, inputWrapper);
+            }
+
+            if (replyingTo) {
+                statusEl.innerHTML = `<span>回复 <strong>@${escapeHtml(replyingTo.username)}</strong> <span class="cancel-reply" style="cursor:pointer;color:var(--plaza-primary);margin-left:8px;">取消</span></span>`;
+                statusEl.style.display = 'block';
+            } else {
+                statusEl.style.display = 'none';
+            }
+        }
+
+        // 显示Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            document.getElementById('notificationText').textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 4000);
+        }
+
+        // 显示我的PK团记录
+        async function showMyPKRecords() {
+            try {
+                const token = AuthManager.getToken();
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/my`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast(data.error || '获取记录失败');
+                    return;
+                }
+
+                const { list } = data.data;
+
+                if (list.length === 0) {
+                    showToast('您还没有参与过PK团');
+                    return;
+                }
+
+                // 构建显示HTML
+                let html = `
+                    <div class="modal-overlay active" id="myPKModal">
+                        <div class="modal-content" style="max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                            <div class="modal-header">
+                                <span class="modal-title">我的PK团记录</span>
+                                <button class="modal-close" onclick="document.getElementById('myPKModal').remove()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                `;
+
+                list.forEach(item => {
+                    // PK团状态映射
+                    const groupStatusText = {
+                        'waiting': '⏳ 等待中',
+                        'ongoing': '⚔️ PK进行中',
+                        'completed': '🏆 已结束',
+                        'expired': '⏰ 已过期'
+                    };
+                    const groupStatusColor = {
+                        'waiting': '#ff9800',
+                        'ongoing': '#2196f3',
+                        'completed': '#4caf50',
+                        'expired': '#9e9e9e'
+                    };
+
+                    html += `
+                        <div style="padding: 12px; background: #f9f9f9; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600; color: #333;">PK团 #${item.groupId.substring(0, 8)}</span>
+                                <span style="color: ${groupStatusColor[item.status] || '#666'}; font-weight: bold;">${groupStatusText[item.status] || item.status}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 6px;">
+                                <div>攻击: ${item.king} | 防御: ${item.assassin}</div>
+                                <div>参与能量: ${item.energyCost} | 人数: ${item.maxParticipants}</div>
+                                <div>时间: ${item.createdAt ? new Date(item.createdAt).toLocaleString() : '未知'}</div>
+                            </div>
+                            <div style="display: flex; gap: 12px; font-size: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                <span style="color: ${item.energyChange >= 0 ? '#4caf50' : '#f44336'};">
+                                    能量: ${item.energyChange >= 0 ? '+' : ''}${item.energyChange}
+                                </span>
+                                <span style="color: ${item.fortuneChange >= 0 ? '#9c27b0' : '#666'};">
+                                    福力: ${item.fortuneChange >= 0 ? '+' : ''}${item.fortuneChange}
+                                </span>
+                                <span style="color: ${item.contributionChange >= 0 ? '#2196f3' : '#666'};">
+                                    贡献: ${item.contributionChange >= 0 ? '+' : ''}${item.contributionChange}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', html);
+            } catch (err) {
+                console.error('获取PK团记录失败:', err);
+                showToast('获取记录失败');
+            }
+        }
+    </script>
+
+    <!-- 底部导航栏 -->
+    <nav class="bottom-nav">
+        <a href="podcast.html" class="bottom-nav-item" id="navPodcast">
+            <span class="bottom-nav-icon">&#127911;</span>
+            <span>播客</span>
+        </a>
+        <a href="leaderboard.html" class="bottom-nav-item" id="navRank">
+            <span class="bottom-nav-icon">&#127942;</span>
+            <span>排行榜</span>
+        </a>
+        <a href="game.html" class="bottom-nav-item" id="navGame">
+            <span class="bottom-nav-icon">&#127918;</span>
+            <span>游戏</span>
+        </a>
+        <a href="#" class="bottom-nav-item" id="navMyPK">
+            <span class="bottom-nav-icon">&#9876;</span>
+            <span>我的PK</span>
+        </a>
+    </nav>
+</body>
+</html>

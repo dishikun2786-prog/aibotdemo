@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>播客详情 | 能量山：零号协议</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script src="js/global-podcast-player.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --podcast-bg: #f0f2f5;
+            --podcast-card-bg: rgba(255, 255, 255, 0.92);
+            --podcast-primary: #e91e63;
+            --podcast-primary-dark: #c2185b;
+            --podcast-accent: #ff4081;
+            --podcast-text: #1a1a1a;
+            --podcast-text-secondary: #606266;
+            --podcast-text-light: #909399;
+            --podcast-border: rgba(0, 0, 0, 0.08);
+            --podcast-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --podcast-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --podcast-radius: 12px;
+            --podcast-radius-lg: 16px;
+            --podcast-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--podcast-bg);
+            color: var(--podcast-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header-cover {
+            position: relative;
+            height: 280px;
+            overflow: hidden;
+        }
+
+        .header-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-cover-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 50%, #673ab7 100%);
+        }
+
+        .header-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: transparent;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-icon-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+
+        .nav-icon-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .header-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            color: white;
+        }
+
+        .podcast-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .podcast-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .podcast-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: var(--podcast-radius);
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .subscribe-btn {
+            background: var(--podcast-primary);
+            color: white;
+        }
+
+        .subscribe-btn.subscribed {
+            background: #f5f5f5;
+            color: var(--podcast-text);
+            border: 1px solid #ddd;
+        }
+
+        .subscribe-btn:hover {
+            opacity: 0.9;
+        }
+
+        .like-btn {
+            background: white;
+            color: var(--podcast-text);
+            border: 1px solid #ddd;
+        }
+
+        .like-btn.liked {
+            background: #fff0f0;
+            color: var(--podcast-primary);
+            border-color: var(--podcast-primary);
+        }
+
+        .share-btn {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: white;
+            border: none;
+        }
+
+        .share-btn:hover {
+            opacity: 0.9;
+        }
+
+        .section {
+            background: var(--podcast-card-bg);
+            border-radius: var(--podcast-radius-lg);
+            box-shadow: var(--podcast-shadow);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .podcast-description {
+            font-size: 14px;
+            color: var(--podcast-text-secondary);
+            line-height: 1.8;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            overflow: hidden;
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .author-name {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .author-label {
+            font-size: 12px;
+            color: var(--podcast-text-light);
+        }
+
+        .episode-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .episode-card {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: var(--podcast-radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .episode-card:hover {
+            background: #f5f5f5;
+        }
+
+        .episode-cover {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--podcast-radius-sm);
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .episode-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .episode-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .episode-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .episode-meta {
+            font-size: 12px;
+            color: var(--podcast-text-light);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .episode-like-btn {
+            background: transparent;
+            border: none;
+            color: var(--podcast-text-light);
+            font-size: 12px;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.2s;
+        }
+
+        .episode-like-btn:hover {
+            color: var(--podcast-primary);
+        }
+
+        .episode-like-btn.liked {
+            color: var(--podcast-primary);
+        }
+
+        .episode-description {
+            font-size: 13px;
+            color: var(--podcast-text-secondary);
+            margin-top: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .comments-section {
+            margin-top: 16px;
+            min-height: 150px;
+        }
+
+        .comment-input-wrapper {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+        }
+
+        .comment-input {
+            flex: 1;
+            min-height: 60px;
+            padding: 12px;
+            border: 1px solid var(--podcast-border);
+            border-radius: var(--podcast-radius);
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--podcast-primary);
+        }
+
+        .comment-submit {
+            padding: 12px 24px;
+            background: var(--podcast-primary);
+            color: white;
+            border: none;
+            border-radius: var(--podcast-radius);
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            align-self: flex-end;
+        }
+
+        .comment-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .comment-username {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: var(--podcast-text-light);
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: var(--podcast-text-secondary);
+            line-height: 1.6;
+        }
+
+        .load-more {
+            text-align: center;
+            padding: 16px;
+            color: var(--podcast-text-light);
+            cursor: pointer;
+        }
+
+        .load-more:hover {
+            color: var(--podcast-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--podcast-text-light);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--podcast-border);
+            border-top-color: var(--podcast-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* 网络状态指示器 */
+        .network-indicator {
+            position: fixed;
+            top: 56px;
+            right: 16px;
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            z-index: 200;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .network-indicator.show {
+            display: flex;
+        }
+
+        .network-indicator.slow {
+            background: rgba(255, 152, 0, 0.9);
+        }
+
+        .network-indicator.fast {
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        /* 缓冲状态 */
+        .buffering-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 300;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .buffering-indicator.show {
+            display: flex;
+        }
+
+        .buffering-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 加载进度条 */
+        .audio-player.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--podcast-primary);
+            animation: loading-progress 2s ease-in-out infinite;
+        }
+
+        @keyframes loading-progress {
+            0% { width: 0%; opacity: 1; }
+            50% { width: 70%; opacity: 0.7; }
+            100% { width: 100%; opacity: 1; }
+        }
+
+        .audio-player {
+            position: fixed;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--podcast-border);
+            padding: 12px 16px;
+            display: none;
+            z-index: 100;
+        }
+
+        .audio-player.show {
+            display: block;
+        }
+
+        .audio-player-content {
+            max-width: 720px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .audio-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .audio-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .audio-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .audio-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .audio-progress {
+            font-size: 12px;
+            color: var(--podcast-text-light);
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .audio-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--podcast-primary);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .audio-close {
+            background: #f5f5f5;
+            color: var(--podcast-text);
+        }
+
+        .audio-expand {
+            background: #f5f5f5;
+            color: var(--podcast-text);
+        }
+
+        .audio-expand:hover {
+            background: var(--podcast-primary);
+            color: white;
+        }
+
+        /* 响应式设计 - 移动端优化 */
+        @media (max-width: 480px) {
+            :root {
+                --podcast-radius: 8px;
+                --podcast-radius-lg: 12px;
+            }
+
+            body {
+                font-size: 14px;
+                padding-bottom: 70px;
+            }
+
+            .header-cover {
+                height: 220px;
+            }
+
+            .header-content {
+                padding: 60px 16px 16px;
+                bottom: 10px;
+            }
+
+            .podcast-title {
+                font-size: 18px;
+            }
+
+            .podcast-tags {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .tag {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
+
+            .podcast-stats {
+                gap: 12px;
+                font-size: 12px;
+            }
+
+            .action-buttons {
+                gap: 10px;
+            }
+
+            .action-btn {
+                padding: 8px 16px;
+                font-size: 13px;
+                min-width: 80px;
+            }
+
+            .section-title {
+                font-size: 16px;
+                margin: 16px;
+            }
+
+            .episodes-list {
+                padding: 0 12px;
+            }
+
+            .episode-card {
+                flex-direction: column;
+                padding: 12px;
+            }
+
+            .episode-cover {
+                width: 100%;
+                height: 120px;
+                border-radius: 8px;
+            }
+
+            .episode-info {
+                flex: 1;
+                padding: 10px 0 0;
+            }
+
+            .episode-title {
+                font-size: 15px;
+            }
+
+            .episode-meta {
+                gap: 8px;
+                font-size: 11px;
+                flex-wrap: wrap;
+            }
+
+            .episode-description {
+                font-size: 12px;
+            }
+
+            .comments-section {
+                padding: 12px;
+            }
+
+            .comment-input-wrapper {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .comment-input-wrapper .comment-input {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .comment-input-wrapper .comment-submit {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .audio-player {
+                bottom: 60px;
+                padding: 10px;
+            }
+
+            .audio-player-content {
+                gap: 8px;
+            }
+
+            .audio-cover {
+                width: 40px;
+                height: 40px;
+            }
+
+            .audio-title {
+                font-size: 12px;
+            }
+
+            .audio-progress {
+                font-size: 10px;
+            }
+
+            /* 移动端底部导航 */
+            .mobile-nav {
+                display: flex;
+            }
+        }
+
+        /* 平板 */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .episode-card {
+                flex-direction: row;
+            }
+
+            .episode-cover {
+                width: 120px;
+                height: 120px;
+                flex-shrink: 0;
+            }
+        }
+
+        /* 桌面 */
+        @media (min-width: 769px) {
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+
+        /* 触摸反馈 */
+        .touch-feedback {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button, .category-tab, .podcast-card, .episode-card {
+            -webkit-tap-highlight-color: rgba(233, 30, 99, 0.1);
+        }
+
+        button:active, .category-tab:active, .action-btn:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        /* 移动端底部导航 */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--podcast-border);
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            color: var(--podcast-text-light);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--podcast-primary);
+        }
+
+        .mobile-nav-icon {
+            font-size: 24px;
+        }
+
+        /* 分享弹窗样式 */
+        .share-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .share-modal.show {
+            display: flex;
+        }
+
+        .share-modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 340px;
+            overflow: hidden;
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .share-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--podcast-border);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .share-modal-close {
+            font-size: 24px;
+            color: var(--podcast-text-light);
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .share-modal-close:hover {
+            color: var(--podcast-text);
+        }
+
+        .share-poster {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(180deg, #fce4ec 0%, #f8bbd0 100%);
+        }
+
+        .share-poster img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .share-poster-loading {
+            padding: 60px;
+            color: var(--podcast-text-light);
+            font-size: 14px;
+        }
+
+        .share-modal-actions {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--podcast-border);
+        }
+
+        .share-action-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            color: var(--podcast-text);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .share-action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .share-action-btn.primary {
+            background: var(--podcast-primary);
+            color: white;
+            border-color: var(--podcast-primary);
+        }
+
+        .share-action-icon {
+            font-size: 16px;
+        }
+
+        /* 登录提示弹窗 */
+        .login-prompt-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .login-prompt-modal.show {
+            display: flex;
+        }
+
+        .login-prompt-content {
+            background: white;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 300px;
+            padding: 32px 24px;
+            text-align: center;
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        .login-prompt-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .login-prompt-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--podcast-text);
+        }
+
+        .login-prompt-text {
+            font-size: 14px;
+            color: var(--podcast-text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .login-prompt-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .login-prompt-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .login-prompt-btn.secondary {
+            background: #f5f5f5;
+            color: var(--podcast-text);
+        }
+
+        .login-prompt-btn.primary {
+            background: var(--podcast-primary);
+            color: white;
+        }
+
+        .login-prompt-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --podcast-bg: #1a1a1a;
+                --podcast-card-bg: rgba(40, 40, 40, 0.95);
+                --podcast-text: #e0e0e0;
+                --podcast-text-secondary: #a0a0a0;
+                --podcast-text-light: #707070;
+                --podcast-border: rgba(255, 255, 255, 0.1);
+            }
+
+            .header-cover {
+                background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            }
+
+            .audio-player {
+                background: #2d2d2d;
+                border-top-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .audio-close, .audio-expand {
+                background: #3d3d3d;
+                color: #e0e0e0;
+            }
+
+            .mobile-nav {
+                background: #2d2d2d;
+                border-top-color: rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-cover" id="headerCover">
+        <div class="header-cover-placeholder"></div>
+        <div class="header-overlay"></div>
+        <nav class="navbar">
+            <a href="podcast.html" class="back-btn">&#8592;</a>
+            <a href="plaza.html" class="nav-icon-link" title="玩家广场">&#128172;</a>
+        </nav>
+        <div class="header-content">
+            <h1 class="podcast-title" id="podcastTitle">加载中...</h1>
+            <div class="podcast-tags" id="podcastTags"></div>
+            <div class="podcast-stats">
+                <span id="episodeCount">0 集</span>
+                <span id="subscriberCount">0 订阅</span>
+                <span id="playsCount">0 播放</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="action-buttons">
+            <button class="action-btn subscribe-btn" id="subscribeBtn" onclick="handleSubscribe()">
+                &#128276; 订阅
+            </button>
+            <button class="action-btn like-btn" id="likeBtn" onclick="handleLike()">
+                &#10084; <span id="likeCount">0</span> 点赞
+            </button>
+            <button class="action-btn share-btn" id="shareBtn" onclick="handleShare()">
+                &#128279; 分享
+            </button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">&#128221; 简介</div>
+            <div class="podcast-description" id="podcastDescription"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">&#128100; 创作者</div>
+            <div class="author-info">
+                <div class="author-avatar" id="authorAvatar">&#128100;</div>
+                <div>
+                    <div class="author-name" id="authorName"></div>
+                    <div class="author-label">播客主</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">&#127911; 剧集列表</div>
+            <div class="episode-list" id="episodeList">
+                <div class="loading"><div class="loading-spinner"></div></div>
+            </div>
+        </div>
+
+        <div class="section comments-section">
+            <div class="section-title">&#128172; 评论</div>
+            <div class="comment-input-wrapper">
+                <textarea class="comment-input" id="commentInput" placeholder="发表你的看法..." rows="2"></textarea>
+                <button class="comment-submit" id="commentSubmit" onclick="submitComment()">发布</button>
+            </div>
+            <div class="comment-list" id="commentList"></div>
+            <div class="load-more" id="loadMoreComments" style="display: none;">点击加载更多</div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- 分享弹窗 -->
+    <div class="share-modal" id="shareModal">
+        <div class="share-modal-content">
+            <div class="share-modal-header">
+                <span>分享播客</span>
+                <span class="share-modal-close" onclick="closeShareModal()">&times;</span>
+            </div>
+            <div class="share-poster" id="sharePoster">
+                <div class="share-poster-loading">生成中...</div>
+            </div>
+            <div class="share-modal-actions">
+                <button class="share-action-btn" onclick="savePosterImage()">
+                    <span class="share-action-icon">&#128190;</span>
+                    保存图片
+                </button>
+                <button class="share-action-btn primary" onclick="copyShareLink()">
+                    <span class="share-action-icon">&#128279;</span>
+                    复制链接
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录提示弹窗 -->
+    <div class="login-prompt-modal" id="loginPromptModal">
+        <div class="login-prompt-content">
+            <div class="login-prompt-icon">&#128274;</div>
+            <div class="login-prompt-title">试听已达上限</div>
+            <div class="login-prompt-text">您已免费试听30%，请登录后继续收听完整内容</div>
+            <div class="login-prompt-actions">
+                <button class="login-prompt-btn secondary" onclick="closeLoginPrompt()">稍后再说</button>
+                <button class="login-prompt-btn primary" onclick="goToLogin()">立即登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 网络状态指示器 -->
+    <div class="network-indicator" id="networkIndicator">
+        <span id="networkType">4G</span>
+    </div>
+
+    <!-- 缓冲加载指示器 -->
+    <div class="buffering-indicator" id="bufferingIndicator">
+        <div class="buffering-spinner"></div>
+        <span>缓冲中...</span>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let podcastId = null;
+        let podcastData = null;
+        let token = AuthManager.getToken();
+        let currentUserId = null; // 当前登录用户ID
+        let currentAudio = null;
+        let commentPage = 1;
+        let commentTargetType = 'podcast';
+        let podcastSocket = null;
+        let currentNetworkType = 'unknown';
+        let preloadNextTimer = null;
+        let retryCount = 0;
+        const MAX_RETRY = 3;
+        let isFromShare = false; // 是否来自分享链接
+        let shareData = null; // 分享数据
+        let hasShownLoginPrompt = false; // 是否已显示过登录提示
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            podcastId = params.get('id');
+            isFromShare = params.get('from') === 'share'; // 检测是否来自分享链接
+
+            // 获取当前用户ID
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    currentUserId = payload.userId;
+                } catch (e) {
+                    console.error('解析token失败:', e);
+                }
+            }
+
+            if (!podcastId) {
+                showToast('缺少播客ID');
+                setTimeout(() => window.location.href = 'podcast.html', 1500);
+                return;
+            }
+
+            await Promise.all([loadPodcastDetail(), loadComments()]);
+
+            // 检查是否需要自动播放（从广场点击播放按钮过来）
+            const autoplayPodcast = localStorage.getItem('autoplay_podcast');
+            if (autoplayPodcast && autoplayPodcast === podcastId) {
+                localStorage.removeItem('autoplay_podcast');
+                // 自动播放第一个剧集
+                setTimeout(() => {
+                    if (podcastData && podcastData.episodes && podcastData.episodes.length > 0) {
+                        playEpisode(podcastData.episodes[0]);
+                    }
+                }, 500);
+            }
+
+            // 初始化Socket连接
+            initSocket();
+
+            // 初始化网络状态检测
+            initNetworkDetection();
+        }
+
+        // 初始化网络状态检测
+        function initNetworkDetection() {
+            const updateNetworkStatus = () => {
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (conn) {
+                    currentNetworkType = conn.effectiveType || 'unknown';
+                    conn.addEventListener('change', updateNetworkStatus);
+                } else {
+                    currentNetworkType = 'unknown';
+                }
+                updateNetworkIndicator();
+            };
+
+            if (navigator.connection) {
+                updateNetworkStatus();
+            }
+
+            // 显示网络状态
+            updateNetworkIndicator();
+        }
+
+        // 更新网络状态指示器
+        function updateNetworkIndicator() {
+            const indicator = document.getElementById('networkIndicator');
+            const typeEl = document.getElementById('networkType');
+            if (!indicator) return;
+
+            const typeMap = {
+                '4g': '4G',
+                '3g': '3G',
+                '2g': '2G',
+                'slow-2g': '2G',
+                'unknown': 'WiFi'
+            };
+
+            const typeText = typeMap[currentNetworkType] || 'WiFi';
+            typeEl.textContent = typeText;
+
+            // 根据网速设置样式
+            if (currentNetworkType === '4g' || currentNetworkType === 'unknown') {
+                indicator.className = 'network-indicator show fast';
+            } else if (currentNetworkType === '3g') {
+                indicator.className = 'network-indicator show slow';
+            } else {
+                indicator.className = 'network-indicator show slow';
+                showToast('网络较慢，音频可能需要更多加载时间');
+            }
+        }
+
+        // 获取预加载策略
+        function getPreloadStrategy() {
+            const strategies = {
+                '4g': 'auto',
+                '3g': 'metadata',
+                '2g': 'none',
+                'slow-2g': 'none',
+                'unknown': 'auto'
+            };
+            return strategies[currentNetworkType] || 'metadata';
+        }
+
+        // 预加载下一集
+        function preloadNextEpisode() {
+            if (preloadNextTimer) {
+                clearTimeout(preloadNextTimer);
+            }
+
+            // 根据网速决定是否预加载
+            const strategy = getPreloadStrategy();
+            if (strategy === 'none') return;
+
+            preloadNextTimer = setTimeout(() => {
+                if (!podcastData || !podcastData.episodes) return;
+
+                const episodes = podcastData.episodes;
+                const currentIndex = episodes.findIndex(ep => ep.episode_id === currentAudio?.episode_id);
+
+                if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
+                    const nextEpisode = episodes[currentIndex + 1];
+                    if (nextEpisode && nextEpisode.audio_url) {
+                        // 创建隐藏的音频元素预加载
+                        const preloadAudio = new Audio();
+                        preloadAudio.preload = strategy;
+                        preloadAudio.src = nextEpisode.audio_url;
+                        console.log('[Podcast] 预加载下一集:', nextEpisode.title);
+                    }
+                }
+            }, 5000); // 播放5秒后预加载下一集
+        }
+
+        // 显示缓冲状态
+        function showBuffering() {
+            const indicator = document.getElementById('bufferingIndicator');
+            const player = document.getElementById('audioPlayer');
+            if (indicator) indicator.classList.add('show');
+            if (player) player.classList.add('loading');
+        }
+
+        // 隐藏缓冲状态
+        function hideBuffering() {
+            const indicator = document.getElementById('bufferingIndicator');
+            const player = document.getElementById('audioPlayer');
+            if (indicator) indicator.classList.remove('show');
+            if (player) player.classList.remove('loading');
+            retryCount = 0;
+        }
+
+        // 更新加载进度
+        function updateLoadProgress() {
+            const audio = document.getElementById('audioElement');
+            if (!audio || audio.readyState < 2) return;
+
+            const buffered = audio.buffered;
+            if (buffered.length > 0) {
+                const percent = (buffered.end(buffered.length - 1) / audio.duration) * 100;
+                // 可以在这里显示缓冲进度
+            }
+        }
+
+        // 处理音频错误
+        function handleAudioError() {
+            const audio = document.getElementById('audioElement');
+            if (!audio) return;
+
+            console.error('[Podcast] 音频加载失败:', audio.error);
+
+            if (retryCount < MAX_RETRY) {
+                retryCount++;
+                showToast(`加载失败，正在重试 (${retryCount}/${MAX_RETRY})...`);
+
+                // 延迟重试
+                setTimeout(() => {
+                    audio.load();
+                }, 2000 * retryCount);
+            } else {
+                hideBuffering();
+                showToast('音频加载失败，请检查网络后重试');
+
+                // 添加重试按钮到播放器
+                const player = document.getElementById('audioPlayer');
+                if (player) {
+                    player.innerHTML += `<button class="retry-btn" onclick="retryPlay()">重试</button>`;
+                }
+            }
+        }
+
+        // 重试播放
+        function retryPlay() {
+            retryCount = 0;
+            const audio = document.getElementById('audioElement');
+            if (audio && audio.src) {
+                showBuffering();
+                audio.load();
+                audio.play().catch(e => console.error('重试播放失败:', e));
+            }
+        }
+
+        // 初始化Socket连接
+        function initSocket() {
+            if (!token || !podcastId) return;
+
+            podcastSocket = io(`${API_BASE}/plaza`, {
+                auth: { token },
+                transports: ['websocket', 'polling']
+            });
+
+            podcastSocket.on('connect', () => {
+                console.log('[Podcast Detail] Socket connected');
+                podcastSocket.emit('join_podcast');
+            });
+
+            podcastSocket.on('connect_error', (err) => {
+                console.error('[Podcast Detail] Socket error:', err.message);
+            });
+
+            // 监听当前播客的点赞更新
+            podcastSocket.on('podcast_like_update', (data) => {
+                // 播客点赞
+                if (data.target_type === 'podcast' && data.target_id === podcastId) {
+                    updateLikeDisplay(data.action);
+                }
+                // 剧集点赞 - 通知剧集列表更新
+                else if (data.target_type === 'episode') {
+                    updateEpisodeLikeDisplay(data.target_id, data.action);
+                }
+            });
+
+            // 监听剧集点赞更新（专用事件）
+            podcastSocket.on('podcast_episode_like_update', (data) => {
+                if (data.podcast_id === podcastId) {
+                    updateEpisodeLikeDisplay(data.episode_id, data.action);
+                }
+            });
+
+            // 监听当前播客的订阅更新
+            podcastSocket.on('podcast_subscribe_update', (data) => {
+                if (data.podcast_id === podcastId) {
+                    updateSubscribeDisplay(data.action);
+                }
+            });
+
+            // 监听新评论
+            podcastSocket.on('podcast_comment', (data) => {
+                if (data.target_id === podcastId) {
+                    showToast('有新评论');
+                    loadComments();
+                }
+            });
+        }
+
+        // 更新点赞显示
+        function updateLikeDisplay(action) {
+            const likeCountEl = document.getElementById('likeCount');
+            const likeBtn = document.getElementById('likeBtn');
+            if (!likeBtn) return;
+
+            let count = likeCountEl ? parseInt(likeCountEl.textContent) || 0 : 0;
+            if (action === 'like') {
+                count++;
+                likeBtn.classList.add('liked');
+                likeBtn.classList.remove('share-btn');
+                likeBtn.classList.add('like-btn');
+                likeBtn.innerHTML = `&#10084; <span id="likeCount">${count}</span> 已点赞`;
+            } else {
+                count = Math.max(0, count - 1);
+                likeBtn.classList.remove('liked');
+                likeBtn.classList.remove('share-btn');
+                likeBtn.classList.add('like-btn');
+                likeBtn.innerHTML = `&#10084; <span id="likeCount">${count}</span> 点赞`;
+            }
+            if (likeCountEl) likeCountEl.textContent = count;
+        }
+
+        // 更新订阅显示
+        function updateSubscribeDisplay(action) {
+            const subCountEl = document.getElementById('subscriberCount');
+            const subBtn = document.getElementById('subscribeBtn');
+            if (!subBtn) return;
+
+            let count = subCountEl ? parseInt(subCountEl.textContent) || 0 : 0;
+            if (action === 'subscribe') {
+                count++;
+                subBtn.classList.add('subscribed');
+                subBtn.classList.remove('like-btn');
+                subBtn.classList.remove('share-btn');
+                subBtn.classList.add('subscribe-btn');
+                subBtn.innerHTML = '&#10004; 已订阅';
+            } else {
+                count = Math.max(0, count - 1);
+                subBtn.classList.remove('subscribed');
+                subBtn.classList.remove('like-btn');
+                subBtn.classList.remove('share-btn');
+                subBtn.classList.add('subscribe-btn');
+                subBtn.innerHTML = '&#128276; 订阅';
+            }
+            if (subCountEl) subCountEl.textContent = count;
+        }
+
+        // 更新剧集点赞显示
+        function updateEpisodeLikeDisplay(episodeId, action) {
+            const episodeItems = document.querySelectorAll('.episode-item');
+            episodeItems.forEach(item => {
+                if (item.dataset.episodeId === episodeId) {
+                    const likeBtn = item.querySelector('.episode-like-btn');
+                    const likeCountEl = item.querySelector('.episode-like-count');
+                    if (likeCountEl) {
+                        let count = parseInt(likeCountEl.textContent) || 0;
+                        if (action === 'like') {
+                            count++;
+                            if (likeBtn) likeBtn.classList.add('liked');
+                        } else {
+                            count = Math.max(0, count - 1);
+                            if (likeBtn) likeBtn.classList.remove('liked');
+                        }
+                        likeCountEl.textContent = count;
+                    }
+                }
+            });
+        }
+
+        async function loadPodcastDetail() {
+            try {
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
+
+                const res = await fetch(API_BASE + '/api/podcast/podcasts/' + podcastId, { headers });
+                const data = await res.json();
+
+                if (data.success) {
+                    podcastData = data.data;
+                    renderPodcastDetail();
+                } else {
+                    showToast(data.error || '加载失败');
+                }
+            } catch (e) {
+                console.error('加载播客详情失败:', e);
+                showToast('加载失败');
+            }
+        }
+
+        function renderPodcastDetail() {
+            const podcast = podcastData.podcast;
+
+            // 设置封面
+            const headerCover = document.getElementById('headerCover');
+            if (podcast.cover_image) {
+                headerCover.innerHTML = `
+                    <img src="${podcast.cover_image}" alt="${podcast.title}">
+                    <div class="header-overlay"></div>
+                    <nav class="navbar">
+                        <a href="podcast.html" class="back-btn">&#8592;</a>
+                        <a href="plaza.html" class="nav-icon-link" title="玩家广场">&#128172;</a>
+                    </nav>
+                    <div class="header-content">
+                        <h1 class="podcast-title">${escapeHtml(podcast.title)}</h1>
+                        <div class="podcast-tags">${renderTags(podcast.tags, podcast.category)}</div>
+                        <div class="podcast-stats">
+                            <span>${podcast.episode_count} 集</span>
+                            <span>${podcast.subscriber_count} 订阅</span>
+                            <span>${podcast.total_plays} 播放</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('podcastTitle').textContent = podcast.title;
+                document.getElementById('podcastTags').innerHTML = renderTags(podcast.tags, podcast.category);
+                document.getElementById('episodeCount').textContent = podcast.episode_count + ' 集';
+                document.getElementById('subscriberCount').textContent = podcast.subscriber_count + ' 订阅';
+                document.getElementById('playsCount').textContent = podcast.total_plays + ' 播放';
+            }
+
+            // 简介
+            document.getElementById('podcastDescription').textContent = podcast.description || '暂无简介';
+
+            // 作者
+            const authorAvatar = document.getElementById('authorAvatar');
+            if (podcast.author_avatar) {
+                authorAvatar.innerHTML = `<img src="${podcast.author_avatar}">`;
+            }
+            document.getElementById('authorName').textContent = podcast.author_name;
+
+            // 如果是作者本人，显示编辑和删除按钮
+            const authorInfo = document.querySelector('.author-info');
+            if (authorInfo && currentUserId && podcast.author_id && currentUserId.toString() === podcast.author_id.toString()) {
+                const existingActions = authorInfo.querySelector('.author-actions');
+                if (!existingActions) {
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'author-actions';
+                    actionsDiv.style.cssText = 'display: flex; gap: 8px; margin-left: auto;';
+                    actionsDiv.innerHTML = `
+                        <button class="action-btn" onclick="goToEditPodcast()">编辑</button>
+                        <button class="action-btn danger" onclick="deleteCurrentPodcast()">删除</button>
+                    `;
+                    authorInfo.appendChild(actionsDiv);
+                }
+            }
+
+            // 按钮状态
+            updateSubscribeButton(podcast.is_subscribed);
+            updateLikeButton(podcast.is_liked);
+
+            // 剧集列表
+            const episodeList = document.getElementById('episodeList');
+            if (podcastData.episodes.length === 0) {
+                episodeList.innerHTML = '<div class="empty-state"><div class="empty-icon">&#127911;</div><div>暂无剧集</div></div>';
+            } else {
+                episodeList.innerHTML = '';
+                podcastData.episodes.forEach(episode => {
+                    episodeList.appendChild(createEpisodeCard(episode));
+                });
+            }
+        }
+
+        function renderTags(tags, category) {
+            let html = `<span class="tag">${escapeHtml(category)}</span>`;
+            if (tags && tags.length > 0) {
+                tags.forEach(tag => {
+                    html += `<span class="tag">${escapeHtml(tag)}</span>`;
+                });
+            }
+            return html;
+        }
+
+        function createEpisodeCard(episode) {
+            const card = document.createElement('div');
+            card.className = 'episode-card episode-item';
+            card.dataset.episodeId = episode.episode_id;
+            card.onclick = (e) => {
+                if (e.target.closest('.episode-like-btn')) return;
+                playEpisode(episode);
+            };
+
+            const coverHtml = episode.cover_image
+                ? `<img src="${episode.cover_image}">`
+                : '&#127911;';
+
+            const isLiked = episode.is_liked ? 'liked' : '';
+
+            card.innerHTML = `
+                <div class="episode-cover">${coverHtml}</div>
+                <div class="episode-info">
+                    <div class="episode-title">${escapeHtml(episode.title)}</div>
+                    <div class="episode-meta">
+                        <span>&#9654; <span class="episode-plays-count">${episode.plays_count}</span></span>
+                        <span>&#128172; ${episode.comments_count || 0}</span>
+                        <span>&#128337; ${formatDuration(episode.duration)}</span>
+                        <button class="episode-like-btn ${isLiked}" onclick="likeEpisode('${episode.episode_id}')">
+                            &#10084; <span class="episode-like-count">${episode.likes_count || 0}</span>
+                        </button>
+                    </div>
+                    <div class="episode-description">${escapeHtml(episode.description || '')}</div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function loadComments() {
+            if (!podcastId) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/comments?target_id=' + podcastId + '&target_type=podcast&page=' + commentPage + '&limit=10');
+                const data = await res.json();
+
+                if (data.success) {
+                    renderComments(data.data.comments);
+                }
+            } catch (e) {
+                console.error('加载评论失败:', e);
+            }
+        }
+
+        function renderComments(comments) {
+            const list = document.getElementById('commentList');
+            if (commentPage === 1) {
+                list.innerHTML = '';
+            }
+
+            if (comments.length === 0 && commentPage === 1) {
+                list.innerHTML = '<div class="empty-state">暂无评论，快来抢沙发吧</div>';
+                return;
+            }
+
+            comments.forEach(comment => {
+                list.appendChild(createCommentItem(comment));
+            });
+        }
+
+        function createCommentItem(comment) {
+            const item = document.createElement('div');
+            item.className = 'comment-item';
+
+            const avatarHtml = comment.avatar
+                ? `<img src="${comment.avatar}">`
+                : comment.username.charAt(0).toUpperCase();
+
+            item.innerHTML = `
+                <div class="comment-avatar">${avatarHtml}</div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-username">${escapeHtml(comment.username)}</span>
+                        <span class="comment-time">${formatTime(comment.created_at)}</span>
+                    </div>
+                    <div class="comment-text">${escapeHtml(comment.content)}</div>
+                </div>
+            `;
+
+            return item;
+        }
+
+        async function handleSubscribe() {
+            if (!token) {
+                showToast('请先登录');
+                // 使用统一的登录弹窗
+                window.open('game.html?mode=auth', '_blank', 'width=450,height=600,scrollbars=yes');
+                return;
+            }
+
+            const btn = document.getElementById('subscribeBtn');
+            if (!btn || btn.id !== 'subscribeBtn') {
+                console.error('订阅按钮ID不正确');
+                return;
+            }
+            const isSubscribed = btn.classList.contains('subscribed');
+            const action = isSubscribed ? 'unsubscribe' : 'subscribe';
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ podcast_id: podcastId, action })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    updateSubscribeButton(data.data.is_subscribed);
+                    showToast(data.message);
+                } else {
+                    showToast(data.error || '操作失败');
+                }
+            } catch (e) {
+                console.error('订阅操作失败:', e);
+                showToast('操作失败');
+            }
+        }
+
+        function updateSubscribeButton(isSubscribed) {
+            const btn = document.getElementById('subscribeBtn');
+            if (!btn) return;
+            
+            if (isSubscribed) {
+                btn.classList.add('subscribed');
+                btn.classList.remove('like-btn');
+                btn.classList.remove('share-btn');
+                btn.classList.add('subscribe-btn');
+                btn.innerHTML = '&#10004; 已订阅';
+            } else {
+                btn.classList.remove('subscribed');
+                btn.classList.remove('like-btn');
+                btn.classList.remove('share-btn');
+                btn.classList.add('subscribe-btn');
+                btn.innerHTML = '&#128276; 订阅';
+            }
+        }
+
+        async function handleLike() {
+            if (!token) {
+                showToast('请先登录');
+                return;
+            }
+
+            const btn = document.getElementById('likeBtn');
+            if (!btn || btn.id !== 'likeBtn') {
+                console.error('点赞按钮ID不正确');
+                return;
+            }
+            const isLiked = btn.classList.contains('liked');
+            const action = isLiked ? 'unlike' : 'like';
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/like', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ target_id: podcastId, target_type: 'podcast', action })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    updateLikeButton(data.data.is_liked);
+                    showToast(data.message);
+                } else {
+                    showToast(data.error || '操作失败');
+                }
+            } catch (e) {
+                console.error('点赞操作失败:', e);
+                showToast('操作失败');
+            }
+        }
+
+        function updateLikeButton(isLiked) {
+            const btn = document.getElementById('likeBtn');
+            if (!btn) return;
+            
+            const countEl = document.getElementById('likeCount');
+            let count = countEl ? parseInt(countEl.textContent) || 0 : 0;
+
+            if (isLiked) {
+                btn.classList.add('liked');
+                btn.classList.remove('share-btn');
+                btn.classList.add('like-btn');
+                btn.innerHTML = `&#10084; <span id="likeCount">${count + 1}</span> 已点赞`;
+            } else {
+                btn.classList.remove('liked');
+                btn.classList.remove('share-btn');
+                btn.classList.add('like-btn');
+                btn.innerHTML = `&#10084; <span id="likeCount">${Math.max(0, count - 1)}</span> 点赞`;
+            }
+        }
+
+        // 点赞/取消点赞剧集
+        async function likeEpisode(episodeId) {
+            if (!token) {
+                showToast('请先登录');
+                return;
+            }
+
+            // 乐观更新
+            const card = document.querySelector(`.episode-item[data-episode-id="${episodeId}"]`);
+            if (!card) return;
+
+            const likeBtn = card.querySelector('.episode-like-btn');
+            const countEl = card.querySelector('.episode-like-count');
+            const isLiked = likeBtn.classList.contains('liked');
+            const originalCount = parseInt(countEl.textContent) || 0;
+            const action = isLiked ? 'unlike' : 'like';
+
+            // 立即更新UI
+            likeBtn.classList.toggle('liked');
+            countEl.textContent = isLiked ? originalCount - 1 : originalCount + 1;
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/like', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ target_id: episodeId, target_type: 'episode', action })
+                });
+
+                const data = await res.json();
+                if (!data.success) {
+                    // 失败回滚
+                    likeBtn.classList.toggle('liked');
+                    countEl.textContent = originalCount;
+                    showToast(data.error || '操作失败');
+                }
+            } catch (e) {
+                // 失败回滚
+                likeBtn.classList.toggle('liked');
+                countEl.textContent = originalCount;
+                showToast('操作失败');
+            }
+        }
+
+        async function submitComment() {
+            if (!token) {
+                showToast('请先登录');
+                return;
+            }
+
+            const input = document.getElementById('commentInput');
+            const content = input.value.trim();
+
+            if (!content) {
+                showToast('请输入评论内容');
+                return;
+            }
+
+            const btn = document.getElementById('commentSubmit');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/comments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        target_id: podcastId,
+                        target_type: 'podcast',
+                        content: content
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    input.value = '';
+                    commentPage = 1;
+                    await loadComments();
+                    showToast('评论成功');
+                } else {
+                    showToast(data.error || '评论失败');
+                }
+            } catch (e) {
+                console.error('发表评论失败:', e);
+                showToast('评论失败');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // 使用全局播放器播放
+        function playEpisode(episode) {
+            if (!episode.audio_url) {
+                showToast('暂无可播放音频');
+                return;
+            }
+
+            currentAudio = episode;
+
+            // 构建播放列表
+            const playlist = (podcastData?.episodes || []).map(ep => ({
+                episode_id: ep.episode_id,
+                title: ep.title,
+                audio_url: ep.audio_url,
+                cover_image: podcastData?.podcast?.cover_image
+            }));
+            const index = playlist.findIndex(ep => ep.episode_id === episode.episode_id);
+
+            // 使用全局播放器播放
+            if (window.globalPlayer) {
+                window.globalPlayer.playEpisode({
+                    episode_id: episode.episode_id,
+                    title: episode.title,
+                    audio_url: episode.audio_url,
+                    cover_image: podcastData?.podcast?.cover_image
+                }, playlist, index);
+            }
+
+            // 更新播放次数（调用GET接口会自动增加播放计数）
+            fetch(API_BASE + '/api/podcast/episodes/' + episode.episode_id)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        // 更新当前剧集的播放次数显示
+                        const episodeCard = document.querySelector(`.episode-item[data-episode-id="${episode.episode_id}"]`);
+                        if (episodeCard) {
+                            const playsEl = episodeCard.querySelector('.episode-plays-count');
+                            if (playsEl) {
+                                playsEl.textContent = data.data.plays_count || 0;
+                            }
+                        }
+
+                        // 更新页面顶部的播客总播放次数
+                        if (podcastData && podcastData.podcast) {
+                            podcastData.podcast.total_plays = (podcastData.podcast.total_plays || 0) + 1;
+                            const playsCountEl = document.getElementById('playsCount');
+                            if (playsCountEl) {
+                                playsCountEl.textContent = podcastData.podcast.total_plays + ' 播放';
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error('更新播放次数失败:', err));
+        }
+
+        // 广播播放状态给全局播放器
+        function broadcastToPlayer(episode) {
+            try {
+                const channel = new BroadcastChannel('podcast_player');
+                channel.postMessage({
+                    type: 'play',
+                    episode: {
+                        ...episode,
+                        podcast_title: podcastData?.podcast?.title
+                    },
+                    playlist: podcastData?.episodes || [episode],
+                    index: (podcastData?.episodes || []).findIndex(ep => ep.episode_id === episode.episode_id)
+                });
+            } catch (e) {
+                console.log('BroadcastChannel not supported');
+            }
+        }
+
+        // 打开全屏播放器
+        function openFullPlayer() {
+            if (!currentAudio) {
+                showToast('请先选择一个剧集播放');
+                return;
+            }
+            window.open('audio-player.html', '_blank');
+        }
+
+        function toggleAudio() {
+            // 使用全局播放器
+            if (window.globalPlayer) {
+                window.globalPlayer.togglePlay();
+            }
+        }
+
+        function closeAudio() {
+            // 使用全局播放器
+            if (window.globalPlayer) {
+                window.globalPlayer.close();
+            }
+        }
+
+        // 音频进度更新
+        const audio = document.getElementById('audioElement');
+        audio.addEventListener('timeupdate', () => {
+            if (!currentAudio) return;
+            const current = formatDuration(Math.floor(audio.currentTime));
+            const total = formatDuration(currentAudio.duration || 0);
+            document.getElementById('audioProgress').textContent = current + ' / ' + total;
+        });
+
+        audio.addEventListener('ended', () => {
+            document.getElementById('audioPlayBtn').innerHTML = '&#9654;';
+        });
+
+        // 跳转到编辑播客页面
+        function goToEditPodcast() {
+            window.location.href = 'podcast-create.html?edit=' + podcastId;
+        }
+
+        // 删除当前播客
+        async function deleteCurrentPodcast() {
+            if (!confirm('确定要删除这个播客吗？此操作不可恢复！')) {
+                return;
+            }
+
+            if (!token) {
+                showToast('请先登录');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/podcasts/' + podcastId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('删除成功');
+                    setTimeout(() => {
+                        window.location.href = 'podcast-create.html';
+                    }, 1000);
+                } else {
+                    showToast(data.error || '删除失败');
+                }
+            } catch (e) {
+                console.error('删除播客失败:', e);
+                showToast('删除失败');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // 分享功能
+        async function handleShare() {
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/share/' + podcastId);
+                const data = await res.json();
+
+                if (data.success) {
+                    shareData = data.data;
+                    // 生成分享海报
+                    const posterDataUrl = await generateSharePoster(shareData);
+                    // 显示分享弹窗
+                    showShareModal(posterDataUrl);
+                } else {
+                    showToast(data.error || '获取分享信息失败');
+                }
+            } catch (e) {
+                console.error('分享失败:', e);
+                showToast('分享失败');
+            }
+        }
+
+        // 生成分享海报
+        async function generateSharePoster(podcastData) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 600;
+                canvas.height = 900;
+                const ctx = canvas.getContext('2d');
+
+                // 背景渐变
+                const gradient = ctx.createLinearGradient(0, 0, 0, 900);
+                gradient.addColorStop(0, '#fce4ec');
+                gradient.addColorStop(1, '#f8bbd0');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 600, 900);
+
+                // 白色卡片背景
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                roundRect(ctx, 30, 30, 540, 840, 20);
+                ctx.fill();
+
+                // 封面图片
+                const coverSize = 280;
+                const coverX = (600 - coverSize) / 2;
+                const coverY = 60;
+
+                // 先绘制默认封面
+                drawDefaultCover(ctx, coverX, coverY, coverSize);
+
+                // 绘制标题和标签
+                drawTitle(ctx, podcastData.title, 380);
+                drawTags(ctx, podcastData.category, podcastData.episode_count, 450);
+
+                // 加载封面图片
+                if (podcastData.cover_image) {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        // 绘制封面
+                        ctx.save();
+                        roundRect(ctx, coverX, coverY, coverSize, coverSize, 16);
+                        ctx.clip();
+                        ctx.drawImage(img, coverX, coverY, coverSize, coverSize);
+                        ctx.restore();
+                    };
+                    img.onerror = () => {
+                        // 封面加载失败，保持默认封面
+                    };
+                    img.src = podcastData.cover_image;
+                }
+
+                // 加载二维码
+                if (podcastData.qrcode_data_url) {
+                    const qrImg = new Image();
+                    qrImg.onload = () => {
+                        // 绘制二维码区域
+                        drawQRCodeArea(ctx, qrImg, 520);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    qrImg.onerror = () => {
+                        // 二维码加载失败，直接resolve
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    qrImg.src = podcastData.qrcode_data_url;
+                } else {
+                    resolve(canvas.toDataURL('image/png'));
+                }
+            });
+        }
+
+        // 绘制默认封面
+        function drawDefaultCover(ctx, x, y, size) {
+            const imgGradient = ctx.createLinearGradient(x, y, x + size, y + size);
+            imgGradient.addColorStop(0, '#e91e63');
+            imgGradient.addColorStop(1, '#9c27b0');
+            ctx.fillStyle = imgGradient;
+            roundRect(ctx, x, y, size, size, 16);
+            ctx.fill();
+
+            // 绘制封面上的图标
+            ctx.fillStyle = 'white';
+            ctx.font = '80px Noto Sans SC';
+            ctx.textAlign = 'center';
+            ctx.fillText('\uD83C\uDFB5', x + size / 2, y + size / 2 + 25);
+        }
+
+        // 绘制二维码区域
+        function drawQRCodeArea(ctx, qrImg, y) {
+            const qrSize = 160;
+            const qrX = (600 - qrSize) / 2;
+
+            // 绘制白色背景
+            ctx.fillStyle = 'white';
+            roundRect(ctx, qrX - 10, y - 10, qrSize + 20, qrSize + 20, 8);
+            ctx.fill();
+
+            // 绘制二维码
+            ctx.drawImage(qrImg, qrX, y, qrSize, qrSize);
+
+            // 绘制提示文字
+            ctx.fillStyle = '#606266';
+            ctx.font = '14px Noto Sans SC';
+            ctx.textAlign = 'center';
+            ctx.fillText('长按识别小程序码', 300, y + qrSize + 35);
+
+            ctx.fillStyle = '#e91e63';
+            ctx.font = 'bold 16px Noto Sans SC';
+            ctx.fillText('立即开始听播客', 300, y + qrSize + 60);
+        }
+
+        // 绘制圆角矩形
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        // 绘制标题
+        function drawTitle(ctx, title, y) {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.font = 'bold 28px Noto Sans SC';
+            ctx.textAlign = 'center';
+
+            // 限制标题长度
+            let displayTitle = title;
+            if (title.length > 20) {
+                displayTitle = title.substring(0, 18) + '...';
+            }
+
+            ctx.fillText(displayTitle, 300, y);
+        }
+
+        // 绘制标签
+        function drawTags(ctx, category, episodeCount, y) {
+            ctx.font = '14px Noto Sans SC';
+            ctx.textAlign = 'center';
+
+            const tagText = `${category || '播客'} | ${episodeCount || 0}集`;
+            ctx.fillStyle = '#e91e63';
+            ctx.fillText(tagText, 300, y);
+        }
+
+        // 显示分享弹窗
+        function showShareModal(posterDataUrl) {
+            const modal = document.getElementById('shareModal');
+            const posterEl = document.getElementById('sharePoster');
+
+            posterEl.innerHTML = `<img src="${posterDataUrl}" alt="分享海报">`;
+            modal.classList.add('show');
+        }
+
+        // 关闭分享弹窗
+        function closeShareModal() {
+            const modal = document.getElementById('shareModal');
+            modal.classList.remove('show');
+        }
+
+        // 保存海报图片
+        async function savePosterImage() {
+            const posterImg = document.querySelector('#sharePoster img');
+            if (!posterImg) {
+                showToast('海报生成中，请稍后');
+                return;
+            }
+
+            try {
+                const link = document.createElement('a');
+                link.download = `播客分享-${podcastData?.title || '海报'}.png`;
+                link.href = posterImg.src;
+                link.click();
+                showToast('图片已保存');
+            } catch (e) {
+                console.error('保存图片失败:', e);
+                showToast('保存失败');
+            }
+        }
+
+        // 复制分享链接
+        async function copyShareLink() {
+            if (!shareData || !shareData.share_url) {
+                showToast('获取分享链接失败');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(shareData.share_url);
+                showToast('链接已复制');
+            } catch (e) {
+                // 降级处理
+                const input = document.createElement('input');
+                input.value = shareData.share_url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('链接已复制');
+            }
+        }
+
+        // 游客进度检测相关变量
+        const GUEST_PREVIEW_PERCENT = 30; // 游客免费预览进度百分比
+
+        // 显示登录提示弹窗
+        function showLoginPrompt() {
+            if (hasShownLoginPrompt) return;
+            hasShownLoginPrompt = true;
+
+            const modal = document.getElementById('loginPromptModal');
+            modal.classList.add('show');
+        }
+
+        // 关闭登录提示弹窗
+        function closeLoginPrompt() {
+            const modal = document.getElementById('loginPromptModal');
+            modal.classList.remove('show');
+        }
+
+        // 跳转到登录页面 - 统一使用游戏页面的登录弹窗
+        function goToLogin() {
+            // 打开游戏页面的登录弹窗
+            window.open('game.html?mode=auth', '_blank', 'width=450,height=600,scrollbars=yes');
+        }
+
+        // 监听登录成功消息
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'auth_login_success') {
+                // 登录成功，刷新页面
+                localStorage.setItem('authToken', event.data.token);
+                // 刷新页面以更新登录状态
+                window.location.reload();
+            }
+        });
+
+        // 检查游客播放进度
+        function checkGuestProgress() {
+            // 只有来自分享链接且未登录的用户才需要检测
+            if (!isFromShare || token || hasShownLoginPrompt) return;
+
+            const audio = document.getElementById('audioElement');
+            if (!audio || !currentAudio) return;
+
+            const duration = audio.duration;
+            if (!duration || duration <= 0) return;
+
+            const progressPercent = (audio.currentTime / duration) * 100;
+
+            // 达到30%进度时暂停并提示
+            if (progressPercent >= GUEST_PREVIEW_PERCENT) {
+                audio.pause();
+                showLoginPrompt();
+            }
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m + ':' + s.toString().padStart(2, '0');
+        }
+
+        function formatTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        init();
+    </script>
+
+    <!-- 移动端底部导航 -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="podcast.html" class="mobile-nav-item active">
+                <span class="mobile-nav-icon">&#127911;</span>
+                <span>播客</span>
+            </a>
+            <a href="podcast-create.html" class="mobile-nav-item">
+                <span class="mobile-nav-icon">&#10010;</span>
+                <span>创建</span>
+            </a>
+            <a href="game.html" class="mobile-nav-item">
+                <span class="mobile-nav-icon">&#127918;</span>
+                <span>游戏</span>
+            </a>
+            <a href="plaza.html" class="mobile-nav-item">
+                <span class="mobile-nav-icon">&#128172;</span>
+                <span>动态</span>
+            </a>
+        </div>
+    </nav>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

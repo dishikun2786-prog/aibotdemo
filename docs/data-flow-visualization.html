@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务逻辑数据流可视化 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff00;
+            --bg-dark: #050505;
+            --glass-bg: rgba(16, 20, 24, 0.85);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: bgScroll 20s linear infinite;
+        }
+
+        @keyframes bgScroll {
+            from { background-position: 0 0; }
+            to { background-position: 40px 40px; }
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 40px;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-blue);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon-blue);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* 侧边栏目录 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 80px;
+            width: 250px;
+            height: calc(100vh - 80px);
+            background: var(--glass-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar h3 {
+            color: var(--neon-blue);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar a {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: block;
+            padding: 5px 10px;
+            border-left: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: var(--neon-blue);
+            border-left-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            margin-left: 250px;
+            margin-top: 80px;
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 80px;
+            scroll-margin-top: 100px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .subsection-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--neon-purple);
+            margin: 40px 0 20px 0;
+            letter-spacing: 2px;
+        }
+
+        .subsubsection-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--neon-green);
+            margin: 30px 0 15px 0;
+            letter-spacing: 1px;
+        }
+
+        /* 赛博朋克卡片 */
+        .cyber-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(5px);
+            position: relative;
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cyber-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+        }
+
+        .cyber-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--neon-blue);
+            border-left: 2px solid var(--neon-blue);
+        }
+
+        .cyber-card::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--neon-blue);
+            border-right: 2px solid var(--neon-blue);
+        }
+
+        /* Mermaid图表容器 */
+        .mermaid-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 20px;
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+
+        .mermaid-container .mermaid {
+            background: transparent !important;
+        }
+
+        /* 代码位置链接 */
+        .code-links {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 243, 255, 0.05);
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .code-links h4 {
+            color: var(--neon-blue);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .code-links ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .code-links li {
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .code-links a {
+            color: var(--neon-green);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .code-links a:hover {
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        /* 技术栈卡片 */
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .tech-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+        }
+
+        .tech-card h4 {
+            color: var(--neon-purple);
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+        }
+
+        .tech-card ul {
+            list-style: none;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .tech-card li {
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .tech-card li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--neon-blue);
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: var(--glass-bg);
+        }
+
+        table th {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--neon-blue);
+            padding: 12px;
+            text-align: left;
+            font-family: 'Orbitron', sans-serif;
+            border: 1px solid var(--border-color);
+        }
+
+        table td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            color: #ccc;
+        }
+
+        table tr:hover {
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        /* 可折叠内容 */
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible::before {
+            content: '▶';
+            display: inline-block;
+            margin-right: 10px;
+            transition: transform 0.3s;
+            color: var(--neon-blue);
+        }
+
+        .collapsible.active::before {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.active {
+            max-height: 5000px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .nav-links {
+                gap: 15px;
+                font-size: 0.85rem;
+            }
+
+            .search-box {
+                position: fixed;
+                top: 80px;
+                right: 10px;
+                width: 180px;
+            }
+
+            .search-box input {
+                width: 100%;
+                font-size: 0.85rem;
+                padding: 6px 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .subsection-title {
+                font-size: 1.5rem;
+            }
+
+            .mermaid-container {
+                padding: 10px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .cyber-card {
+                padding: 20px;
+            }
+
+            .tech-stack {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.85rem;
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table th,
+            table td {
+                padding: 8px;
+            }
+
+            .search-box {
+                width: 150px;
+                right: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+
+            .logo {
+                font-size: 1rem;
+            }
+
+            .nav-links {
+                gap: 10px;
+                font-size: 0.75rem;
+            }
+
+            .main-content {
+                padding: 15px 10px;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .subsection-title {
+                font-size: 1.3rem;
+            }
+
+            .subsubsection-title {
+                font-size: 1.1rem;
+            }
+
+            .cyber-card {
+                padding: 15px;
+            }
+
+            .search-box {
+                display: none; /* 小屏幕隐藏搜索框 */
+            }
+        }
+
+        /* 搜索框 */
+        .search-box {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 1001;
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 8px 15px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            width: 200px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        /* 高亮搜索结果 */
+        .highlight {
+            background: rgba(255, 215, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="logo">数据流可视化</div>
+        <ul class="nav-links">
+            <li><a href="#architecture">系统架构</a></li>
+            <li><a href="#dataflow">数据流图</a></li>
+            <li><a href="#business">业务逻辑</a></li>
+            <li><a href="#database">数据库设计</a></li>
+            <li><a href="#code">代码清单</a></li>
+        </ul>
+    </nav>
+
+    <!-- 侧边栏目录 -->
+    <aside class="sidebar" id="sidebar">
+        <h3>目录</h3>
+        <ul>
+            <li><a href="#architecture">1. 系统架构概览</a></li>
+            <li><a href="#tech-stack">1.1 技术栈</a></li>
+            <li><a href="#three-tier">1.2 三层架构</a></li>
+            <li><a href="#protocol">1.3 通信协议</a></li>
+            <li><a href="#dataflow">2. 数据流图</a></li>
+            <li><a href="#auth-flow">2.1 用户认证流程</a></li>
+            <li><a href="#occupy-flow">2.2 节点占据流程</a></li>
+            <li><a href="#mining-flow">2.3 挖矿流程</a></li>
+            <li><a href="#pk-flow">2.4 PK对战流程</a></li>
+            <li><a href="#ai-flow">2.5 AI智能体对话流程</a></li>
+            <li><a href="#story-flow">2.6 剧情系统流程</a></li>
+            <li><a href="#virtual-flow">2.7 虚拟智能体流程</a></li>
+            <li><a href="#business">3. 业务逻辑详解</a></li>
+            <li><a href="#auth-module">3.1 认证模块</a></li>
+            <li><a href="#game-module">3.2 游戏核心模块</a></li>
+            <li><a href="#ai-module">3.3 AI智能体模块</a></li>
+            <li><a href="#story-module">3.4 剧情系统模块</a></li>
+            <li><a href="#virtual-module">3.5 虚拟智能体模块</a></li>
+            <li><a href="#admin-module">3.6 管理后台模块</a></li>
+            <li><a href="#database">4. 数据库设计</a></li>
+            <li><a href="#tables">4.1 核心表结构</a></li>
+            <li><a href="#er-diagram">4.2 表关系图</a></li>
+            <li><a href="#data-flow">4.3 数据流转说明</a></li>
+            <li><a href="#code">5. 代码文件清单</a></li>
+        </ul>
+    </aside>
+
+    <!-- 搜索框 -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="搜索内容...">
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 1. 系统架构概览 -->
+        <section id="architecture" class="section">
+            <h1 class="section-title">1. 系统架构概览</h1>
+            
+            <div id="tech-stack" class="subsection">
+                <h2 class="subsection-title">1.1 技术栈</h2>
+                <div class="tech-stack">
+                    <div class="tech-card">
+                        <h4>前端</h4>
+                        <ul>
+                            <li>HTML5 + JavaScript (ES6+)</li>
+                            <li>Socket.io Client 4.6.1</li>
+                            <li>单文件架构（game.html）</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>服务端</h4>
+                        <ul>
+                            <li>Node.js + Express.js</li>
+                            <li>Socket.io (WebSocket)</li>
+                            <li>JWT认证</li>
+                            <li>bcrypt密码加密</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>数据库</h4>
+                        <ul>
+                            <li>MySQL（主数据库）</li>
+                            <li>Redis（缓存和临时数据）</li>
+                            <li>MongoDB（对战日志存储）</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>外部服务</h4>
+                        <ul>
+                            <li>MiniMAX API</li>
+                            <li>AI对话、图像生成</li>
+                            <li>视频生成、语音合成</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="three-tier" class="subsection">
+                <h2 class="subsection-title">1.2 三层架构</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="architecture-diagram">
+graph TB
+    Frontend["前端层 (Frontend)<br/>game.html - 单文件应用<br/>- 用户界面渲染<br/>- 用户交互处理<br/>- WebSocket客户端<br/>- REST API调用"]
+    Backend["服务端层 (Backend)<br/>Express.js + Socket.io<br/>- REST API路由处理<br/>- WebSocket实时通信<br/>- 业务逻辑处理<br/>- 数据验证与安全"]
+    Storage["数据存储层 (Storage)<br/>MySQL - 主数据存储<br/>Redis - 缓存与临时数据<br/>MongoDB - 日志存储"]
+    
+    Frontend -->|"HTTP REST API<br/>WebSocket (Socket.io)"| Backend
+    Backend -->|"SQL查询/更新<br/>Redis操作<br/>MongoDB操作"| Storage
+    
+    style Frontend fill:#1a1a2e,stroke:#00f3ff,stroke-width:2px
+    style Backend fill:#1a1a2e,stroke:#bc13fe,stroke-width:2px
+    style Storage fill:#1a1a2e,stroke:#0aff00,stroke-width:2px
+                    </div>
+                </div>
+            </div>
+
+            <div id="protocol" class="subsection">
+                <h2 class="subsection-title">1.3 通信协议</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">REST API</h3>
+                    <ul style="list-style: none; color: #aaa;">
+                        <li style="margin-bottom: 10px;">基础URL：<code style="color: var(--neon-green);">https://aibotdemo.skym178.com/api</code></li>
+                        <li style="margin-bottom: 10px;">认证方式：<code style="color: var(--neon-green);">Authorization: Bearer &lt;JWT_TOKEN&gt;</code></li>
+                        <li style="margin-bottom: 10px;">请求格式：JSON</li>
+                        <li>响应格式：JSON</li>
+                    </ul>
+                </div>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">WebSocket (Socket.io)</h3>
+                    <ul style="list-style: none; color: #aaa;">
+                        <li style="margin-bottom: 10px;">连接URL：<code style="color: var(--neon-green);">https://aibotdemo.skym178.com</code></li>
+                        <li style="margin-bottom: 10px;">认证方式：连接时通过 <code style="color: var(--neon-green);">auth: { token: &lt;JWT_TOKEN&gt; }</code> 传递</li>
+                        <li>事件驱动：双向通信</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 数据流图 -->
+        <section id="dataflow" class="section">
+            <h1 class="section-title">2. 数据流图</h1>
+            
+            <!-- 2.1 用户认证流程 -->
+            <div id="auth-flow" class="subsection">
+                <h2 class="subsection-title">2.1 用户认证流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="auth-flow-diagram">
+sequenceDiagram
+    participant User as 用户
+    participant Frontend as 前端(game.html)
+    participant API as REST API(auth.js)
+    participant DB as MySQL(users表)
+    participant Redis as Redis(验证码)
+
+    User->>Frontend: 输入用户名/密码/验证码
+    Frontend->>API: GET /api/auth/captcha
+    API->>Redis: 生成验证码并存储(5分钟过期)
+    API-->>Frontend: 返回验证码图片
+    
+    Frontend->>API: POST /api/auth/login
+    Note over API: 1. 验证验证码<br/>2. 查询用户<br/>3. 验证密码(bcrypt)
+    API->>Redis: 验证验证码
+    API->>DB: SELECT * FROM users WHERE username=?
+    API->>DB: 验证密码哈希
+    
+    alt 登录成功
+        API->>DB: UPDATE users SET last_login=NOW()
+        API-->>Frontend: 返回JWT Token + 用户信息
+        Frontend->>Frontend: 保存Token到localStorage
+        Frontend->>Frontend: 连接WebSocket
+    else 登录失败
+        API-->>Frontend: 返回错误信息
+    end
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>前端：<a href="../game.html" target="_blank">game.html</a> - <code>auth.login()</code> 函数（约第200-250行）</li>
+                        <li>服务端：<a href="../server/routes/auth.js" target="_blank">server/routes/auth.js</a> - <code>POST /register</code> 和 <code>POST /login</code>（约第46-150行）</li>
+                        <li>数据库：<code>users</code> 表存储用户信息</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2.2 节点占据流程 -->
+            <div id="occupy-flow" class="subsection">
+                <h2 class="subsection-title">2.2 节点占据流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="occupy-flow-diagram">
+sequenceDiagram
+    participant User as 用户
+    participant Frontend as 前端(game.html)
+    participant WS as WebSocket(socket.js)
+    participant DB as MySQL
+    participant Redis as Redis
+
+    User->>Frontend: 点击节点
+    Frontend->>WS: emit('occupy_node', {nodeId, roomId})
+    
+    WS->>DB: 检查节点是否已被占用
+    WS->>DB: 检查用户是否已占据其他节点
+    
+    alt 用户已占据其他节点
+        WS->>DB: 释放旧节点(事务)
+        WS->>Frontend: 广播旧节点释放事件
+    end
+    
+    WS->>DB: 检查是否首次占据
+    alt 首次占据
+        WS->>DB: 占据节点 + 更新标记(事务)
+        WS->>Frontend: 发送成功消息(免费)
+    else 非首次占据
+        WS->>DB: 检查能量是否足够
+        alt 能量足够
+            WS->>DB: 占据节点 + 扣除能量(事务)
+            WS->>Frontend: 发送成功消息(消耗能量)
+        else 能量不足
+            WS->>Frontend: 发送错误消息
+        end
+    end
+    
+    WS->>Redis: 缓存节点信息(3600秒)
+    WS->>DB: 检查能量宝藏
+    alt 有宝藏且未领取
+        WS->>DB: 发放宝藏(事务)
+        WS->>Frontend: 发送宝藏领取通知
+    end
+    
+    WS->>DB: 更新任务进度(occupy_node)
+    WS->>Frontend: 广播节点占用事件(game_state)
+    Frontend->>Frontend: 更新地图显示
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>前端：<a href="../game.html" target="_blank">game.html</a> - <code>game.occupySlot()</code> 函数（约第1500-1600行）</li>
+                        <li>服务端：<a href="../server/socket.js" target="_blank">server/socket.js</a> - <code>socket.on('occupy_node')</code> 事件处理（约第451-700行）</li>
+                        <li>数据库：<code>game_nodes</code> 表（节点占据状态）、<code>users</code> 表（能量扣除）、<code>treasure_claims</code> 表（宝藏记录）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2.3 挖矿流程 -->
+            <div id="mining-flow" class="subsection">
+                <h2 class="subsection-title">2.3 挖矿流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="mining-flow-diagram">
+sequenceDiagram
+    participant Timer as 定时器(每秒)
+    participant WS as WebSocket(socket.js)
+    participant DB as MySQL
+    participant Frontend as 前端(game.html)
+
+    Timer->>WS: 挖矿循环触发
+    
+    loop 每个占据节点的用户
+        WS->>DB: 查询用户占据的节点
+        alt 用户占据节点
+            WS->>DB: 查询用户能量和体力
+            
+            alt 能量未满(<100)且体力>0
+                WS->>DB: 能量+5, 体力-1, total_energy+5(事务)
+                WS->>DB: 更新任务进度(mine_energy)
+                WS->>Frontend: emit('player_update', {energy, stamina})
+                Frontend->>Frontend: 更新UI显示(带动画)
+            else 能量已满(≥100)
+                Note over WS: 不消耗体力，不增加能量
+            else 体力为0
+                Note over WS: 停止挖矿
+            end
+        end
+    end
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>服务端：<a href="../server/socket.js" target="_blank">server/socket.js</a> - 挖矿循环（约第1400-1500行）</li>
+                        <li>数据库：<code>users</code> 表（energy, stamina, total_energy字段）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2.4 PK对战流程 -->
+            <div id="pk-flow" class="subsection">
+                <h2 class="subsection-title">2.4 PK对战流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="pk-flow-diagram">
+sequenceDiagram
+    participant Attacker as 攻击者
+    participant Frontend1 as 前端1(game.html)
+    participant WS as WebSocket(socket.js)
+    participant Redis as Redis(PK数值)
+    participant DB as MySQL
+    participant MongoDB as MongoDB(日志)
+    participant Defender as 防御者
+    participant Frontend2 as 前端2(game.html)
+
+    Attacker->>Frontend1: 点击"能量溢出"按钮
+    Frontend1->>Frontend1: 检查能量≥100
+    Frontend1->>WS: emit('challenge_player', {defenderId, roomId})
+    
+    WS->>DB: 检查攻击者能量≥100
+    WS->>DB: 检查防御者是否在线
+    
+    alt 防御者在线
+        WS->>DB: 检查防御者能量≥100
+        alt 防御者能量不足
+            WS->>Frontend1: emit('system_message', {error: '目标玩家能量不足100'})
+        else 防御者能量充足
+            WS->>DB: 检查防御者是否占据节点
+            alt 防御者未占据节点
+                WS->>Frontend1: emit('system_message', {error: '目标玩家未占据能量节点'})
+            else 防御者已占据节点
+                WS->>Redis: 存储挑战状态(30秒过期)
+                WS->>Frontend2: emit('pk_challenge', {attackerId, attackerName})
+                Frontend2->>Frontend2: 显示PK挑战弹窗
+        
+                alt 防御者接受
+                    Frontend1->>Frontend1: 设置King和Assassin值
+                    Frontend1->>WS: emit('pk_set_values', {king, assassin})
+                    WS->>Redis: 存储攻击者数值(300秒)
+                    
+                    Frontend2->>Frontend2: 设置King和Assassin值
+                    Frontend2->>WS: emit('pk_set_values', {king, assassin})
+                    WS->>Redis: 存储防御者数值(300秒)
+                    
+                    Frontend1->>WS: emit('resolve_pk', {defenderId, myKing, myAssassin})
+                    WS->>Redis: 获取双方数值
+                    
+                    WS->>WS: 计算攻击距离<br/>attackerDist = |king - assassin|<br/>defenderDist = |king - assassin|
+                    
+                    alt 攻击者获胜
+                        WS->>DB: 攻击者energy+50, wins+1<br/>防御者energy-50, losses+1
+                        WS->>MongoDB: 记录对战日志
+                        WS->>Frontend1: emit('pk_result', {result: 'win', energyChange: 50})
+                        WS->>Frontend2: emit('pk_result', {result: 'lose', energyChange: -50})
+                    else 防御者获胜
+                        WS->>DB: 防御者energy+50, wins+1<br/>攻击者energy-50, losses+1
+                        WS->>MongoDB: 记录对战日志
+                        WS->>Frontend1: emit('pk_result', {result: 'lose', energyChange: -50})
+                        WS->>Frontend2: emit('pk_result', {result: 'win', energyChange: 50})
+                    else 平局
+                        WS->>DB: 双方energy-50, draws+1<br/>平台池+100
+                        WS->>MongoDB: 记录对战日志
+                        WS->>Frontend1: emit('pk_result', {result: 'draw'})
+                        WS->>Frontend2: emit('pk_result', {result: 'draw'})
+                    end
+                    
+                    WS->>DB: 更新任务进度(complete_pk)
+                    WS->>Redis: 清理PK数据
+                else 防御者拒绝/超时
+                    WS->>DB: 攻击者energy+50, wins+1<br/>防御者energy-50, losses+1
+                    WS->>Frontend1: emit('pk_result', {result: 'win', reason: 'rejected'})
+                    WS->>Frontend2: emit('pk_result', {result: 'lose', reason: 'rejected'})
+                end
+            end
+        end
+    else 防御者离线/自动匹配虚拟智能体
+        WS->>WS: 匹配虚拟智能体
+        Note over WS: 虚拟智能体自动接受并设置数值
+        WS->>WS: 执行PK结算
+    end
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>前端：<a href="../game.html" target="_blank">game.html</a> - <code>game.openPK()</code> 和 <code>game.resolveCombat()</code> 函数（约第1700-2000行）</li>
+                        <li>服务端：<a href="../server/socket.js" target="_blank">server/socket.js</a> - <code>socket.on('challenge_player')</code> 和 <code>socket.on('resolve_pk')</code>（约第750-1200行）</li>
+                        <li>Redis：存储PK数值（key: <code>pk_values:${userId}:${challengeKey}</code>）</li>
+                        <li>数据库：<code>pk_records</code> 表（对战记录）、<code>users</code> 表（能量和战绩更新）、<code>game_nodes</code> 表（节点占据检查）</li>
+                        <li>MongoDB：<code>battles</code> 集合（详细对战日志）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2.5 AI智能体对话流程 -->
+            <div id="ai-flow" class="subsection">
+                <h2 class="subsection-title">2.5 AI智能体对话流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="ai-flow-diagram">
+sequenceDiagram
+    participant User as 用户
+    participant Frontend as 前端(game.html)
+    participant API as REST API(ai-agents.js)
+    participant DB as MySQL
+    participant Memory as 记忆管理器
+    participant MiniMAX as MiniMAX API
+    participant MongoDB as MongoDB(对话日志)
+
+    User->>Frontend: 输入消息
+    Frontend->>API: POST /api/ai-agents/conversation
+    Note over API: 1. 验证用户<br/>2. 检查能量<br/>3. 获取智能体信息
+    
+    API->>DB: 查询用户能量
+    alt 能量不足
+        API-->>Frontend: 返回错误(能量不足)
+    else 能量充足
+        API->>DB: 查询AI智能体信息
+        API->>DB: 查询对话历史(最近20条)
+        API->>Memory: 获取短期记忆
+        API->>DB: 查询剧情进度
+        API->>DB: 查询游戏状态(能量、体力、节点)
+        
+        API->>API: 构建对话上下文<br/>- 系统提示词<br/>- 角色设定<br/>- 记忆内容<br/>- 游戏状态<br/>- 对话历史
+        
+        API->>MiniMAX: POST /v1/text/chatcompletion
+        MiniMAX-->>API: 返回AI回复
+        
+        API->>DB: 扣除能量(5点)
+        API->>DB: 保存对话记录(ai_agent_conversations)
+        API->>MongoDB: 保存详细日志
+        
+        API->>Memory: 更新短期记忆
+        alt 对话达到阈值
+            API->>Memory: 生成中期记忆摘要
+            API->>DB: 保存中期记忆(ai_agent_memories)
+        end
+        
+        API-->>Frontend: 返回AI回复
+        Frontend->>Frontend: 显示AI回复(Markdown渲染)
+    end
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>前端：<a href="../game.html" target="_blank">game.html</a> - <code>agentChat.sendMessage()</code> 函数（约第2500-2700行）</li>
+                        <li>服务端：<a href="../server/routes/ai-agents.js" target="_blank">server/routes/ai-agents.js</a> - <code>POST /conversation</code>（约第200-400行）</li>
+                        <li>数据库：<code>ai_agents</code> 表（智能体信息）、<code>ai_agent_conversations</code> 表（对话记录）、<code>ai_agent_memories</code> 表（记忆）</li>
+                        <li>工具：<a href="../server/utils/memory-manager.js" target="_blank">server/utils/memory-manager.js</a>（记忆管理）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2.6 剧情系统流程 -->
+            <div id="story-flow" class="subsection">
+                <h2 class="subsection-title">2.6 剧情系统流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="story-flow-diagram">
+sequenceDiagram
+    participant User as 用户
+    participant Frontend as 前端(game.html)
+    participant API as REST API(story.js)
+    participant WS as WebSocket(socket.js)
+    participant DB as MySQL
+
+    User->>Frontend: 点击"剧情章节"按钮
+    Frontend->>API: GET /api/story/my-progress
+    API->>DB: 查询章节列表(story_chapters)
+    API->>DB: 查询任务列表(story_tasks)
+    API->>DB: 查询用户进度(user_story_progress, user_task_progress)
+    API-->>Frontend: 返回章节和任务进度
+    Frontend->>Frontend: 渲染章节和任务列表
+    
+    Note over WS,DB: 游戏过程中自动更新任务进度
+    WS->>DB: 更新任务进度(updateTaskProgress)
+    WS->>Frontend: emit('task_progress_ready')
+    
+    User->>Frontend: 点击"完成任务"按钮
+    Frontend->>API: POST /api/story/tasks/:taskId/complete
+    API->>DB: 检查任务是否完成
+    alt 任务已完成
+        API->>DB: 更新任务状态(事务)
+        API->>DB: 发放奖励(能量/体力)
+        API->>DB: 检查章节是否完成
+        alt 章节完成
+            API->>DB: 更新章节状态
+            API->>DB: 发放章节奖励
+        end
+        API-->>Frontend: 返回成功和奖励信息
+        Frontend->>Frontend: 更新UI显示
+    else 任务未完成
+        API-->>Frontend: 返回错误(任务未完成)
+    end
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>前端：<a href="../game.html" target="_blank">game.html</a> - <code>storySystem</code> 模块（约第2800-3200行）</li>
+                        <li>服务端：<a href="../server/routes/story.js" target="_blank">server/routes/story.js</a> - 剧情路由（约第15-627行）</li>
+                        <li>WebSocket：<a href="../server/socket.js" target="_blank">server/socket.js</a> - <code>updateTaskProgress()</code> 函数（约第25-155行）</li>
+                        <li>数据库：<code>story_chapters</code> 表（章节）、<code>story_tasks</code> 表（任务）、<code>user_story_progress</code> 表（章节进度）、<code>user_task_progress</code> 表（任务进度）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2.7 虚拟智能体流程 -->
+            <div id="virtual-flow" class="subsection">
+                <h2 class="subsection-title">2.7 虚拟智能体流程</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="virtual-flow-diagram">
+sequenceDiagram
+    participant Timer as 定时器
+    participant Scheduler as 调度器(virtual-agent-scheduler.js)
+    participant Socket as Socket服务(virtual-agent-socket.js)
+    participant DB as MySQL
+    participant WS as WebSocket(socket.js)
+
+    Timer->>Scheduler: 占据节点任务(每30秒)
+    Scheduler->>DB: 查询在线且未占据节点的虚拟智能体
+    loop 每个虚拟智能体
+        Scheduler->>DB: 检查能量是否足够
+        alt 能量足够
+            Scheduler->>DB: 占据随机空闲节点(事务)
+            Scheduler->>WS: 广播节点占用事件
+        end
+    end
+    
+    Timer->>Scheduler: PK对战任务(每60秒)
+    Scheduler->>DB: 查询在线且能量≥100的虚拟智能体
+    loop 每个虚拟智能体
+        Scheduler->>DB: 查询可挑战目标(真人/虚拟智能体)
+        alt 找到目标
+            Scheduler->>Socket: 发起PK挑战
+            Socket->>Socket: 自动接受挑战
+            Socket->>Socket: 自动生成PK数值
+            Socket->>DB: 执行PK结算(事务)
+            Socket->>MongoDB: 记录对战日志
+            Socket->>WS: 广播PK结果
+        end
+    end
+    
+    Timer->>Scheduler: 主动挑战真人任务(3-5分钟随机)
+    Scheduler->>DB: 查询在线真人玩家
+    Scheduler->>Socket: 发起PK挑战
+    Socket->>WS: 发送PK挑战事件给真人
+    alt 真人接受
+        Socket->>Socket: 自动设置数值并结算
+    else 真人拒绝/超时
+        Socket->>DB: 虚拟智能体获胜
+    end
+                    </div>
+                </div>
+                <div class="code-links">
+                    <h4>关键代码位置：</h4>
+                    <ul>
+                        <li>服务端：<a href="../server/services/virtual-agent-scheduler.js" target="_blank">server/services/virtual-agent-scheduler.js</a> - 调度器（约第1-469行）</li>
+                        <li>服务端：<a href="../server/services/virtual-agent-socket.js" target="_blank">server/services/virtual-agent-socket.js</a> - Socket服务（约第1-955行）</li>
+                        <li>数据库：<code>virtual_ai_agents</code> 表（虚拟智能体状态）、<code>virtual_agent_battles</code> 表（对战记录）</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 业务逻辑详解 -->
+        <section id="business" class="section">
+            <h1 class="section-title">3. 业务逻辑详解</h1>
+            
+            <!-- 3.1 认证模块 -->
+            <div id="auth-module" class="subsection">
+                <h2 class="subsection-title">3.1 认证模块</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">用户注册、登录、验证码生成与验证。</p>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">数据流向</h3>
+                    <ol style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li>前端请求验证码 → 服务端生成并存储到Redis → 返回验证码图片</li>
+                        <li>前端提交登录/注册信息 → 服务端验证 → 生成JWT → 返回Token和用户信息</li>
+                    </ol>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">关键代码位置</h3>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li>前端：<a href="../game.html" target="_blank" style="color: var(--neon-green);">game.html</a> - <code>auth</code> 对象（约第100-300行）</li>
+                        <li style="margin-left: 20px;">- <code>auth.login()</code> - 登录函数</li>
+                        <li style="margin-left: 20px;">- <code>auth.register()</code> - 注册函数</li>
+                        <li style="margin-left: 20px;">- <code>auth.refreshCaptcha()</code> - 刷新验证码</li>
+                        <li>服务端：<a href="../server/routes/auth.js" target="_blank" style="color: var(--neon-green);">server/routes/auth.js</a>（约第1-269行）</li>
+                        <li style="margin-left: 20px;">- <code>GET /api/auth/captcha</code> - 获取验证码</li>
+                        <li style="margin-left: 20px;">- <code>POST /api/auth/register</code> - 用户注册</li>
+                        <li style="margin-left: 20px;">- <code>POST /api/auth/login</code> - 用户登录</li>
+                        <li style="margin-left: 20px;">- <code>POST /api/auth/logout</code> - 用户登出</li>
+                        <li style="margin-left: 20px;">- <code>GET /api/auth/me</code> - 获取当前用户信息</li>
+                    </ul>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">数据库操作</h3>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>users</code> 表：</li>
+                        <li style="margin-left: 20px;">- 注册：<code>INSERT INTO users (username, password, energy, stamina)</code></li>
+                        <li style="margin-left: 20px;">- 登录：<code>SELECT * FROM users WHERE username = ?</code></li>
+                        <li style="margin-left: 20px;">- 更新：<code>UPDATE users SET last_login = NOW() WHERE id = ?</code></li>
+                    </ul>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">错误处理</h3>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>验证码错误或过期</li>
+                        <li>用户名已存在</li>
+                        <li>密码长度不符合要求</li>
+                        <li>速率限制（15分钟10次请求）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3.2 游戏核心模块 -->
+            <div id="game-module" class="subsection">
+                <h2 class="subsection-title">3.2 游戏核心模块</h2>
+                
+                <h3 class="subsubsection-title">3.2.1 节点占据</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h4>
+                    <p style="color: #aaa; margin-bottom: 20px;">用户占据游戏节点，首次占据免费，后续占据需要消耗能量。</p>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">数据流向</h4>
+                    <ol style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li>前端点击节点 → WebSocket发送 <code>occupy_node</code> 事件</li>
+                        <li>服务端检查节点状态 → 释放旧节点（如有）→ 检查能量 → 占据节点 → 更新数据库</li>
+                        <li>服务端检查能量宝藏 → 发放宝藏（如有）→ 广播状态更新</li>
+                    </ol>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">业务规则</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>每个用户同时只能占据一个节点</li>
+                        <li>首次占据免费，后续占据消耗50点能量（可配置）</li>
+                        <li>每个节点全局仅可被领取一次能量宝藏</li>
+                        <li>占据节点后自动开始挖矿</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsubsection-title">3.2.2 挖矿</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h4>
+                    <p style="color: #aaa; margin-bottom: 20px;">用户占据节点后自动挖矿，每秒增加5点能量，消耗1点体力（能量满时不消耗体力）。</p>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">业务规则</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>每秒增加5点能量（可配置）</li>
+                        <li>每秒消耗1点体力（能量≥100时不消耗）</li>
+                        <li>能量上限100点（可配置）</li>
+                        <li>体力为0时停止挖矿</li>
+                        <li>自动更新 <code>total_energy</code> 累计能量</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsubsection-title">3.2.3 PK对战</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h4>
+                    <p style="color: #aaa; margin-bottom: 20px;">能量达到100时，用户可以向其他玩家发起PK挑战，通过设置King和Assassin值进行对战。</p>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">业务规则</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>发起挑战需要攻击者能量≥100</li>
+                        <li>防御者必须满足以下条件才能接受挑战：</li>
+                        <li style="margin-left: 20px;">- 防御者在线</li>
+                        <li style="margin-left: 20px;">- 防御者能量≥100</li>
+                        <li style="margin-left: 20px;">- 防御者已占据能量节点</li>
+                        <li>攻击距离 = |King - Assassin|，距离更小的一方获胜</li>
+                        <li>胜者：能量+50，wins+1</li>
+                        <li>败者：能量-50，losses+1</li>
+                        <li>平局：双方能量-50，平台池+100，draws+1</li>
+                        <li>拒绝/超时：攻击者获胜，防御者失败</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3.3 AI智能体模块 -->
+            <div id="ai-module" class="subsection">
+                <h2 class="subsection-title">3.3 AI智能体模块</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">用户可以与AI智能体进行对话，支持文本、图像、视频、语音生成。</p>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">业务规则</h3>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>每次对话消耗5点能量（可配置）</li>
+                        <li>对话历史保留最近20条</li>
+                        <li>短期记忆：最近10条对话</li>
+                        <li>中期记忆：每20条对话生成一次摘要</li>
+                        <li>长期记忆：重要信息永久保存</li>
+                        <li>图像/视频/语音生成需要功能开关启用</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3.4 剧情系统模块 -->
+            <div id="story-module" class="subsection">
+                <h2 class="subsection-title">3.4 剧情系统模块</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">用户通过完成剧情任务获得奖励，推动游戏进度。</p>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">任务类型</h3>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>occupy_node</code> - 占据节点（统计占据的不同节点数）</li>
+                        <li><code>mine_energy</code> - 挖掘能量（使用total_energy）</li>
+                        <li><code>complete_pk</code> - 完成PK（统计PK次数）</li>
+                        <li><code>find_treasure</code> - 发现宝藏（统计宝藏领取次数）</li>
+                        <li><code>reach_energy</code> - 达到能量值（使用当前energy）</li>
+                        <li><code>chat_with_ai</code> - 与AI对话（统计对话次数）</li>
+                    </ul>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">业务规则</h3>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>任务进度自动更新（通过WebSocket事件）</li>
+                        <li>完成任务需要达到目标值</li>
+                        <li>完成任务后发放能量/体力奖励</li>
+                        <li>章节完成后发放章节奖励</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3.5 虚拟智能体模块 -->
+            <div id="virtual-module" class="subsection">
+                <h2 class="subsection-title">3.5 虚拟智能体模块</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">系统自动运行的虚拟智能体，自动占据节点、发起PK、响应PK挑战。</p>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">业务规则</h3>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>占据节点：每30秒检查一次，能量足够时占据随机空闲节点</li>
+                        <li>PK对战：每60秒检查一次，能量≥100时发起PK</li>
+                        <li>主动挑战真人：3-5分钟随机触发，挑战在线真人玩家</li>
+                        <li>自动响应PK：根据能量状态计算接受概率，自动生成PK数值</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3.6 管理后台模块 -->
+            <div id="admin-module" class="subsection">
+                <h2 class="subsection-title">3.6 管理后台模块</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">功能描述</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">管理员可以管理用户、配置游戏参数、查看统计数据。</p>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">主要功能</h3>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li>用户管理：查看用户列表、封禁用户、编辑用户能量/体力</li>
+                        <li>配置管理：获取和更新游戏配置</li>
+                        <li>统计数据：查看系统统计数据</li>
+                        <li>虚拟智能体管理：创建、上线、编辑虚拟智能体</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 数据库设计 -->
+        <section id="database" class="section">
+            <h1 class="section-title">4. 数据库设计</h1>
+            
+            <!-- 4.1 核心表结构 -->
+            <div id="tables" class="subsection">
+                <h2 class="subsection-title">4.1 核心表结构</h2>
+                
+                <h3 class="subsubsection-title">4.1.1 用户相关表</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">users（用户表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>username</code> - 用户名（唯一）</li>
+                        <li><code>password</code> - 密码哈希（bcrypt）</li>
+                        <li><code>energy</code> - 当前能量（0-1000）</li>
+                        <li><code>stamina</code> - 当前体力（0-100）</li>
+                        <li><code>total_energy</code> - 累计能量</li>
+                        <li><code>wins/losses/draws</code> - PK战绩</li>
+                        <li><code>has_used_first_free_occupy</code> - 是否使用过首次免费占据</li>
+                        <li><code>is_admin</code> - 是否管理员</li>
+                        <li><code>status</code> - 状态（active/banned）</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">ai_agents（AI智能体表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>user_id</code> - 用户ID（外键，唯一）</li>
+                        <li><code>name</code> - 智能体名称</li>
+                        <li><code>role</code> - 角色设定（JSON）</li>
+                        <li><code>appearance</code> - 形象设定（JSON）</li>
+                        <li><code>model_preferences</code> - 模型参数偏好（JSON）</li>
+                        <li><code>energy</code> - 智能体能量</li>
+                        <li><code>is_initialized</code> - 是否已初始化</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">ai_agent_memories（AI智能体记忆表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>agent_id</code> - 智能体ID（外键）</li>
+                        <li><code>memory_type</code> - 记忆类型（short/medium/long）</li>
+                        <li><code>content</code> - 记忆内容（TEXT）</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">ai_agent_conversations（AI智能体对话记录表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>agent_id</code> - 智能体ID（外键）</li>
+                        <li><code>user_message</code> - 用户消息（TEXT）</li>
+                        <li><code>agent_message</code> - AI回复（TEXT）</li>
+                        <li><code>energy_cost</code> - 能量消耗</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsubsection-title">4.1.2 游戏相关表</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">game_rooms（游戏房间表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>room_name</code> - 房间名称</li>
+                        <li><code>max_players</code> - 最大玩家数</li>
+                        <li><code>current_players</code> - 当前玩家数</li>
+                        <li><code>platform_pool</code> - 平台池（平局时增加）</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">game_nodes（游戏节点表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>room_id</code> - 房间ID（外键）</li>
+                        <li><code>node_id</code> - 节点编号（1-100，与room_id组成唯一键）</li>
+                        <li><code>owner_id</code> - 占据者ID（外键，可为NULL）</li>
+                        <li><code>occupied_at</code> - 占据时间</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">pk_records（PK战斗记录表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>attacker_id</code> - 攻击者ID</li>
+                        <li><code>attacker_type</code> - 攻击者类型（user/virtual_agent）</li>
+                        <li><code>defender_id</code> - 防御者ID</li>
+                        <li><code>defender_type</code> - 防御者类型（user/virtual_agent）</li>
+                        <li><code>attacker_king/assassin</code> - 攻击者数值（1-100）</li>
+                        <li><code>defender_king/assassin</code> - 防御者数值（1-100）</li>
+                        <li><code>result</code> - 结果（win/lose/draw）</li>
+                        <li><code>energy_change</code> - 能量变化</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">treasure_claims（能量宝藏领取记录表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>user_id</code> - 用户ID（外键）</li>
+                        <li><code>room_id</code> - 房间ID</li>
+                        <li><code>node_id</code> - 节点ID（与room_id组成唯一键）</li>
+                        <li><code>amount</code> - 宝藏数量</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsubsection-title">4.1.3 剧情系统表</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">story_chapters（剧情章节表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>chapter_number</code> - 章节编号（唯一）</li>
+                        <li><code>chapter_title</code> - 章节标题</li>
+                        <li><code>chapter_description</code> - 章节描述</li>
+                        <li><code>story_content</code> - 剧情内容（TEXT）</li>
+                        <li><code>completion_condition</code> - 完成条件（JSON）</li>
+                        <li><code>stamina_reward/energy_reward</code> - 奖励</li>
+                        <li><code>is_active</code> - 是否激活</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">story_tasks（任务线索表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>chapter_id</code> - 章节ID（外键）</li>
+                        <li><code>task_type</code> - 任务类型</li>
+                        <li><code>task_title</code> - 任务标题</li>
+                        <li><code>task_description</code> - 任务描述</li>
+                        <li><code>target_value</code> - 目标值</li>
+                        <li><code>stamina_reward/energy_reward</code> - 奖励</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">user_story_progress（用户剧情进度表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>user_id</code> - 用户ID（外键）</li>
+                        <li><code>chapter_id</code> - 章节ID（外键，与user_id组成唯一键）</li>
+                        <li><code>is_completed</code> - 是否完成</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">user_task_progress（用户任务进度表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>user_id</code> - 用户ID（外键）</li>
+                        <li><code>task_id</code> - 任务ID（外键，与user_id组成唯一键）</li>
+                        <li><code>progress_value</code> - 进度值</li>
+                        <li><code>is_completed</code> - 是否完成</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsubsection-title">4.1.4 虚拟智能体表</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">virtual_ai_agents（虚拟AI智能体表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>name</code> - 智能体名称</li>
+                        <li><code>energy</code> - 当前能量</li>
+                        <li><code>stamina</code> - 当前体力</li>
+                        <li><code>status</code> - 状态（online/offline）</li>
+                        <li><code>room_id</code> - 所在房间ID（外键）</li>
+                        <li><code>current_node_id</code> - 当前占据的节点ID</li>
+                        <li><code>wins/losses/draws</code> - 战绩</li>
+                        <li><code>total_energy</code> - 累计能量</li>
+                        <li><code>last_action_at</code> - 最后行动时间</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">virtual_agent_battles（虚拟智能体对战记录表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>attacker_id</code> - 攻击者ID</li>
+                        <li><code>attacker_type</code> - 攻击者类型</li>
+                        <li><code>defender_id</code> - 防御者ID</li>
+                        <li><code>defender_type</code> - 防御者类型</li>
+                        <li><code>result</code> - 结果</li>
+                        <li><code>attacker_energy_change/defender_energy_change</code> - 能量变化</li>
+                    </ul>
+                </div>
+
+                <h3 class="subsubsection-title">4.1.5 配置和日志表</h3>
+                <div class="cyber-card">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">game_config（游戏配置表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>config_key</code> - 配置键（唯一）</li>
+                        <li><code>config_value</code> - 配置值（TEXT/JSON）</li>
+                        <li><code>description</code> - 配置说明</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--neon-blue); margin-bottom: 15px;">admin_logs（管理员操作日志表）</h4>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li><code>id</code> - 主键</li>
+                        <li><code>admin_id</code> - 管理员ID（外键）</li>
+                        <li><code>action</code> - 操作类型</li>
+                        <li><code>target_id</code> - 目标ID</li>
+                        <li><code>details</code> - 详细信息（JSON）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 4.2 表关系图 -->
+            <div id="er-diagram" class="subsection">
+                <h2 class="subsection-title">4.2 表关系图</h2>
+                <div class="mermaid-container">
+                    <div class="mermaid" id="er-diagram-mermaid">
+erDiagram
+    users ||--o| ai_agents : "拥有"
+    users ||--o{ game_nodes : "占据"
+    users ||--o{ pk_records : "攻击者"
+    users ||--o{ pk_records : "防御者"
+    users ||--o{ treasure_claims : "领取"
+    users ||--o{ user_story_progress : "进度"
+    users ||--o{ user_task_progress : "进度"
+    
+    ai_agents ||--o{ ai_agent_memories : "拥有"
+    ai_agents ||--o{ ai_agent_conversations : "对话"
+    
+    game_rooms ||--o{ game_nodes : "包含"
+    game_rooms ||--o{ virtual_ai_agents : "包含"
+    
+    story_chapters ||--o{ story_tasks : "包含"
+    story_chapters ||--o{ user_story_progress : "进度"
+    
+    story_tasks ||--o{ user_task_progress : "进度"
+    
+    virtual_ai_agents ||--o{ virtual_agent_battles : "对战"
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4.3 数据流转说明 -->
+            <div id="data-flow" class="subsection">
+                <h2 class="subsection-title">4.3 数据流转说明</h2>
+                <div class="cyber-card">
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">MySQL（主数据库）</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">存储所有持久化数据：用户信息、游戏状态、配置、剧情数据等。作为数据权威源，所有关键操作都通过事务保证一致性。</p>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">Redis（缓存和临时数据）</h3>
+                    <ul style="color: #aaa; margin-left: 20px; margin-bottom: 20px;">
+                        <li>验证码：<code>captcha:${captchaId}</code>（5分钟过期）</li>
+                        <li>PK挑战状态：<code>pk_challenge:${defenderId}:${attackerId}</code>（30秒过期）</li>
+                        <li>PK数值：<code>pk_values:${userId}:${challengeKey}</code>（300秒过期）</li>
+                        <li>节点缓存：<code>game:room:${roomId}:node:${nodeId}</code>（3600秒过期）</li>
+                        <li>挖矿状态：<code>mining:${userId}</code>（可选）</li>
+                    </ul>
+                    
+                    <h3 style="color: var(--neon-blue); margin-bottom: 15px;">MongoDB（日志存储）</h3>
+                    <ul style="color: #aaa; margin-left: 20px;">
+                        <li><code>battles</code> 集合：详细对战日志</li>
+                        <li><code>conversations</code> 集合：AI对话详细日志（可选）</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 代码文件清单 -->
+        <section id="code" class="section">
+            <h1 class="section-title">5. 代码文件清单</h1>
+            
+            <div class="subsection">
+                <h2 class="subsection-title">5.1 前端文件</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文件路径</th>
+                            <th>职责</th>
+                            <th>关键函数/模块</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="../game.html" target="_blank" style="color: var(--neon-green);">game.html</a></td>
+                            <td>主游戏界面，包含所有前端逻辑</td>
+                            <td><code>auth</code>（认证）、<code>game</code>（游戏核心）、<code>storySystem</code>（剧情）、<code>agentChat</code>（AI对话）、<code>agentDelivery</code>（AI初始化）</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="subsection">
+                <h2 class="subsection-title">5.2 服务端核心文件</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文件路径</th>
+                            <th>职责</th>
+                            <th>关键功能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="../server/app.js" target="_blank" style="color: var(--neon-green);">server/app.js</a></td>
+                            <td>Express应用入口</td>
+                            <td>路由挂载、中间件配置、Socket.io初始化</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/socket.js" target="_blank" style="color: var(--neon-green);">server/socket.js</a></td>
+                            <td>WebSocket实时通信服务</td>
+                            <td>房间管理、节点占据、挖矿循环、PK对战、任务进度更新</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="subsection">
+                <h2 class="subsection-title">5.3 服务端路由文件</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文件路径</th>
+                            <th>职责</th>
+                            <th>主要端点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="../server/routes/auth.js" target="_blank" style="color: var(--neon-green);">server/routes/auth.js</a></td>
+                            <td>认证相关路由</td>
+                            <td><code>GET /api/auth/captcha</code>、<code>POST /api/auth/register</code>、<code>POST /api/auth/login</code>、<code>POST /api/auth/logout</code>、<code>GET /api/auth/me</code></td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/routes/admin.js" target="_blank" style="color: var(--neon-green);">server/routes/admin.js</a></td>
+                            <td>管理后台路由</td>
+                            <td><code>GET /api/admin/users</code>、<code>PUT /api/admin/users/:id/ban</code>、<code>GET /api/admin/config</code>、<code>PUT /api/admin/config</code>、<code>GET /api/admin/stats</code></td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/routes/ai-agents.js" target="_blank" style="color: var(--neon-green);">server/routes/ai-agents.js</a></td>
+                            <td>AI智能体路由</td>
+                            <td><code>POST /api/ai-agents/initialize</code>、<code>POST /api/ai-agents/conversation</code>、<code>POST /api/ai-agents/generate-image</code>、<code>POST /api/ai-agents/create-video-task</code>、<code>POST /api/ai-agents/generate-speech</code></td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/routes/story.js" target="_blank" style="color: var(--neon-green);">server/routes/story.js</a></td>
+                            <td>剧情系统路由</td>
+                            <td><code>GET /api/story/my-progress</code>、<code>POST /api/story/tasks/:taskId/complete</code>、<code>POST /api/story/chapters/:chapterId/complete</code></td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/routes/battles.js" target="_blank" style="color: var(--neon-green);">server/routes/battles.js</a></td>
+                            <td>对战记录路由</td>
+                            <td><code>GET /api/battles</code></td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/routes/admin-virtual-agents.js" target="_blank" style="color: var(--neon-green);">server/routes/admin-virtual-agents.js</a></td>
+                            <td>虚拟智能体管理路由</td>
+                            <td><code>GET /api/admin/virtual-agents</code>、<code>POST /api/admin/virtual-agents/create</code>、<code>PUT /api/admin/virtual-agents/:id/online</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="subsection">
+                <h2 class="subsection-title">5.4 服务端服务文件</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文件路径</th>
+                            <th>职责</th>
+                            <th>关键功能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="../server/services/virtual-agent-socket.js" target="_blank" style="color: var(--neon-green);">server/services/virtual-agent-socket.js</a></td>
+                            <td>虚拟智能体Socket服务</td>
+                            <td>PK挑战处理、PK响应、PK结算、Socket注册/注销</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/services/virtual-agent-scheduler.js" target="_blank" style="color: var(--neon-green);">server/services/virtual-agent-scheduler.js</a></td>
+                            <td>虚拟智能体调度器</td>
+                            <td>占据节点任务、PK对战任务、主动挑战真人任务</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="subsection">
+                <h2 class="subsection-title">5.5 服务端工具文件</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>文件路径</th>
+                            <th>职责</th>
+                            <th>关键功能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="../server/utils/db.js" target="_blank" style="color: var(--neon-green);">server/utils/db.js</a></td>
+                            <td>MySQL数据库工具</td>
+                            <td>连接池管理、查询封装、事务处理</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/utils/redis.js" target="_blank" style="color: var(--neon-green);">server/utils/redis.js</a></td>
+                            <td>Redis缓存工具</td>
+                            <td>连接管理、get/set/del操作、支持降级</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/utils/mongo.js" target="_blank" style="color: var(--neon-green);">server/utils/mongo.js</a></td>
+                            <td>MongoDB工具</td>
+                            <td>连接管理、集合操作</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/utils/captcha.js" target="_blank" style="color: var(--neon-green);">server/utils/captcha.js</a></td>
+                            <td>验证码工具</td>
+                            <td>SVG生成、Redis存储、验证</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/utils/minimax.js" target="_blank" style="color: var(--neon-green);">server/utils/minimax.js</a></td>
+                            <td>MiniMAX API工具</td>
+                            <td>API调用封装、错误处理</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/utils/memory-manager.js" target="_blank" style="color: var(--neon-green);">server/utils/memory-manager.js</a></td>
+                            <td>记忆管理器</td>
+                            <td>短期记忆管理、中期记忆摘要生成</td>
+                        </tr>
+                        <tr>
+                            <td><a href="../server/utils/pk-challenge-helper.js" target="_blank" style="color: var(--neon-green);">server/utils/pk-challenge-helper.js</a></td>
+                            <td>PK挑战辅助函数</td>
+                            <td>挑战状态检查、参与者验证</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 初始化Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#1a1a2e',
+                primaryTextColor: '#00f3ff',
+                primaryBorderColor: '#00f3ff',
+                lineColor: '#00f3ff',
+                secondaryColor: '#1a1a2e',
+                tertiaryColor: '#1a1a2e',
+                background: '#050505',
+                mainBkg: '#101418',
+                secondBkg: '#1a1a2e',
+                textColor: '#ffffff',
+                actorBorder: '#00f3ff',
+                actorBkg: '#1a1a2e',
+                actorTextColor: '#00f3ff',
+                actorLineColor: '#00f3ff',
+                signalColor: '#00f3ff',
+                signalTextColor: '#ffffff',
+                labelBoxBkgColor: '#1a1a2e',
+                labelBoxBorderColor: '#00f3ff',
+                labelTextColor: '#ffffff',
+                loopTextColor: '#ffffff',
+                noteBorderColor: '#bc13fe',
+                noteBkgColor: '#1a1a2e',
+                noteTextColor: '#ffffff',
+                activationBorderColor: '#0aff00',
+                activationBkgColor: '#1a1a2e',
+                sequenceNumberColor: '#ffffff',
+                sectionBkgColor: '#1a1a2e',
+                altBkgColor: '#1a1a2e',
+                dividerBkgColor: '#1a1a2e',
+                cScale0: '#1a1a2e',
+                cScale1: '#00f3ff',
+                cScale2: '#bc13fe'
+            }
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 搜索功能（已移至下方改进版本）
+
+        // 移动端侧边栏切换
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebar = () => {
+            if (window.innerWidth <= 1024) {
+                sidebar.classList.toggle('open');
+            }
+        };
+        
+        // 点击导航链接时关闭侧边栏（移动端）
+        document.querySelectorAll('.nav-links a, .sidebar a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 1024) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+
+        // 点击外部关闭侧边栏
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 1024 && 
+                !sidebar.contains(e.target) && 
+                !e.target.closest('.navbar')) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // 窗口大小改变时调整侧边栏
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // 可折叠内容功能
+        document.querySelectorAll('.collapsible').forEach(collapsible => {
+            collapsible.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                if (content && content.classList.contains('collapsible-content')) {
+                    content.classList.toggle('active');
+                }
+            });
+        });
+
+        // 图表懒加载（当滚动到可视区域时渲染）
+        const observerOptions = {
+            root: null,
+            rootMargin: '50px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const mermaidElement = entry.target.querySelector('.mermaid');
+                    if (mermaidElement && !mermaidElement.dataset.rendered) {
+                        mermaidElement.dataset.rendered = 'true';
+                        // Mermaid会自动渲染，这里只是标记已渲染
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // 观察所有Mermaid容器
+        document.querySelectorAll('.mermaid-container').forEach(container => {
+            observer.observe(container);
+        });
+
+        // 改进搜索功能
+        let searchTimeout;
+        const improvedSearch = (searchTerm) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (searchTerm.length < 2) {
+                    // 清除所有高亮
+                    document.querySelectorAll('.highlight').forEach(el => {
+                        const parent = el.parentNode;
+                        parent.replaceChild(document.createTextNode(el.textContent), el);
+                        parent.normalize();
+                    });
+                    return;
+                }
+
+                // 搜索并高亮
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                const walker = document.createTreeWalker(
+                    document.body,
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: (node) => {
+                            const parent = node.parentElement;
+                            if (parent && (
+                                parent.tagName === 'SCRIPT' || 
+                                parent.tagName === 'STYLE' ||
+                                parent.classList.contains('highlight')
+                            )) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    },
+                    false
+                );
+
+                const textNodes = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    if (regex.test(node.textContent)) {
+                        textNodes.push(node);
+                    }
+                }
+
+                textNodes.forEach(textNode => {
+                    const text = textNode.textContent;
+                    const highlightedText = text.replace(regex, '<span class="highlight">$1</span>');
+                    if (highlightedText !== text) {
+                        const wrapper = document.createElement('span');
+                        wrapper.innerHTML = highlightedText;
+                        textNode.parentNode.replaceChild(wrapper, textNode);
+                    }
+                });
+
+                // 滚动到第一个搜索结果
+                const firstHighlight = document.querySelector('.highlight');
+                if (firstHighlight) {
+                    firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        };
+
+        searchInput.addEventListener('input', (e) => {
+            improvedSearch(e.target.value.toLowerCase());
+        });
+    </script>
+</body>
+</html>

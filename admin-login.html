@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台登录 - 能量山</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.theme-q {
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .captcha-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .captcha-container input {
+            flex: 1;
+        }
+
+        .captcha-img {
+            width: 120px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            object-fit: cover;
+        }
+
+        .captcha-img:hover {
+            border-color: #00d4ff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: linear-gradient(135deg, #666 0%, #444 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-msg {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #00d4ff;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="theme-q">
+    <div class="login-container">
+        <div class="login-header">
+            <h1>管理后台</h1>
+            <p>请登录以访问管理功能</p>
+        </div>
+
+        <form id="login-form" onsubmit="return false;">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" autocomplete="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="captcha">验证码</label>
+                <div class="captcha-container">
+                    <input type="text" id="captcha" placeholder="请输入验证码" maxlength="4" required>
+                    <img id="captcha-img" class="captcha-img" src="" alt="验证码" onclick="refreshCaptcha()">
+                </div>
+            </div>
+
+            <input type="hidden" id="captcha-id">
+
+            <div class="error-msg" id="error-msg"></div>
+
+            <button class="btn" id="login-btn" onclick="doLogin()">登 录</button>
+        </form>
+
+        <div class="back-link">
+            <a href="game.html">返回游戏首页</a>
+        </div>
+    </div>
+
+    <script src="/js/auth-manager.js"></script>
+    <script>
+        const API_BASE = 'https://aibotdemo.skym178.com/api';
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 检查是否已登录且是管理员
+            if (AuthManager.isLoggedIn()) {
+                try {
+                    const token = AuthManager.getToken();
+                    const response = await fetch(`${API_BASE}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (data.success && data.user && data.user.is_admin) {
+                        // 已登录且是管理员，直接跳转
+                        window.location.href = 'admin.html';
+                        return;
+                    }
+                } catch (e) {
+                    // 验证失败，继续显示登录页面
+                }
+            }
+            // 加载验证码
+            refreshCaptcha();
+        });
+
+        // 刷新验证码
+        async function refreshCaptcha() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/captcha?t=${Date.now()}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('captcha-img').src = data.image;
+                    document.getElementById('captcha-id').value = data.captchaId;
+                }
+            } catch (error) {
+                console.error('获取验证码失败:', error);
+                showError('获取验证码失败，请刷新页面重试');
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('error-msg').textContent = message;
+        }
+
+        // 清除错误信息
+        function clearError() {
+            document.getElementById('error-msg').textContent = '';
+        }
+
+        // 执行登录
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const captchaCode = document.getElementById('captcha').value.trim();
+            const captchaId = document.getElementById('captcha-id').value;
+
+            // 表单验证
+            if (!username) {
+                showError('请输入用户名');
+                return;
+            }
+            if (!password) {
+                showError('请输入密码');
+                return;
+            }
+            if (!captchaCode) {
+                showError('请输入验证码');
+                return;
+            }
+
+            clearError();
+
+            // 禁用按钮，显示加载状态
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>登录中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        captchaId,
+                        captchaCode
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('[Debug] 登录成功，返回数据:', data);
+                    // 登录成功，保存token
+                    localStorage.setItem('authToken', data.token);
+
+                    // 检查是否为管理员
+                    if (data.user && data.user.is_admin) {
+                        // 管理员，跳转到管理后台
+                        window.location.href = 'admin.html';
+                    } else {
+                        // 非管理员
+                        localStorage.removeItem('authToken');
+                        showError('您没有管理员权限');
+                        refreshCaptcha();
+                    }
+                } else {
+                    // 登录失败
+                    showError(data.error || '登录失败，请检查用户名和密码');
+                    refreshCaptcha();
+                }
+            } catch (error) {
+                console.error('登录请求失败:', error);
+                showError('网络错误，请检查网络连接');
+                refreshCaptcha();
+            } finally {
+                // 恢复按钮状态
+                btn.disabled = false;
+                btn.innerHTML = '登 录';
+            }
+        }
+
+        // 回车登录
+        document.getElementById('login-form').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+    </script>
+</body>
+</html>

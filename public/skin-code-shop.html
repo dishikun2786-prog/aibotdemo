@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>皮肤激活码商店 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --member-bg: #f0f2f5;
+            --member-card-bg: rgba(255, 255, 255, 0.92);
+            --member-primary: #4a90e2;
+            --member-primary-dark: #3a7bc8;
+            --member-accent: #67c23a;
+            --member-text: #1a1a1a;
+            --member-text-secondary: #606266;
+            --member-text-light: #909399;
+            --member-border: rgba(0, 0, 0, 0.08);
+            --member-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --member-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --member-radius: 12px;
+            --member-radius-lg: 16px;
+            --member-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--member-bg);
+            color: var(--member-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 240px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a18cd1 100%);
+            z-index: 0;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--member-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--member-bg);
+            color: var(--member-text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--member-text);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .energy-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #5d4037;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--member-text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: #f0f2f5;
+            border-radius: var(--member-radius);
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+
+        .tab-item {
+            flex: 1;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--member-text-secondary);
+            border-radius: var(--member-radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .tab-item.active {
+            background: white;
+            color: var(--member-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .skin-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .skin-card {
+            background: white;
+            border-radius: var(--member-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+        }
+
+        .skin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--member-shadow-hover);
+        }
+
+        .skin-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .skin-info {
+            padding: 12px;
+        }
+
+        .skin-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--member-text);
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .skin-stats {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .skin-stat {
+            font-size: 11px;
+            color: var(--member-text-light);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .skin-price {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .price-tag {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #f39c12;
+        }
+
+        .stock-tag {
+            font-size: 11px;
+            color: var(--member-text-light);
+        }
+
+        .stock-tag.low {
+            color: #e74c3c;
+        }
+
+        .buy-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: var(--member-radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .buy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .buy-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .code-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .code-card {
+            background: white;
+            border-radius: var(--member-radius);
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .code-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .code-skin-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--member-text);
+        }
+
+        .code-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .code-status.unused {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .code-status.used {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .code-value {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: var(--member-radius-sm);
+            margin-bottom: 12px;
+        }
+
+        .code-text {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--member-text);
+        }
+
+        .copy-code-btn {
+            padding: 6px 12px;
+            background: var(--member-primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-code-btn:hover {
+            background: var(--member-primary-dark);
+        }
+
+        .copy-code-btn.copied {
+            background: var(--member-accent);
+        }
+
+        .activate-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: var(--member-radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .activate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .activate-btn.activated {
+            background: #4caf50;
+            cursor: default;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--member-text-light);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 14px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--member-text-light);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--member-border);
+            border-top-color: var(--member-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--member-accent);
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .bottom-tip {
+            text-align: center;
+            padding: 16px;
+            color: var(--member-text-light);
+            font-size: 13px;
+        }
+
+        .bottom-tip a {
+            color: var(--member-primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <span class="navbar-title">皮肤激活码商店</span>
+        </div>
+        <div class="navbar-right">
+            <div class="energy-display">
+                ⚡ <span id="userEnergy">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 商店页面 -->
+        <div class="page active" id="shopPage">
+            <div class="card">
+                <div class="card-title">
+                    <span>🎫</span> 激活码商店
+                </div>
+                <div id="shopLoading" class="loading">
+                    <div class="loading-spinner"></div>
+                    加载中...
+                </div>
+                <div class="skin-grid" id="shopList"></div>
+            </div>
+            <div class="bottom-tip">
+                <a href="#" onclick="switchPage('myCodes'); return false;">查看我的激活码 →</a>
+            </div>
+        </div>
+
+        <!-- 我的激活码页面 -->
+        <div class="page" id="myCodesPage">
+            <div class="card">
+                <div class="card-title">
+                    <span>🎫</span> 我的激活码
+                </div>
+                <div id="codesLoading" class="loading">
+                    <div class="loading-spinner"></div>
+                    加载中...
+                </div>
+                <div class="code-list" id="codesList"></div>
+            </div>
+            <div class="bottom-tip">
+                <a href="#" onclick="switchPage('shop'); return false;">返回商店 →</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let currentEnergy = 0;
+
+        function goBack() {
+            window.location.href = '/member.html';
+        }
+
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast' + (type ? ' ' + type : '');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        async function checkAuth() {
+            const authToken = AuthManager.getToken();
+            if (!authToken) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            return authToken;
+        }
+
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+
+            if (page === 'shop') {
+                loadShop();
+            } else if (page === 'myCodes') {
+                loadMyCodes();
+            }
+        }
+
+        async function loadShop() {
+            try {
+                const authToken = await checkAuth();
+                if (!authToken) return;
+
+                const res = await fetch(API_BASE + '/api/skin-codes/shop', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                document.getElementById('shopLoading').style.display = 'none';
+
+                if (data.success) {
+                    currentEnergy = data.data.user_energy;
+                    document.getElementById('userEnergy').textContent = currentEnergy;
+                    renderShop(data.data.skins);
+                } else {
+                    showToast(data.error || '加载失败', 'error');
+                }
+            } catch (err) {
+                console.error('加载商店失败:', err);
+                document.getElementById('shopLoading').textContent = '加载失败';
+            }
+        }
+
+        function renderShop(skins) {
+            const container = document.getElementById('shopList');
+            if (!skins || skins.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: span 2;">
+                        <div class="empty-icon">🎫</div>
+                        <div class="empty-text">暂无激活码可购买</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = skins.map(skin => `
+                <div class="skin-card">
+                    <img class="skin-image" src="${skin.image_path || '/bg/180.png'}" alt="${skin.name}">
+                    <div class="skin-info">
+                        <div class="skin-name">${skin.name}</div>
+                        <div class="skin-stats">
+                            <span class="skin-stat">⚔️ 攻击+${skin.pk_attack || 0}</span>
+                            <span class="skin-stat">🛡️ 防御+${skin.pk_defense || 0}</span>
+                        </div>
+                        <div class="skin-price">
+                            <span class="price-tag">⚡ ${skin.code_price || skin.energy_price}</span>
+                            <span class="stock-tag ${(skin.code_stock || 0) < 5 ? 'low' : ''}">${skin.code_stock || 0}个</span>
+                        </div>
+                        <button class="buy-btn"
+                                onclick="buyCode(${skin.id}, '${skin.name}', ${skin.code_price || skin.energy_price}, ${skin.code_stock || 0})"
+                                ${(skin.code_stock || 0) <= 0 ? 'disabled' : ''}>
+                            ${(skin.code_stock || 0) <= 0 ? '已售罄' : '购买激活码'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function buyCode(skinId, skinName, price, stock) {
+            if (stock <= 0) {
+                showToast('该激活码已售罄', 'error');
+                return;
+            }
+
+            if (currentEnergy < price) {
+                showToast(`能量不足，需要 ${price} 点能量`, 'error');
+                return;
+            }
+
+            if (!confirm(`确定花费 ${price} 能量购买 "${skinName}" 的激活码吗？`)) {
+                return;
+            }
+
+            // 先检查是否设置了支付密码
+            const hasPayPassword = await checkPayPassword();
+            if (!hasPayPassword) {
+                if (confirm('您还未设置支付密码，购买皮肤需要验证支付密码。是否前往设置？')) {
+                    window.location.href = '/member.html';
+                }
+                return;
+            }
+
+            // 弹出支付密码输入框
+            const payPassword = await showPayPasswordInput();
+            if (!payPassword) {
+                return; // 用户取消
+            }
+
+            try {
+                const authToken = AuthManager.getToken();
+                const res = await fetch(API_BASE + '/api/skin-codes/buy', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        skin_id: skinId,
+                        pay_password: payPassword
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    currentEnergy -= price;
+                    document.getElementById('userEnergy').textContent = currentEnergy;
+                    showToast('购买成功！激活码: ' + data.data.code, 'success');
+                    loadShop();
+                } else if (data.need_pay_password) {
+                    if (confirm('您还未设置支付密码，购买皮肤需要验证支付密码。是否前往设置？')) {
+                        window.location.href = '/member.html';
+                    }
+                } else if (data.require_pay_password) {
+                    showToast('请输入支付密码', 'error');
+                    buyCode(skinId, skinName, price, stock); // 重新输入
+                } else {
+                    showToast(data.error || '购买失败', 'error');
+                }
+            } catch (err) {
+                console.error('购买失败:', err);
+                showToast('购买失败，请稍后重试', 'error');
+            }
+        }
+
+        // 检查是否设置了支付密码
+        async function checkPayPassword() {
+            const authToken = AuthManager.getToken();
+            if (!authToken) return false;
+
+            try {
+                const res = await fetch(API_BASE + '/api/auth/has-pay-password', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                return data.success && data.data.has_pay_password;
+            } catch (err) {
+                console.error('检查支付密码失败:', err);
+                return false;
+            }
+        }
+
+        // 弹出支付密码输入框
+        let payPasswordResolve = null;
+
+        function showPayPasswordInput() {
+            return new Promise((resolve) => {
+                payPasswordResolve = resolve;
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                `;
+
+                overlay.innerHTML = `
+                    <div style="background: white; border-radius: 12px; padding: 24px; width: 300px; text-align: center;">
+                        <h3 style="margin: 0 0 16px; font-size: 16px;">请输入支付密码</h3>
+                        <input type="password" id="payPasswordInput"
+                            style="width: 100%; padding: 12px; font-size: 18px; letter-spacing: 8px; text-align: center;
+                                   border: 1px solid #ddd; border-radius: 8px; outline: none; ime-mode: disabled;"
+                            placeholder="6位数字" maxlength="6" autocomplete="off">
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button onclick="cancelPayPassword()"
+                                style="flex: 1; padding: 12px; border: none; border-radius: 8px;
+                                       background: #f0f0f0; cursor: pointer;">取消</button>
+                            <button onclick="confirmPayPassword()"
+                                style="flex: 1; padding: 12px; border: none; border-radius: 8px;
+                                       background: #4CAF50; color: white; cursor: pointer;">确认</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+
+                const input = overlay.querySelector('#payPasswordInput');
+                input.focus();
+
+                // 只允许输入数字
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+
+                // 回车确认
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        confirmPayPassword();
+                    }
+                });
+
+                // 保存 overlay 引用用于关闭
+                overlay.dataset.payPasswordOverlay = 'true';
+            });
+        }
+
+        // 确认支付密码
+        function confirmPayPassword() {
+            const overlay = document.querySelector('[data-pay-password-overlay="true"]');
+            if (!overlay) return;
+
+            const input = document.getElementById('payPasswordInput');
+            const pwd = input ? input.value : '';
+
+            if (!/^\d{6}$/.test(pwd)) {
+                alert('请输入6位数字支付密码');
+                return;
+            }
+
+            overlay.remove();
+            if (payPasswordResolve) {
+                payPasswordResolve(pwd);
+                payPasswordResolve = null;
+            }
+        }
+
+        // 取消支付密码
+        function cancelPayPassword() {
+            const overlay = document.querySelector('[data-pay-password-overlay="true"]');
+            if (overlay) {
+                overlay.remove();
+            }
+            if (payPasswordResolve) {
+                payPasswordResolve(null);
+                payPasswordResolve = null;
+            }
+        }
+
+        async function loadMyCodes() {
+            try {
+                const authToken = await checkAuth();
+                if (!authToken) return;
+
+                const res = await fetch(API_BASE + '/api/skin-codes/my-codes', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                document.getElementById('codesLoading').style.display = 'none';
+
+                if (data.success) {
+                    renderCodes(data.data);
+                } else {
+                    showToast(data.error || '加载失败', 'error');
+                }
+            } catch (err) {
+                console.error('加载激活码失败:', err);
+                document.getElementById('codesLoading').textContent = '加载失败';
+            }
+        }
+
+        function renderCodes(codes) {
+            const container = document.getElementById('codesList');
+            if (!codes || codes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎫</div>
+                        <div class="empty-text">暂无激活码<br>去商店购买吧</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = codes.map(c => `
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-skin-name">${c.skin_name || '未知皮肤'}</span>
+                        <span class="code-status ${c.is_used ? 'used' : 'unused'}">
+                            ${c.is_used ? '已使用' : '未使用'}
+                        </span>
+                    </div>
+                    <div class="code-value">
+                        <span class="code-text">${c.code}</span>
+                        <button class="copy-code-btn" onclick="copyCode('${c.code}', this)">复制</button>
+                    </div>
+                    ${!c.is_used ? `
+                        <button class="activate-btn" onclick="activateSkin(${c.id}, '${c.skin_name}')">
+                            激活皮肤
+                        </button>
+                    ` : `
+                        <button class="activate-btn activated" disabled>
+                            已激活
+                        </button>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        function copyCode(code, btn) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = '已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        async function activateSkin(codeId, skinName) {
+            if (!confirm(`确定使用该激活码激活 "${skinName}" 皮肤吗？`)) {
+                return;
+            }
+
+            try {
+                const authToken = AuthManager.getToken();
+                const res = await fetch(API_BASE + '/api/skin-codes/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code_id: codeId })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('激活成功！', 'success');
+                    loadMyCodes();
+                } else {
+                    showToast(data.error || '激活失败', 'error');
+                }
+            } catch (err) {
+                console.error('激活失败:', err);
+                showToast('激活失败，请稍后重试', 'error');
+            }
+        }
+
+        async function init() {
+            await loadShop();
+        }
+
+        init();
+    </script>
+    <script src="/js/auth-manager.js"></script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

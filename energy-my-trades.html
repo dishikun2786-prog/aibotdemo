@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的交易 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --trade-bg: #f0f2f5;
+            --trade-card-bg: rgba(255, 255, 255, 0.92);
+            --trade-primary: #4a90e2;
+            --trade-primary-dark: #3a7bc8;
+            --trade-accent: #67c23a;
+            --trade-text: #1a1a1a;
+            --trade-text-secondary: #606266;
+            --trade-text-light: #909399;
+            --trade-border: rgba(0, 0, 0, 0.08);
+            --trade-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --trade-radius: 12px;
+            --trade-radius-lg: 16px;
+            --trade-danger: #f56c6c;
+            --trade-warning: #e6a23c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--trade-bg);
+            color: var(--trade-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--trade-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--trade-bg);
+            color: var(--trade-text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: var(--trade-card-bg);
+            border: 1px solid var(--trade-border);
+            color: var(--trade-text-secondary);
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--trade-primary);
+            color: white;
+            border-color: var(--trade-primary);
+        }
+
+        .trade-card {
+            background: var(--trade-card-bg);
+            border-radius: var(--trade-radius-lg);
+            box-shadow: var(--trade-shadow);
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .trade-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--trade-shadow);
+        }
+
+        .trade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .trade-no {
+            font-size: 13px;
+            color: var(--trade-text-light);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-pending { background: #e6a23c; color: white; }
+        .status-submitted { background: #409eff; color: white; }
+        .status-completed { background: #67c23a; color: white; }
+        .status-cancelled { background: #909399; color: white; }
+        .status-disputed { background: #f56c6c; color: white; }
+        .status-resolved { background: #909399; color: white; }
+
+        .trade-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .trade-counterparty {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .trade-counterparty.seller {
+            color: #f093fb;
+        }
+
+        .trade-counterparty.buyer {
+            color: #f5576c;
+        }
+
+        .trade-role {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--trade-bg);
+            color: var(--trade-text-light);
+        }
+
+        .trade-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trade-energy {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--trade-primary);
+        }
+
+        .trade-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--trade-danger);
+        }
+
+        .trade-time {
+            font-size: 12px;
+            color: var(--trade-text-light);
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--trade-text-light);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--trade-text-light);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--trade-card-bg);
+            border: 1px solid var(--trade-border);
+            color: var(--trade-text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn.active {
+            background: var(--trade-primary);
+            color: white;
+            border-color: var(--trade-primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="back-btn" onclick="history.back()">&#8592;</button>
+            <span class="navbar-title">我的交易</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-role="all" onclick="switchTab('all')">全部</button>
+            <button class="tab" data-role="buyer" onclick="switchTab('buyer')">我买到的</button>
+            <button class="tab" data-role="seller" onclick="switchTab('seller')">我卖出的</button>
+        </div>
+
+        <div id="tradeList"></div>
+        <div id="loading" class="loading">加载中...</div>
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">&#128230;</div>
+            <div>暂无交易记录</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let token = AuthManager.getToken();
+        let currentPage = 1;
+        let currentRole = 'all';
+        let currentStatus = 'all';
+
+        function init() {
+            if (!token) {
+                alert('请先登录');
+                window.location.href = 'game.html';
+                return;
+            }
+            loadTrades();
+        }
+
+        async function loadTrades() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('tradeList').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'none';
+
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 15,
+                    role: currentRole
+                });
+
+                const response = await fetch(`${API_BASE}/api/energy-trade/trades?${params}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                // 检查令牌是否过期
+                if (response.status === 403 || response.status === 401) {
+                    const result = await response.json();
+                    if (result.error && (result.error.includes('无效') || result.error.includes('过期') || result.error.includes('token'))) {
+                        alert('登录状态已过期，请重新登录');
+                        localStorage.removeItem('authToken');
+                        window.location.href = 'game.html';
+                        return;
+                    }
+                }
+
+                const result = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (result.success) {
+                    renderTrades(result.data.list);
+                    renderPagination(result.data.pagination);
+                } else {
+                    alert(result.error || '加载失败');
+                }
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                alert('网络错误');
+            }
+        }
+
+        function renderTrades(trades) {
+            if (!trades || trades.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            const html = trades.map(trade => {
+                // 判断当前用户是买家还是卖家
+                let role, counterparty;
+                if (trade.buyer_id === getUserId()) {
+                    role = 'buyer';
+                    counterparty = trade.seller_username;
+                } else {
+                    role = 'seller';
+                    counterparty = trade.buyer_username;
+                }
+
+                const statusMap = {
+                    'pending_payment': { text: '待付款', class: 'status-pending' },
+                    'payment_submitted': { text: '待确认', class: 'status-submitted' },
+                    'payment_confirmed': { text: '已确认', class: 'status-submitted' },
+                    'energy_released': { text: '已完成', class: 'status-completed' },
+                    'cancelled': { text: '已取消', class: 'status-cancelled' },
+                    'disputed': { text: '纠纷中', class: 'status-disputed' },
+                    'resolved_seller': { text: '已解决', class: 'status-resolved' },
+                    'resolved_buyer': { text: '已解决', class: 'status-resolved' }
+                };
+                const statusInfo = statusMap[trade.status] || { text: trade.status, class: 'status-pending' };
+
+                return `
+                    <div class="trade-card" onclick="goToTrade(${trade.id}, '${trade.trade_no}')">
+                        <div class="trade-header">
+                            <span class="trade-no">${trade.trade_no}</span>
+                            <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                        </div>
+                        <div class="trade-info">
+                            <span class="trade-counterparty ${role}">${role === 'buyer' ? '向 ' + counterparty + ' 购买' : '出售给 ' + counterparty}</span>
+                            <span class="trade-role">${role === 'buyer' ? '买家' : '卖家'}</span>
+                        </div>
+                        <div class="trade-details">
+                            <span class="trade-energy">${trade.energy_amount} 能量</span>
+                            <span class="trade-price">¥${parseFloat(trade.price).toFixed(2)}</span>
+                        </div>
+                        <div class="trade-time">${formatTime(trade.created_at)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('tradeList').innerHTML = html;
+        }
+
+        function renderPagination(pagination) {
+            if (pagination.totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<button class="page-btn" onclick="goPage(${pagination.page - 1})" ${pagination.page === 1 ? 'disabled' : ''}>&laquo; 上一页</button>`;
+            
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                if (i === 1 || i === pagination.totalPages || (i >= pagination.page - 1 && i <= pagination.page + 1)) {
+                    html += `<button class="page-btn ${i === pagination.page ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+                } else if (i === pagination.page - 2 || i === pagination.page + 2) {
+                    html += `<span>...</span>`;
+                }
+            }
+
+            html += `<button class="page-btn" onclick="goPage(${pagination.page + 1})" ${pagination.page === pagination.totalPages ? 'disabled' : ''}>下一页 &raquo;</button>`;
+
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadTrades();
+            window.scrollTo(0, 0);
+        }
+
+        function switchTab(role) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.role === role);
+            });
+            currentRole = role;
+            currentPage = 1;
+            loadTrades();
+        }
+
+        function goToTrade(tradeId, tradeNo) {
+            window.location.href = `energy-trade-chat.html?trade_id=${tradeId}&trade_no=${tradeNo}`;
+        }
+
+        function getUserId() {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.userId;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function formatTime(time) {
+            const date = new Date(time);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        init();
+    </script>
+    <script src="/js/auth-manager.js"></script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI客服聊天</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff00;
+            --bg-dark: #050505;
+            --glass-bg: rgba(16, 20, 24, 0.85);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            background: var(--bg-dark);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        @media (min-width: 768px) { body { max-width: 90vw; } }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .header h1 { margin: 0; font-size: 1rem; font-family: 'Orbitron', sans-serif; color: var(--neon-purple); }
+        .header .status { font-size: 0.75rem; color: var(--neon-green); }
+
+        .avatar-info {
+            padding: 12px 16px;
+            background: rgba(188, 19, 254, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .avatar-details h2 { margin: 0; font-size: 1rem; }
+        .avatar-details p { margin: 4px 0 0; font-size: 0.75rem; color: #888; }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            min-height: 200px;
+            max-height: calc(100vh - 220px);
+        }
+        .msg {
+            margin-bottom: 14px;
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .msg.user {
+            margin-left: auto;
+            background: rgba(0, 243, 255, 0.15);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+        }
+        .msg.agent {
+            margin-right: auto;
+            background: rgba(188, 19, 254, 0.12);
+            border: 1px solid var(--neon-purple);
+            color: var(--neon-purple);
+        }
+        .msg.system {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin: 20px 0;
+        }
+        .msg .time {
+            font-size: 0.7rem;
+            color: #66cccc;
+            margin-top: 4px;
+        }
+        .msg .typing {
+            display: inline-block;
+            animation: typing 1s infinite;
+        }
+        @keyframes typing {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* 流式消息样式 */
+        .msg.streaming-msg {
+            position: relative;
+        }
+        .msg.streaming-msg::after {
+            content: '';
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-purple);
+            animation: streamingDot 1s infinite;
+        }
+        @keyframes streamingDot {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        .msg.streaming-msg .streaming-content {
+            min-height: 20px;
+        }
+
+        .input-area {
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--neon-blue);
+            color: #000;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 0 12px var(--neon-blue); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-row { display: flex; gap: 8px; margin-top: 8px; justify-content: center; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border-color); }
+        .btn-image { background: var(--neon-purple); }
+
+        /* 图片消息样式 */
+        .msg-image {
+            padding: 4px !important;
+        }
+        .msg-image img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .msg-image img:hover {
+            transform: scale(1.02);
+        }
+
+        /* ViewerJS 样式覆盖 */
+        .viewer-backdrop {
+            background: rgba(0, 0, 0, 0.9) !important;
+        }
+
+        .loading { text-align: center; padding: 20px; color: #888; }
+        .error { color: var(--neon-red); text-align: center; padding: 10px; }
+        .success { color: var(--neon-green); text-align: center; padding: 10px; }
+
+        .footer-tip {
+            text-align: center;
+            padding: 8px;
+            font-size: 0.7rem;
+            color: #555;
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* ========== 现代简约风格 (Ant Design) ========== */
+        body.modern {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        body.modern .header {
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        body.modern .header h1 {
+            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+        }
+        body.modern .header .status {
+            color: #52c41a;
+        }
+        body.modern .avatar-info {
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        body.modern .avatar-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        body.modern .avatar-details h2 {
+            color: #333;
+        }
+        body.modern .avatar-details p {
+            color: #999;
+        }
+        body.modern .messages {
+            background: #ffffff;
+            padding: 16px;
+        }
+        /* 现代风格 - 微信气泡效果 */
+        body.modern .msg {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            position: relative;
+            line-height: 1.5;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        body.modern .msg.user {
+            margin-left: auto;
+            background-color: #1677ff !important;
+            border: none !important;
+            color: #ffffff !important;
+            border-top-right-radius: 4px;
+        }
+        /* 用户消息气泡箭头 */
+        body.modern .msg.user::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 12px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent transparent #1677ff;
+        }
+        body.modern .msg.agent,
+        body.modern .msg.assistant {
+            margin-right: auto;
+            background-color: #e8e8e8 !important;
+            border: none !important;
+            color: #333333 !important;
+            border-top-left-radius: 4px;
+        }
+        /* AI消息气泡箭头 */
+        body.modern .msg.agent::before,
+        body.modern .msg.assistant::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 12px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent #e8e8e8 transparent transparent;
+        }
+        body.modern .msg .time {
+            color: #999;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        body.modern .input-area {
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+            padding: 16px;
+        }
+        body.modern input[type="text"] {
+            background: #f5f5f5;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            color: #000000;
+        }
+        body.modern input[type="text"]:focus {
+            border-color: #1677ff;
+            box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+        }
+        body.modern .btn {
+            background: #1677ff;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 400;
+        }
+        body.modern .btn:hover {
+            background: #4096ff;
+            box-shadow: 0 2px 8px rgba(22,119,255,0.3);
+        }
+        body.modern .btn-secondary {
+            background: #fff;
+            border: 1px solid #d9d9d9;
+            color: #666;
+        }
+        body.modern .btn-secondary:hover {
+            border-color: #1677ff;
+            color: #1677ff;
+        }
+        body.modern .btn-image {
+            background: #722ed1;
+        }
+        body.modern .btn-image:hover {
+            background: #9254de;
+        }
+
+        /* 现代风格图片消息 */
+        body.modern .msg-image {
+            padding: 6px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        body.modern .msg-image img {
+            max-width: 180px;
+            max-height: 180px;
+            border-radius: 8px;
+        }
+        body.modern .footer-tip {
+            background: #fafafa;
+            color: #999;
+        }
+
+        /* 现代风格 - 联网搜索复选框和文字 */
+        body.modern .btn-row label,
+        body.modern .search-label {
+            color: #333;
+            font-size: 14px;
+        }
+        body.modern .btn-row input[type="checkbox"],
+        body.modern .search-label input[type="checkbox"] {
+            accent-color: #1677ff;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 默认风格 - 联网搜索复选框和文字 */
+        .search-label {
+            color: var(--neon-cyan);
+            font-size: 14px;
+        }
+        .search-label input[type="checkbox"] {
+            accent-color: var(--neon-cyan);
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 id="pageTitle">AI客服</h1>
+        <span class="status" id="connectionStatus">连接中...</span>
+    </header>
+
+    <div class="avatar-info" id="avatarInfo" style="display:none;">
+        <div class="avatar-avatar">🤖</div>
+        <div class="avatar-details">
+            <h2 id="avatarName">AI助手</h2>
+            <p id="avatarDesc">在线客服</p>
+        </div>
+    </div>
+
+    <div class="messages" id="messages">
+        <div class="msg system" id="welcome">正在连接AI客服...</div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-row">
+            <input type="text" id="input" placeholder="输入消息..." autocomplete="off" disabled>
+            <label class="btn btn-image" for="imageInput" title="发送图片" style="display:flex;align-items:center;justify-content:center;padding:10px;cursor:pointer;">📷</label>
+            <input type="file" id="imageInput" accept="image/*" style="display:none;">
+            <button class="btn" id="btnSend" disabled>发送</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-secondary" id="btnNewChat">新对话</button>
+            <label class="search-label" style="display:flex;align-items:center;gap:4px;margin-left:8px;cursor:pointer;">
+                <input type="checkbox" id="enableSearch"> 联网搜索
+            </label>
+        </div>
+    </div>
+
+    <div class="footer-tip">
+        由 AI分身的智能客服 | 无需登录即可对话
+    </div>
+
+    <script>
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const avatarId = urlParams.get('avatar_id') || window.location.pathname.split('/agent/chat/')[1]?.split('?')[0];
+        const token = urlParams.get('token');
+
+        const API_BASE = window.location.origin;
+        let sessionId = null;
+        let avatarName = 'AI助手';
+        let socket = null; // Socket连接
+        let viewer = null; // 图片预览器
+
+        // 元素
+        const messagesEl = document.getElementById('messages');
+        const inputEl = document.getElementById('input');
+        const btnSend = document.getElementById('btnSend');
+        const btnNewChat = document.getElementById('btnNewChat');
+        const welcomeEl = document.getElementById('welcome');
+        const statusEl = document.getElementById('connectionStatus');
+        const avatarInfoEl = document.getElementById('avatarInfo');
+        const avatarNameEl = document.getElementById('avatarName');
+        const avatarDescEl = document.getElementById('avatarDesc');
+
+        // 初始化
+        async function init() {
+            if (!avatarId || !token) {
+                showError('链接无效，缺少必要参数');
+                return;
+            }
+
+            try {
+                // 验证链接
+                const verifyRes = await fetch(API_BASE + '/api/agent-chat/verify/' + avatarId + '?token=' + token);
+                const verifyData = await verifyRes.json();
+
+                if (!verifyData.success) {
+                    showError(verifyData.error || '链接验证失败');
+                    return;
+                }
+
+                // 显示分身信息
+                avatarName = verifyData.avatar.name || 'AI助手';
+                document.title = avatarName + ' - AI客服';
+                document.getElementById('pageTitle').textContent = avatarName;
+                avatarNameEl.textContent = avatarName;
+                avatarDescEl.textContent = '在线客服';
+                avatarInfoEl.style.display = 'flex';
+
+                // 应用聊天风格
+                const chatStyle = verifyData.avatar.chat_style || 'modern';
+                if (chatStyle === 'modern') {
+                    document.body.classList.add('modern');
+                }
+
+                // 加载欢迎语
+                await loadWelcomeMessage();
+
+                // 隐藏欢迎消息
+                welcomeEl.style.display = 'none';
+
+                // 启用输入
+                inputEl.disabled = false;
+                btnSend.disabled = false;
+                statusEl.textContent = '在线';
+                statusEl.style.color = 'var(--neon-green)';
+
+                // 创建会话
+                await createSession();
+
+                // 连接Socket
+                connectSocket();
+
+            } catch (e) {
+                showError('连接失败: ' + e.message);
+            }
+        }
+
+        // 加载欢迎语
+        async function loadWelcomeMessage() {
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat/welcome/' + avatarId + '?session_secret=' + token);
+                const data = await res.json();
+                if (data.success && data.data?.welcome_message) {
+                    addMessage('assistant', data.data.welcome_message);
+                }
+            } catch (e) {
+                console.error('加载欢迎语失败:', e);
+            }
+        }
+
+        // 连接Socket
+        function connectSocket() {
+            if (!sessionId) {
+                console.log('等待会话创建...');
+                setTimeout(connectSocket, 500);
+                return;
+            }
+
+            // 断开旧连接
+            if (socket) {
+                socket.disconnect();
+            }
+
+            socket = io(API_BASE + '/agent-chat', {
+                auth: { token: token },
+                query: {
+                    sessionId: sessionId,
+                    token: token,
+                    role: 'user'
+                },
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                console.log('用户端Socket connected');
+                statusEl.textContent = '在线';
+                statusEl.style.color = 'var(--neon-green)';
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log('用户端Socket disconnected, reason:', reason);
+                statusEl.textContent = '离线';
+                statusEl.style.color = 'var(--neon-red)';
+                // 5秒后自动重连
+                setTimeout(() => {
+                    if (sessionId) {
+                        console.log('尝试重新连接Socket...');
+                        connectSocket();
+                    }
+                }, 5000);
+            });
+
+            socket.on('connect_error', (err) => {
+                console.error('Socket连接错误:', err.message);
+            });
+
+            // 监听新消息
+            socket.on('new_message', (message) => {
+                console.log('收到消息:', message);
+                const role = message.role;
+
+                // 显示所有收到的消息（人工客服和AI的消息）
+                if (role === 'assistant' || role === 'human_operator') {
+                    // 移除之前的typing
+                    removeTyping();
+                    console.log('显示消息, role:', role, 'content:', message.content, 'imageUrl:', message.imageUrl);
+                    // 支持图片消息
+                    addMessage(
+                        role === 'human_operator' ? 'agent' : 'assistant',
+                        message.content,
+                        null,
+                        message.messageType || 'text',
+                        message.imageUrl
+                    );
+                } else if (role === 'user') {
+                    // 用户自己发送的消息（来自其他设备或Socket广播）
+                    // 支持图片消息
+                    addMessage(
+                        'user',
+                        message.content,
+                        null,
+                        message.messageType || 'text',
+                        message.imageUrl
+                    );
+                }
+            });
+
+            // 监听AI流式开始
+            socket.on('ai_stream_start', (data) => {
+                console.log('[前端] AI流式开始:', data);
+                // 创建AI消息占位符
+                addStreamingMessage(data.messageId);
+            });
+
+            // 监听AI流式内容块
+            socket.on('ai_stream_chunk', (data) => {
+                console.log('[前端] AI流式内容块:', data.chunk, 'messageId:', data.messageId);
+                // 追加内容到消息
+                appendToStreamingMessage(data.messageId, data.chunk);
+            });
+
+            // 监听AI流式结束
+            socket.on('ai_stream_end', (data) => {
+                console.log('[前端] AI流式结束:', data);
+                // 完成流式消息
+                finishStreamingMessage(data.messageId, data.content);
+            });
+
+            // 监听AI流式错误
+            socket.on('ai_stream_error', (data) => {
+                console.error('[前端] AI流式错误:', data);
+                // 显示错误消息
+                finishStreamingMessage(data.messageId, '【系统错误】' + data.error);
+            });
+
+            // 监听typing状态
+            socket.on('typing', (data) => {
+                if (data.isTyping && data.role !== 'user') {
+                    addTyping();
+                } else if (!data.isTyping) {
+                    removeTyping();
+                }
+            });
+
+            // 监听消息发送成功，用真实ID替换临时ID
+            socket.on('message_sent', (data) => {
+                console.log('消息发送成功:', data);
+                // 找到临时消息，用真实messageId更新
+                const tempId = data.tempId;
+                const realMessageId = data.messageId;
+                // 更新消息元素的数据属性
+                const msgEl = messagesEl.querySelector(`[data-temp-id="${tempId}"]`);
+                if (msgEl) {
+                    msgEl.setAttribute('data-message-id', realMessageId);
+                    msgEl.removeAttribute('data-temp-id');
+                }
+            });
+
+            // 监听模式变更
+            socket.on('mode_changed', (data) => {
+                console.log('模式变更:', data);
+                if (data.mode === 'human') {
+                    addMessage('system', '人工客服已接入');
+                } else {
+                    addMessage('system', '已切换为AI模式');
+                }
+            });
+
+            // 监听客服接入
+            socket.on('operator_joined', (data) => {
+                addMessage('system', `${data.operatorName || '人工客服'} 已接入会话`);
+            });
+        }
+
+        // 创建会话
+        async function createSession() {
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat/create-session?token=' + token, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avatar_id: avatarId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    sessionId = data.session_id;
+                }
+            } catch (e) {
+                console.error('创建会话失败:', e);
+            }
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const message = inputEl.value.trim();
+            if (!message || !sessionId) return;
+
+            // 获取联网搜索设置（放在开头统一获取）
+            const enableSearch = document.getElementById('enableSearch')?.checked || false;
+
+            // 生成临时ID用于标记消息
+            const tempId = 'temp_' + Date.now();
+
+            // 添加用户消息（立即显示），传入tempId
+            addMessage('user', message, tempId);
+            inputEl.value = '';
+
+            // 如果Socket已连接，通过Socket发送
+            if (socket && socket.connected) {
+                // 后端会在AI响应时自动发送typing事件，不需要前端提前显示
+                console.log('[前端] 发送消息, enableSearch:', enableSearch);
+                socket.emit('send_message', {
+                    content: message,
+                    tempId: tempId,
+                    enableSearch: enableSearch
+                });
+
+                // Socket会推送AI响应，不需要在这里处理HTTP响应
+                return;
+            }
+
+            // Socket不可用，使用HTTP API
+            const typingEl = addTyping();
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat/message?token=' + token, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        avatar_id: avatarId,
+                        session_id: sessionId,
+                        message: message,
+                        enable_search: enableSearch
+                    })
+                });
+
+                const data = await res.json();
+
+                // 移除typing
+                typingEl.remove();
+
+                if (data.success) {
+                    const content = data.message?.content || data.message?.text || 'AI响应为空';
+                    addMessage('assistant', content);
+                } else {
+                    showError(data.error || '发送失败');
+                }
+            } catch (e) {
+                typingEl.remove();
+                showError('发送失败: ' + e.message);
+            }
+        }
+
+        // 添加消息
+        function addMessage(role, content, tempId = null, messageType = 'text', imageUrl = null) {
+            const div = document.createElement('div');
+            // 支持 system 角色
+            if (role === 'system') {
+                div.className = 'msg system';
+            } else {
+                div.className = 'msg ' + role;
+            }
+
+            // 如果是图片消息
+            if (messageType === 'image' && imageUrl) {
+                div.classList.add('msg-image');
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = '图片消息';
+                img.loading = 'lazy';
+                // 点击图片放大预览
+                img.addEventListener('click', function() {
+                    if (viewer) {
+                        viewer.destroy();
+                    }
+                    viewer = new Viewer(img, {
+                        hidden: function() {
+                            viewer.destroy();
+                        }
+                    });
+                    viewer.show();
+                });
+                div.appendChild(img);
+            } else if (content) {
+                div.innerHTML = content;
+            }
+
+            // 如果有临时ID，添加到元素上
+            if (tempId) {
+                div.setAttribute('data-temp-id', tempId);
+            }
+
+            const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'time';
+            timeDiv.textContent = time;
+            div.appendChild(timeDiv);
+
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // 创建流式消息占位符
+        function addStreamingMessage(messageId) {
+            const div = document.createElement('div');
+            div.className = 'msg agent streaming-msg';
+            div.setAttribute('data-stream-id', messageId);
+
+            // 内容区域
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'streaming-content';
+            div.appendChild(contentDiv);
+
+            // 时间
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'time';
+            timeDiv.textContent = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            div.appendChild(timeDiv);
+
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+            return div;
+        }
+
+        // 追加内容到流式消息
+        function appendToStreamingMessage(messageId, chunk) {
+            const div = messagesEl.querySelector(`[data-stream-id="${messageId}"]`);
+            if (div) {
+                const contentDiv = div.querySelector('.streaming-content');
+                if (contentDiv) {
+                    // 追加文本，保留HTML格式
+                    contentDiv.innerHTML += chunk;
+                }
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+        }
+
+        // 完成流式消息
+        function finishStreamingMessage(messageId, finalContent) {
+            const div = messagesEl.querySelector(`[data-stream-id="${messageId}"]`);
+            if (div) {
+                // 移除流式标记
+                div.classList.remove('streaming-msg');
+                const contentDiv = div.querySelector('.streaming-content');
+                if (contentDiv) {
+                    // 设置最终内容
+                    contentDiv.innerHTML = finalContent;
+                }
+            }
+            // 移除typing（如果还有的话）
+            removeTyping();
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // 添加typing
+        function addTyping() {
+            const div = document.createElement('div');
+            div.className = 'msg agent typing-msg';
+            div.innerHTML = '<span class="typing">正在输入...</span>';
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return div;
+        }
+
+        // 移除typing指示器
+        function removeTyping() {
+            const typingEls = messagesEl.querySelectorAll('.typing-msg');
+            typingEls.forEach(el => el.remove());
+        }
+
+        // 显示错误
+        function showError(msg) {
+            const div = document.createElement('div');
+            div.className = 'error';
+            div.textContent = msg;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // 图片上传处理
+        document.getElementById('imageInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+
+            // 验证文件大小 (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过5MB');
+                return;
+            }
+
+            // 显示上传中
+            const tempId = 'temp_' + Date.now();
+            addMessage('user', '上传中...', tempId);
+            const typingEl = addTyping();
+
+            try {
+                // 先上传图片
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const uploadRes = await fetch(API_BASE + '/api/agent-chat/upload-image?token=' + token + '&avatar_id=' + avatarId, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const uploadData = await uploadRes.json();
+                typingEl.remove();
+
+                if (!uploadData.success) {
+                    // 移除临时消息
+                    const tempMsg = messagesEl.querySelector(`[data-temp-id="${tempId}"]`);
+                    if (tempMsg) tempMsg.remove();
+                    alert(uploadData.error || '图片上传失败');
+                    return;
+                }
+
+                const imageUrl = uploadData.image_url;
+
+                // 删除"上传中..."临时消息，正确显示图片消息
+                const uploadingMsg = messagesEl.querySelector(`[data-temp-id="${tempId}"]`);
+                if (uploadingMsg) uploadingMsg.remove();
+
+                // 添加图片消息（正确传递 messageType 和 imageUrl 参数）
+                addMessage('user', '', tempId, 'image', imageUrl);
+
+                // 通过Socket发送图片消息
+                if (socket && socket.connected) {
+                    socket.emit('send_message', {
+                        content: '',
+                        tempId: tempId,
+                        imageUrl: imageUrl,
+                        messageType: 'image'
+                    });
+                } else {
+                    // HTTP降级处理
+                    const res = await fetch(API_BASE + '/api/agent-chat/message?token=' + token, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            avatar_id: avatarId,
+                            session_id: sessionId,
+                            message: '',
+                            image_url: imageUrl
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        const content = data.message?.content || data.message?.text || 'AI响应为空';
+                        addMessage('assistant', content);
+                    } else {
+                        showError(data.error || '发送失败');
+                    }
+                }
+
+            } catch (err) {
+                typingEl.remove();
+                // 移除临时消息
+                const tempMsg = messagesEl.querySelector(`[data-temp-id="${tempId}"]`);
+                if (tempMsg) tempMsg.remove();
+                showError('上传图片失败: ' + err.message);
+            }
+
+            // 清空文件选择
+            e.target.value = '';
+        });
+
+        // 新对话
+        async function newChat() {
+            messagesEl.innerHTML = '';
+            sessionId = null;
+            await createSession();
+
+            // 重新连接Socket
+            if (socket) {
+                socket.disconnect();
+            }
+            connectSocket();
+
+            welcomeEl.style.display = 'block';
+            welcomeEl.textContent = '已开启新对话';
+        }
+
+        // 事件监听
+        btnSend.addEventListener('click', sendMessage);
+        inputEl.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+        btnNewChat.addEventListener('click', newChat);
+
+        // 启动
+        init();
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>排行榜 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff00;
+            --neon-cyan: #00ffff;
+            --gold-color: #ffd700;
+            --silver-color: #c0c0c0;
+            --bronze-color: #cd7f32;
+            --bg-dark: #050505;
+            --glass-bg: rgba(16, 20, 24, 0.9);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 动态星空背景 */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
+            z-index: -2;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            animation: starMove 60s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes starMove {
+            from { background-position: 0 0, 40px 60px, 130px 270px; }
+            to { background-position: 550px 550px, 390px 410px, 380px 520px; }
+        }
+
+        /* CRT扫描线 */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* 顶部标题区域 */
+        .hero-section {
+            text-align: center;
+            padding: 40px 0 30px;
+            position: relative;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+            animation: pulse 2s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 0;
+            background: linear-gradient(90deg, #ffd700, #ff8c00, #ff4500, #ffd700);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGradient 3s ease infinite;
+            text-shadow: none;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+        }
+
+        @keyframes titleGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 10px 0 0;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .tagline {
+            font-size: 0.85rem;
+            color: rgba(0, 243, 255, 0.8);
+            margin: 15px 0 0;
+            font-style: italic;
+        }
+
+        .hero-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .hero-link {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--neon-gold);
+            border-radius: 20px;
+            color: var(--neon-gold);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .hero-link:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* 个人数据卡片 */
+        .my-stats-card {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.1) 0%, rgba(188, 19, 254, 0.1) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .my-stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+
+        .my-stat {
+            text-align: center;
+        }
+
+        .my-stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .my-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .my-stat-value.contribution {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+        }
+
+        .my-stat-value.fortune {
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .my-stat-rank {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 3px;
+        }
+
+        /* 标签切换 */
+        .tab-switcher {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .tab-switcher::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--neon-cyan);
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .tab:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab.active {
+            color: #fff;
+        }
+
+        .tab.active::after {
+            width: 80%;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        .tab.active[data-tab="contribution"] {
+            color: var(--neon-red);
+        }
+
+        .tab.active[data-tab="contribution"]::after {
+            background: var(--neon-red);
+            box-shadow: 0 0 15px var(--neon-red);
+        }
+
+        .tab.active[data-tab="fortune"] {
+            color: var(--neon-gold);
+        }
+
+        .tab.active[data-tab="fortune"]::after {
+            background: var(--neon-gold);
+            box-shadow: 0 0 15px var(--neon-gold);
+        }
+
+        .tab-icon {
+            margin-right: 8px;
+        }
+
+        /* 排行榜列表 */
+        .leaderboard-list {
+            position: relative;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(16, 20, 24, 0.8);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rank-item:hover {
+            transform: translateX(5px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        .rank-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--neon-cyan);
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        .rank-item:hover::before {
+            opacity: 1;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* 前三名特殊样式 */
+        .rank-item.top-1 {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, rgba(16, 20, 24, 0.8) 100%);
+            border-color: var(--gold-color);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .rank-item.top-1::before {
+            background: var(--gold-color);
+            box-shadow: 0 0 15px var(--gold-color);
+        }
+
+        .rank-item.top-1:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+        }
+
+        .rank-item.top-2 {
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, rgba(16, 20, 24, 0.8) 100%);
+            border-color: var(--silver-color);
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.2);
+        }
+
+        .rank-item.top-2::before {
+            background: var(--silver-color);
+            box-shadow: 0 0 10px var(--silver-color);
+        }
+
+        .rank-item.top-3 {
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(16, 20, 24, 0.8) 100%);
+            border-color: var(--bronze-color);
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.2);
+        }
+
+        .rank-item.top-3::before {
+            background: var(--bronze-color);
+            box-shadow: 0 0 10px var(--bronze-color);
+        }
+
+        /* 排名数字 */
+        .rank-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            width: 50px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            background: linear-gradient(180deg, #00d4ff, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .top-1 .rank-number {
+            font-size: 2rem;
+            background: linear-gradient(180deg, #ffd700, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rankGlow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rankGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8)); }
+        }
+
+        .top-2 .rank-number {
+            background: linear-gradient(180deg, #e0e0e0, #a0a0a0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .top-3 .rank-number {
+            background: linear-gradient(180deg, #cd7f32, #8b4513);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 头像 */
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            margin: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-1 .user-avatar {
+            border-color: var(--gold-color);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        /* 用户信息 */
+        .user-info {
+            flex: 1;
+        }
+
+        .username {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .top-1 .username {
+            color: var(--gold-color);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .user-title {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 分数 */
+        .score {
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .contribution .score-value {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+        }
+
+        .fortune .score-value {
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .score-label {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 详情按钮 */
+        .detail-btn {
+            padding: 8px 15px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .detail-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        /* 详情弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: linear-gradient(135deg, rgba(16, 20, 24, 0.98) 0%, rgba(26, 10, 46, 0.98) 100%);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 15px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.3);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-title.contribution {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+        }
+
+        .modal-title.fortune {
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* 详情列表 */
+        .detail-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-item:hover {
+            background: rgba(0, 243, 255, 0.05);
+        }
+
+        .detail-rank {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.3);
+            width: 30px;
+        }
+
+        .detail-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-right: 12px;
+        }
+
+        .detail-info {
+            flex: 1;
+        }
+
+        .detail-name {
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .detail-times {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .detail-energy {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .contribution .detail-energy {
+            color: var(--neon-red);
+        }
+
+        .fortune .detail-energy {
+            color: var(--neon-gold);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 243, 255, 0.2);
+            border-top-color: var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 底部返回按钮 */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 25px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            margin-top: 30px;
+        }
+
+        .back-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .back-btn-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* 实时更新提示 */
+        .update-tip {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.75rem;
+            color: rgba(0, 243, 255, 0.6);
+            margin-bottom: 15px;
+        }
+
+        .update-tip-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .update-tip-wrapper .update-tip {
+            margin-bottom: 0;
+            padding: 0;
+        }
+
+        .sync-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sync-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .sync-btn:active {
+            transform: translateY(0);
+        }
+
+        .sync-btn.loading {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        /* 搜索框样式 */
+        .search-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: rgba(0, 243, 255, 0.8);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 210, 255, 0.4);
+        }
+
+        .search-result {
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .search-result-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-result-item .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-result-item .rank-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #00d4ff, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 243, 255, 0.5);
+        }
+
+        .search-result-item .username {
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .search-result-item .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .search-result-item.contribution .score-value {
+            color: var(--neon-red);
+        }
+
+        .search-result-item.fortune .score-value {
+            color: var(--neon-gold);
+        }
+
+        .search-no-result {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .update-tip span {
+            display: inline-block;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* 滚动条样式 */
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 3px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .rank-item {
+                padding: 12px;
+            }
+
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+                margin: 0 10px;
+            }
+
+            .username {
+                font-size: 0.9rem;
+            }
+
+            .score-value {
+                font-size: 1.1rem;
+            }
+
+            .detail-btn {
+                padding: 6px 10px;
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-layer"></div>
+    <div class="stars"></div>
+    <div class="scanlines"></div>
+
+    <div class="container">
+        <!-- 顶部标题 -->
+        <div class="hero-section">
+            <h1 class="title">战力排行榜</h1>
+            <p class="subtitle">RANKING LIST</p>
+            <p class="tagline" id="tagline">榜单之上，谁与争锋</p>
+            <div class="hero-links">
+                <a href="plaza.html" class="hero-link">玩家广场</a>
+                <a href="game.html" class="hero-link">返回游戏</a>
+            </div>
+        </div>
+
+        <!-- 个人数据卡片 -->
+        <div class="my-stats-card" id="myStatsCard">
+            <div class="my-stat">
+                <div class="my-stat-label">贡献榜排名</div>
+                <div class="my-stat-value contribution" id="myContributionScore">--</div>
+                <div class="my-stat-rank" id="myContributionRank">排名 --</div>
+            </div>
+            <div class="my-stat">
+                <div class="my-stat-label">福力榜排名</div>
+                <div class="my-stat-value fortune" id="myFortuneScore">--</div>
+                <div class="my-stat-rank" id="myFortuneRank">排名 --</div>
+            </div>
+        </div>
+
+        <!-- 更新提示和同步按钮 -->
+        <div class="update-tip-wrapper">
+            <div class="update-tip">
+                <span>●</span> 实时更新中，数据与游戏同步
+            </div>
+            <button class="sync-btn" id="syncBtn" onclick="leaderboard.syncData()">
+                <span>🔄</span> 一键同步
+            </button>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-wrapper">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索用户名..." onkeyup="leaderboard.handleSearch(event)">
+            <button class="search-btn" onclick="leaderboard.doSearch()">搜索</button>
+        </div>
+        <div class="search-result" id="searchResult"></div>
+
+        <!-- 标签切换 -->
+        <div class="tab-switcher">
+            <button class="tab active" data-tab="contribution" id="tabContribution">
+                <span class="tab-icon">⚔️</span>贡献榜
+            </button>
+            <button class="tab" data-tab="fortune" id="tabFortune">
+                <span class="tab-icon">💎</span>福力榜
+            </button>
+        </div>
+
+        <!-- 排行榜列表 -->
+        <div class="leaderboard-list" id="leaderboardList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div>加载中...</div>
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <div class="back-btn-container">
+            <a href="game.html" class="back-btn">
+                <span>←</span> 返回游戏
+            </a>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">贡献详情</h2>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <ul class="detail-list" id="detailList">
+                    <!-- 动态加载详情数据 -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script>
+        // API基础URL
+        const API_BASE = window.location.origin;
+
+        // 排行榜管理器类
+        class Leaderboard {
+            constructor() {
+                this.currentTab = 'contribution';
+                this.currentUser = null;
+                this.data = { contribution: [], fortune: [] };
+                this.socket = null;
+                this.token = AuthManager.getToken();
+
+                this.init();
+            }
+
+            async init() {
+                // 加载用户个人数据
+                await this.loadMyStats();
+
+                // 加载排行榜数据
+                await this.loadLeaderboard('contribution');
+                await this.loadLeaderboard('fortune');
+
+                // 初始化Socket连接
+                this.initSocket();
+
+                // 绑定事件
+                this.bindEvents();
+            }
+
+            // 绑定DOM事件
+            bindEvents() {
+                // Tab切换
+                document.getElementById('tabContribution').addEventListener('click', () => this.switchTab('contribution'));
+                document.getElementById('tabFortune').addEventListener('click', () => this.switchTab('fortune'));
+
+                // 弹窗关闭
+                document.getElementById('modalClose').addEventListener('click', () => this.closeModal());
+                document.getElementById('detailModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'detailModal') this.closeModal();
+                });
+            }
+
+            // 切换Tab
+            switchTab(tab) {
+                this.currentTab = tab;
+
+                // 更新Tab样式
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+
+                // 更新标语
+                const taglines = {
+                    contribution: '为他人点亮希望之火',
+                    fortune: '汇聚万千福运于一身'
+                };
+                document.getElementById('tagline').textContent = taglines[tab];
+
+                // 渲染排行榜
+                this.renderLeaderboard();
+            }
+
+            // 加载用户个人数据
+            async loadMyStats() {
+                if (!this.token) {
+                    document.getElementById('myStatsCard').style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/leaderboard/my-stats`, {
+                        headers: { 'Authorization': `Bearer ${this.token}` }
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const { contribution, fortune } = result.data;
+                        document.getElementById('myContributionScore').textContent = contribution.score;
+                        document.getElementById('myContributionRank').textContent = `排名 #${contribution.rank}`;
+                        document.getElementById('myFortuneScore').textContent = fortune.score;
+                        document.getElementById('myFortuneRank').textContent = `排名 #${fortune.rank}`;
+                    }
+                } catch (err) {
+                    console.error('获取个人数据失败:', err);
+                    document.getElementById('myStatsCard').style.display = 'none';
+                }
+            }
+
+            // 加载排行榜数据
+            async loadLeaderboard(type) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/leaderboard/${type}`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.data[type] = result.data;
+                        this.renderLeaderboard();
+                    }
+                } catch (err) {
+                    console.error(`获取${type}排行榜失败:`, err);
+                }
+            }
+
+            // 渲染排行榜
+            renderLeaderboard() {
+                const list = document.getElementById('leaderboardList');
+                const data = this.data[this.currentTab];
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <div>暂无数据</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                data.forEach((item, index) => {
+                    const rank = index + 1;
+                    const topClass = rank <= 3 ? `top-${rank}` : '';
+                    const score = this.currentTab === 'contribution' ? item.contribution_score : item.fortune_score;
+                    const username = this.escapeHtml(item.username || '未知');
+                    const initial = username.charAt(0).toUpperCase();
+
+                    html += `
+                        <div class="rank-item ${topClass}" data-user-id="${item.id}" data-type="${this.currentTab}">
+                            <div class="rank-number">${rank}</div>
+                            <div class="user-avatar">${initial}</div>
+                            <div class="user-info">
+                                <div class="username">${username}</div>
+                                <div class="user-title">${this.getTitle(rank)}</div>
+                            </div>
+                            <div class="score">
+                                <div class="score-value">${this.formatNumber(score)}</div>
+                                <div class="score-label">${this.currentTab === 'contribution' ? '贡献能量' : '福力能量'}</div>
+                            </div>
+                            <button class="detail-btn" onclick="leaderboard.showDetail(${item.id}, '${this.currentTab}')">详情</button>
+                        </div>
+                    `;
+                });
+
+                list.innerHTML = html;
+            }
+
+            // 获取段位称号
+            getTitle(rank) {
+                const titles = {
+                    1: '传奇王者',
+                    2: '至尊强者',
+                    3: '巅峰王者',
+                    4: '超级强者',
+                    5: '顶尖高手',
+                    6: '一流高手',
+                    7: '精英战士',
+                    8: '资深战士',
+                    9: '进阶战士',
+                    10: '初级战士'
+                };
+                return titles[rank] || `战场好手`;
+            }
+
+            // 格式化数字
+            formatNumber(num) {
+                if (num >= 10000) {
+                    return (num / 10000).toFixed(1) + 'w';
+                }
+                return num.toString();
+            }
+
+            // HTML转义
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // 显示详情
+            async showDetail(userId, type) {
+                const modal = document.getElementById('detailModal');
+                const title = document.getElementById('modalTitle');
+                const list = document.getElementById('detailList');
+
+                // 设置弹窗样式
+                title.className = `modal-title ${type}`;
+                title.textContent = type === 'contribution' ? '贡献详情' : '福力详情';
+
+                // 显示加载状态
+                list.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div>加载中...</div>
+                    </div>
+                `;
+
+                modal.classList.add('active');
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/leaderboard/${type}/${userId}`);
+                    const result = await response.json();
+
+                    if (result.success && result.data.length > 0) {
+                        let html = '';
+                        result.data.forEach((item, index) => {
+                            const rank = index + 1;
+                            const opponentName = this.escapeHtml(item.opponent_name || '未知玩家');
+                            const initial = opponentName.charAt(0).toUpperCase();
+                            const energy = type === 'contribution' ? item.total_energy : item.total_energy;
+
+                            html += `
+                                <li class="detail-item">
+                                    <div class="detail-rank">${rank}</div>
+                                    <div class="detail-avatar">${initial}</div>
+                                    <div class="detail-info">
+                                        <div class="detail-name">${opponentName}</div>
+                                        <div class="detail-times">对战 ${item.pk_times} 次</div>
+                                    </div>
+                                    <div class="detail-energy">${type === 'contribution' ? '-' : '+'}${this.formatNumber(energy)}</div>
+                                </li>
+                            `;
+                        });
+                        list.innerHTML = html;
+                    } else {
+                        list.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📝</div>
+                                <div>暂无详情数据</div>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    console.error('获取详情失败:', err);
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">❌</div>
+                            <div>加载失败</div>
+                        </div>
+                    `;
+                }
+            }
+
+            // 关闭弹窗
+            closeModal() {
+                document.getElementById('detailModal').classList.remove('active');
+            }
+
+            // 初始化Socket连接
+            initSocket() {
+                if (!this.token) return;
+
+                this.socket = io(API_BASE + '/game', {
+                    auth: { token: this.token },
+                    transports: ['websocket', 'polling']
+                });
+
+                this.socket.on('connect', () => {
+                    console.log('排行榜Socket已连接');
+                });
+
+                // 监听排行榜更新事件
+                this.socket.on('leaderboard_update', (data) => {
+                    console.log('收到排行榜更新:', data);
+                    this.refreshLeaderboard();
+                });
+
+                this.socket.on('disconnect', () => {
+                    console.log('排行榜Socket已断开');
+                });
+            }
+
+            // 刷新排行榜数据
+            async refreshLeaderboard() {
+                await this.loadLeaderboard('contribution');
+                await this.loadLeaderboard('fortune');
+                await this.loadMyStats();
+                this.renderLeaderboard();
+            }
+
+            // 一键同步排行榜数据
+            async syncData() {
+                const syncBtn = document.getElementById('syncBtn');
+                if (syncBtn.classList.contains('loading')) {
+                    return;
+                }
+
+                syncBtn.classList.add('loading');
+                syncBtn.innerHTML = '<span>🔄</span> 同步中...';
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/leaderboard/refresh`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // 重新加载排行榜数据
+                        await this.refreshLeaderboard();
+                        alert('排行榜同步成功！');
+                    } else {
+                        alert('同步失败: ' + (result.error || '未知错误'));
+                    }
+                } catch (err) {
+                    console.error('同步排行榜失败:', err);
+                    alert('同步失败，请稍后重试');
+                } finally {
+                    syncBtn.classList.remove('loading');
+                    syncBtn.innerHTML = '<span>🔄</span> 一键同步';
+                }
+            }
+
+            // 搜索框回车事件
+            handleSearch(event) {
+                if (event.key === 'Enter') {
+                    this.doSearch();
+                }
+            }
+
+            // 执行搜索
+            async doSearch() {
+                const searchInput = document.getElementById('searchInput');
+                const searchResult = document.getElementById('searchResult');
+                const username = searchInput.value.trim();
+
+                if (!username) {
+                    searchResult.innerHTML = '';
+                    return;
+                }
+
+                searchResult.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>搜索中...</div></div>';
+
+                try {
+                    // 搜索贡献榜
+                    const contribResponse = await fetch(`${API_BASE}/api/leaderboard/contribution?search=${encodeURIComponent(username)}`);
+                    const contribResult = await contribResponse.json();
+
+                    // 搜索福力榜
+                    const fortuneResponse = await fetch(`${API_BASE}/api/leaderboard/fortune?search=${encodeURIComponent(username)}`);
+                    const fortuneResult = await fortuneResponse.json();
+
+                    let html = '';
+
+                    // 显示贡献榜搜索结果
+                    if (contribResult.success && contribResult.data.length > 0) {
+                        const user = contribResult.data[0];
+                        html += `
+                            <div class="search-result-item contribution">
+                                <div class="user-info">
+                                    <div class="rank-number">${user.rank}</div>
+                                    <div class="username">${this.escapeHtml(user.username)}</div>
+                                </div>
+                                <div class="score">
+                                    <div class="score-value">${user.contribution_score}</div>
+                                    <div class="score-label">贡献能量</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // 显示福力榜搜索结果
+                    if (fortuneResult.success && fortuneResult.data.length > 0) {
+                        const user = fortuneResult.data[0];
+                        html += `
+                            <div class="search-result-item fortune">
+                                <div class="user-info">
+                                    <div class="rank-number">${user.rank}</div>
+                                    <div class="username">${this.escapeHtml(user.username)}</div>
+                                </div>
+                                <div class="score">
+                                    <div class="score-value">${user.fortune_score}</div>
+                                    <div class="score-label">福力能量</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    if (!html) {
+                        html = '<div class="search-no-result">未找到该用户</div>';
+                    }
+
+                    searchResult.innerHTML = html;
+                } catch (err) {
+                    console.error('搜索失败:', err);
+                    searchResult.innerHTML = '<div class="search-no-result">搜索失败，请稍后重试</div>';
+                }
+            }
+        }
+
+        // 初始化排行榜
+        let leaderboard;
+        document.addEventListener('DOMContentLoaded', () => {
+            leaderboard = new Leaderboard();
+            window.leaderboard = leaderboard; // 暴露到全局供详情按钮调用
+        });
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

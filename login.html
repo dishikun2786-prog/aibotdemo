@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 | 能量山：零号协议</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-box {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            font-size: 28px;
+            color: #e91e63;
+            margin-bottom: 5px;
+        }
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #e91e63;
+        }
+        .captcha-group {
+            display: flex;
+            gap: 10px;
+        }
+        .captcha-group input {
+            flex: 1;
+        }
+        .captcha-img {
+            height: 48px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links a {
+            color: #e91e63;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="logo">
+            <h1>能量山</h1>
+            <p>零号协议 - 登录</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码" required>
+            </div>
+            <div class="form-group">
+                <label>验证码</label>
+                <div class="captcha-group">
+                    <input type="text" id="captcha" placeholder="请输入验证码" required>
+                    <img class="captcha-img" id="captchaImg" src="/api/auth/captcha" onclick="refreshCaptcha()" alt="验证码">
+                </div>
+            </div>
+            <button type="submit" class="btn">登录</button>
+        </form>
+        
+        <div class="links">
+            <a href="game.html">返回游戏</a>
+        </div>
+    </div>
+
+    <script>
+        let captchaId = '';
+        
+        async function refreshCaptcha() {
+            try {
+                const res = await fetch('/api/auth/captcha?t=' + Date.now());
+                const data = await res.json();
+                if (data.success) {
+                    captchaId = data.captchaId;
+                    document.getElementById('captchaImg').src = data.image;
+                }
+            } catch (e) {
+                console.error('获取验证码失败:', e);
+            }
+        }
+        
+        // 页面加载时获取验证码
+        refreshCaptcha();
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const captcha = document.getElementById('captcha').value;
+            
+            if (!captchaId) {
+                document.getElementById('error').textContent = '请输入验证码';
+                document.getElementById('error').style.display = 'block';
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, captchaId: captchaId, captchaCode: captcha })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    // 统一使用 authToken 作为标准 key，与 game.html 保持一致
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    // 通知其他窗口登录成功（通过 opener）
+                    if (window.opener) {
+                        window.opener.postMessage({ type: 'auth_login_success', token: data.token }, '*');
+                    }
+
+                    // 根据用户角色跳转：管理员 -> admin.html，其他 -> game.html 或 redirect
+                    const params = new URLSearchParams(window.location.search);
+                    const redirect = params.get('redirect');
+                    if (redirect) {
+                        window.location.href = redirect;
+                    } else if (data.user && data.user.is_admin) {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'game.html';
+                    }
+                } else {
+                    document.getElementById('error').textContent = data.error || '登录失败';
+                    document.getElementById('error').style.display = 'block';
+                    refreshCaptcha();
+                }
+            } catch (err) {
+                document.getElementById('error').textContent = '网络错误，请稍后重试';
+                document.getElementById('error').style.display = 'block';
+            }
+        });
+    </script>
+    <script src="/js/auth-manager.js"></script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

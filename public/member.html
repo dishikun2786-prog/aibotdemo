@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>会员中心 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --member-bg: #f0f2f5;
+            --member-card-bg: rgba(255, 255, 255, 0.92);
+            --member-primary: #4a90e2;
+            --member-primary-dark: #3a7bc8;
+            --member-accent: #67c23a;
+            --member-text: #1a1a1a;
+            --member-text-secondary: #606266;
+            --member-text-light: #909399;
+            --member-border: rgba(0, 0, 0, 0.08);
+            --member-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --member-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --member-radius: 12px;
+            --member-radius-lg: 16px;
+            --member-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--member-bg);
+            color: var(--member-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* 背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 240px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a18cd1 100%);
+            z-index: 0;
+        }
+
+        /* 顶部导航 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--member-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--member-bg);
+            color: var(--member-text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--member-text);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 用户信息卡片 */
+        .user-card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            padding: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--member-primary), #a18cd1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--member-text);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            color: #5d4037;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 16px;
+            color: var(--member-text-secondary);
+            font-size: 14px;
+        }
+
+        .user-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .energy-icon {
+            color: #f39c12;
+        }
+
+        /* 推荐码卡片 */
+        .code-card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .code-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--member-text);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .code-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--member-radius);
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .code-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+
+        .code-value {
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .copy-btn.copied {
+            background: var(--member-accent);
+        }
+
+        .referral-url {
+            background: #f5f7fa;
+            border-radius: var(--member-radius-sm);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .referral-url-text {
+            flex: 1;
+            font-size: 12px;
+            color: var(--member-text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .copy-url-btn {
+            background: var(--member-primary);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .copy-url-btn:hover {
+            background: var(--member-primary-dark);
+        }
+
+        .copy-url-btn.copied {
+            background: var(--member-accent);
+        }
+
+        /* 团队统计卡片 */
+        .stats-card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .stats-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--member-text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 16px 8px;
+            background: #f5f7fa;
+            border-radius: var(--member-radius);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--member-primary);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--member-text-light);
+            margin-top: 4px;
+        }
+
+        /* 团队成员卡片 */
+        .team-card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .team-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--member-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .team-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--member-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .team-count-badge {
+            background: var(--member-primary);
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .expand-icon {
+            color: var(--member-text-light);
+            transition: transform 0.3s;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .team-card-body {
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .team-card-body.expanded {
+            display: block;
+        }
+
+        .team-level-group {
+            border-bottom: 1px solid var(--member-border);
+        }
+
+        .team-level-group:last-child {
+            border-bottom: none;
+        }
+
+        .team-level-header {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--member-text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: var(--member-primary);
+            color: white;
+            font-size: 11px;
+            border-radius: 50%;
+        }
+
+        .team-member {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--member-border);
+        }
+
+        .team-member:last-child {
+            border-bottom: none;
+        }
+
+        .team-member-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .team-member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #a18cd1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .team-member-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--member-text);
+        }
+
+        .team-member-meta {
+            font-size: 12px;
+            color: var(--member-text-light);
+        }
+
+        .team-member-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .team-member-referrals {
+            font-size: 12px;
+            color: var(--member-text-light);
+        }
+
+        .team-member-time {
+            font-size: 11px;
+            color: var(--member-text-light);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--member-text-light);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 14px;
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--member-text-light);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--member-border);
+            border-top-color: var(--member-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--member-accent);
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--member-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 100;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            color: var(--member-text-light);
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--member-primary);
+        }
+
+        .bottom-nav-icon {
+            font-size: 20px;
+        }
+
+        /* 设置入口卡片 */
+        .settings-entry-card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-entry-card:hover {
+            box-shadow: var(--member-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .settings-entry-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .settings-entry-text {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--member-text);
+        }
+
+        .settings-entry-arrow {
+            font-size: 20px;
+            color: var(--member-text-light);
+        }
+
+        /* 设置弹窗 */
+        .settings-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .settings-modal-overlay.show {
+            display: flex;
+        }
+
+        .settings-modal-content {
+            background: white;
+            border-radius: var(--member-radius-lg);
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--member-border);
+        }
+
+        .settings-modal-header h2 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--member-text);
+        }
+
+        .settings-modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--member-bg);
+            font-size: 20px;
+            color: var(--member-text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--member-text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .settings-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--member-border);
+            border-radius: var(--member-radius-sm);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: var(--member-primary);
+        }
+
+        .settings-avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .settings-avatar-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--member-primary), #a18cd1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .settings-avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .settings-btn {
+            padding: 8px 16px;
+            background: var(--member-primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: var(--member-primary-dark);
+        }
+
+        .settings-btn-danger {
+            padding: 8px 16px;
+            background: #f56c6c;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-btn-danger:hover {
+            background: #e45a5a;
+        }
+
+        .settings-save-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: var(--member-radius-sm);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .settings-save-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .settings-msg {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--member-text-light);
+        }
+
+        .settings-msg.success {
+            color: var(--member-accent);
+        }
+
+        .settings-msg.error {
+            color: #f56c6c;
+        }
+
+        /* 头像上传 */
+        .avatar-upload-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--member-primary);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: var(--member-bg);
+        }
+
+        .avatar-upload-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-upload-preview span {
+            font-size: 40px;
+        }
+
+        .avatar-file-input {
+            display: none;
+        }
+
+        .avatar-file-label {
+            display: block;
+            padding: 12px;
+            background: var(--member-bg);
+            color: var(--member-text);
+            text-align: center;
+            border-radius: var(--member-radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .avatar-file-label:hover {
+            background: #e8e8e8;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景装饰 -->
+    <div class="bg-decoration"></div>
+
+    <!-- 顶部导航 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="back-btn" onclick="history.back()">←</button>
+            <span class="navbar-title">会员中心</span>
+        </div>
+        <div class="navbar-right">
+            <div class="user-avatar" id="navAvatar">?</div>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 用户信息卡片 -->
+        <div class="user-card">
+            <div class="user-avatar" id="userAvatar">?</div>
+            <div class="user-info">
+                <div class="user-name">
+                    <span id="userName">加载中...</span>
+                    <span class="user-badge">VIP</span>
+                </div>
+                <div class="user-stats">
+                    <div class="user-stat">
+                        <span class="energy-icon">⚡</span>
+                        <span>能量: <strong id="userEnergy">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 推荐码卡片 -->
+        <div class="code-card">
+            <div class="code-card-title">
+                <span>🎫</span> 我的推荐码
+            </div>
+            <div class="code-display">
+                <div>
+                    <div class="code-label">推荐码</div>
+                    <div class="code-value" id="referralCode">---</div>
+                </div>
+                <button class="copy-btn" id="copyCodeBtn" onclick="copyReferralCode()">复制</button>
+            </div>
+            <div class="referral-url">
+                <span class="referral-url-text" id="referralUrl">---</span>
+                <button class="copy-url-btn" id="copyUrlBtn" onclick="copyReferralUrl()">复制链接</button>
+            </div>
+        </div>
+
+        <!-- 团队统计卡片 -->
+        <div class="stats-card">
+            <div class="stats-card-title">
+                <span>📊</span> 团队统计
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="directCount">0</div>
+                    <div class="stat-label">直推人数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="teamTotalCount">0</div>
+                    <div class="stat-label">团队人数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="activeCount">0</div>
+                    <div class="stat-label">活跃人数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 团队成员列表 -->
+        <div class="team-card">
+            <div class="team-card-header" onclick="toggleTeamList()">
+                <div class="team-card-title">
+                    <span>👥</span> 我的团队
+                    <span class="team-count-badge" id="teamCountBadge">0</span>
+                </div>
+                <span class="expand-icon" id="expandIcon">▼</span>
+            </div>
+            <div class="team-card-body" id="teamListBody">
+                <div class="loading" id="teamLoading">
+                    <div class="loading-spinner"></div>
+                    加载中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 皮肤激活码商店入口卡片 -->
+        <div class="settings-entry-card" onclick="window.location.href='/skin-code-shop.html'">
+            <div class="settings-entry-icon">🎫</div>
+            <div class="settings-entry-text">皮肤激活码商店</div>
+            <div class="settings-entry-arrow">›</div>
+        </div>
+
+        <!-- 支付密码设置入口卡片 -->
+        <div class="settings-entry-card" onclick="openPayPasswordModal()">
+            <div class="settings-entry-icon">🔐</div>
+            <div class="settings-entry-text" id="payPasswordEntryText">设置支付密码</div>
+            <div class="settings-entry-arrow">›</div>
+        </div>
+
+        <!-- 设置入口卡片 -->
+        <div class="settings-entry-card" onclick="openSettings()">
+            <div class="settings-entry-icon">⚙️</div>
+            <div class="settings-entry-text">账号设置</div>
+            <div class="settings-entry-arrow">›</div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="settings-modal-overlay" id="settingsModal" onclick="closeSettings(event)">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2>⚙️ 账号设置</h2>
+                <button class="settings-modal-close" onclick="closeSettings()">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <!-- 头像设置 -->
+                <div class="settings-section">
+                    <div class="settings-avatar-section">
+                        <div class="settings-avatar-preview" id="settingsAvatarPreview">
+                            <span id="settingsAvatarInitial">?</span>
+                        </div>
+                        <div class="settings-avatar-actions">
+                            <button class="settings-btn" onclick="changeAvatar()">更换头像</button>
+                            <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户名修改 -->
+                <div class="settings-section">
+                    <label class="settings-label">用户名</label>
+                    <input type="text" id="settingsUsername" class="settings-input" placeholder="请输入新用户名" maxlength="20">
+                </div>
+
+                <!-- 修改密码 -->
+                <div class="settings-section">
+                    <label class="settings-label">修改密码</label>
+                    <input type="password" id="settingsOldPassword" class="settings-input" placeholder="当前密码">
+                    <input type="password" id="settingsNewPassword" class="settings-input" style="margin-top: 8px;" placeholder="新密码（至少6位）">
+                    <input type="password" id="settingsConfirmPassword" class="settings-input" style="margin-top: 8px;" placeholder="确认新密码">
+                </div>
+
+                <!-- 保存按钮 -->
+                <button class="settings-save-btn" onclick="saveSettings()">保存设置</button>
+
+                <p id="settingsMsg" class="settings-msg"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支付密码设置弹窗 -->
+    <div class="settings-modal-overlay" id="payPasswordModal" onclick="closePayPasswordModal(event)">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2 id="payPasswordModalTitle">🔐 设置支付密码</h2>
+                <button class="settings-modal-close" onclick="closePayPasswordModal()">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <!-- 当前登录密码验证 -->
+                <div class="settings-section">
+                    <label class="settings-label">当前登录密码 <span style="color: #ff4d4f;">*</span></label>
+                    <input type="password" id="payPasswordCurrentPassword" class="settings-input" placeholder="请输入当前登录密码" style="ime-mode:disabled;">
+                </div>
+
+                <!-- 支付密码 -->
+                <div class="settings-section">
+                    <label class="settings-label">支付密码 <span style="color: #ff4d4f;">*</span></label>
+                    <input type="password" id="payPasswordNew" class="settings-input" placeholder="请输入6位数字支付密码" maxlength="6" style="ime-mode:disabled;">
+                </div>
+
+                <!-- 确认支付密码 -->
+                <div class="settings-section">
+                    <label class="settings-label">确认支付密码 <span style="color: #ff4d4f;">*</span></label>
+                    <input type="password" id="payPasswordConfirm" class="settings-input" placeholder="请再次输入6位数字支付密码" maxlength="6" style="ime-mode:disabled;">
+                </div>
+
+                <!-- 保存按钮 -->
+                <button class="settings-save-btn" id="payPasswordSaveBtn" onclick="savePayPassword()">设置支付密码</button>
+
+                <p id="payPasswordMsg" class="settings-msg"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像上传弹窗 -->
+    <div class="settings-modal-overlay" id="avatarModal" onclick="closeAvatarModal(event)">
+        <div class="settings-modal-content" style="max-width: 350px;">
+            <div class="settings-modal-header">
+                <h2>📷 设置节点头像</h2>
+                <button class="settings-modal-close" onclick="closeAvatarModal()">×</button>
+            </div>
+            <div class="settings-modal-body" style="text-align: center;">
+                <div class="avatar-upload-preview" id="avatarUploadPreview">
+                    <img id="avatarPreviewImg" style="display: none;">
+                    <span id="avatarPreviewDefault">🤖</span>
+                </div>
+                <input type="file" id="avatarFileInput2" accept="image/jpeg,image/png,image/gif,image/webp" class="avatar-file-input" onchange="handleAvatarSelect(event)">
+                <label for="avatarFileInput2" class="avatar-file-label">选择图片</label>
+                <p id="avatarUploadMsg" class="settings-msg"></p>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="settings-save-btn" style="flex: 1;" onclick="saveUserAvatar()">保存头像</button>
+                    <button class="settings-btn-danger" style="flex: 1;" onclick="deleteUserAvatar()">删除头像</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let currentUser = null;
+        let referralData = null;
+        let teamData = [];
+
+        // 检查登录状态
+        async function checkAuth() {
+            const authToken = AuthManager.getToken();
+            if (!authToken) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            return authToken;
+        }
+
+        // 显示 Toast
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast' + (type ? ' ' + type : '');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 复制到剪贴板
+        async function copyToClipboard(text, btnId) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const btn = document.getElementById(btnId);
+                const originalText = btn.textContent;
+                btn.textContent = '已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+                showToast('复制成功', 'success');
+            } catch (err) {
+                showToast('复制失败');
+            }
+        }
+
+        // 复制推荐码
+        function copyReferralCode() {
+            if (referralData && referralData.referral_code) {
+                copyToClipboard(referralData.referral_code, 'copyCodeBtn');
+            }
+        }
+
+        // 复制推广链接
+        function copyReferralUrl() {
+            if (referralData && referralData.referral_url) {
+                copyToClipboard(referralData.referral_url, 'copyUrlBtn');
+            }
+        }
+
+        // 切换团队列表展开/收起
+        function toggleTeamList() {
+            const body = document.getElementById('teamListBody');
+            const icon = document.getElementById('expandIcon');
+            body.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        // 加载用户信息
+        async function loadUserProfile() {
+            try {
+                const authToken = await checkAuth();
+                if (!authToken) return;
+
+                const res = await fetch(API_BASE + '/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    renderUserInfo(data.user);
+                } else {
+                    showToast(data.error || '获取用户信息失败');
+                }
+            } catch (err) {
+                console.error('加载用户信息失败:', err);
+                showToast('加载用户信息失败');
+            }
+        }
+
+        // 渲染用户信息
+        function renderUserInfo(user) {
+            const firstChar = user.username.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = user.username;
+            document.getElementById('userEnergy').textContent = user.energy;
+            document.getElementById('userAvatar').textContent = firstChar;
+            document.getElementById('navAvatar').textContent = firstChar;
+        }
+
+        // 加载推荐码信息
+        async function loadReferralCode() {
+            try {
+                const authToken = await checkAuth();
+                if (!authToken) return;
+
+                const res = await fetch(API_BASE + '/api/auth/my-referral-code', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    referralData = data.data;
+                    renderReferralCode(data.data);
+                }
+            } catch (err) {
+                console.error('加载推荐码失败:', err);
+            }
+        }
+
+        // 渲染推荐码
+        function renderReferralCode(data) {
+            document.getElementById('referralCode').textContent = data.referral_code || '---';
+            document.getElementById('referralUrl').textContent = data.referral_url || '---';
+            document.getElementById('directCount').textContent = data.referral_count || 0;
+            document.getElementById('teamTotalCount').textContent = data.team_total_count || 0;
+            document.getElementById('teamCountBadge').textContent = data.team_total_count || 0;
+        }
+
+        // 加载团队成员
+        async function loadTeamMembers() {
+            try {
+                const authToken = await checkAuth();
+                if (!authToken) return;
+
+                const res = await fetch(API_BASE + '/api/auth/my-team', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                document.getElementById('teamLoading').style.display = 'none';
+
+                if (data.success && data.data.length > 0) {
+                    teamData = data.data;
+                    renderTeamMembers(data.data);
+                } else {
+                    document.getElementById('teamListBody').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <div class="empty-text">暂无团队成员<br>分享推广链接邀请好友加入吧</div>
+                        </div>
+                    `;
+                    document.getElementById('teamListBody').classList.add('expanded');
+                }
+            } catch (err) {
+                console.error('加载团队成员失败:', err);
+                document.getElementById('teamLoading').textContent = '加载失败';
+            }
+        }
+
+        // 渲染团队成员
+        function renderTeamMembers(members) {
+            // 按等级分组
+            const groups = {};
+            members.forEach(m => {
+                if (!groups[m.level]) groups[m.level] = [];
+                groups[m.level].push(m);
+            });
+
+            let html = '';
+            for (let level = 1; level <= 3; level++) {
+                if (!groups[level]) continue;
+                html += `
+                    <div class="team-level-group">
+                        <div class="team-level-header">
+                            <span class="level-badge">${level}</span>
+                            ${level === 1 ? '一级成员' : level === 2 ? '二级成员' : '三级成员'}
+                            (${groups[level].length}人)
+                        </div>
+                `;
+                groups[level].forEach(m => {
+                    const char = m.username.charAt(0).toUpperCase();
+                    const joinDate = new Date(m.joined_at).toLocaleDateString('zh-CN');
+                    html += `
+                        <div class="team-member">
+                            <div class="team-member-info">
+                                <div class="team-member-avatar">${char}</div>
+                                <div>
+                                    <div class="team-member-name">${m.username}</div>
+                                    <div class="team-member-meta">加入于 ${joinDate}</div>
+                                </div>
+                            </div>
+                            <div class="team-member-stats">
+                                <span class="team-member-referrals">直推 ${m.referral_count}人</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            document.getElementById('teamListBody').innerHTML = html;
+            document.getElementById('teamListBody').classList.add('expanded');
+        }
+
+        // 加载团队统计数据（补充活跃人数）
+        async function loadTeamStats() {
+            try {
+                const authToken = await checkAuth();
+                if (!authToken) return;
+
+                const res = await fetch(API_BASE + '/api/auth/team-stats', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('activeCount').textContent = data.data.active_count || 0;
+                }
+            } catch (err) {
+                console.error('加载团队统计失败:', err);
+            }
+        }
+
+        // 打开设置弹窗
+        async function openSettings() {
+            const modal = document.getElementById('settingsModal');
+            const usernameInput = document.getElementById('settingsUsername');
+            const avatarInitial = document.getElementById('settingsAvatarInitial');
+            const msgEl = document.getElementById('settingsMsg');
+
+            // 填充当前用户名
+            if (currentUser && currentUser.username) {
+                usernameInput.value = currentUser.username;
+                avatarInitial.textContent = currentUser.username.charAt(0).toUpperCase();
+            }
+
+            // 清空密码字段
+            document.getElementById('settingsOldPassword').value = '';
+            document.getElementById('settingsNewPassword').value = '';
+            document.getElementById('settingsConfirmPassword').value = '';
+            msgEl.textContent = '';
+            msgEl.className = 'settings-msg';
+
+            // 加载用户头像
+            await loadUserAvatar();
+
+            modal.classList.add('show');
+        }
+
+        // 关闭设置弹窗
+        function closeSettings(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('show');
+        }
+
+        // 支付密码相关函数
+        let hasPayPassword = false;
+
+        // 加载支付密码状态
+        async function loadPayPasswordStatus() {
+            const authToken = AuthManager.getToken();
+            if (!authToken) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/auth/has-pay-password', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    hasPayPassword = data.data.has_pay_password;
+                    updatePayPasswordEntry();
+                }
+            } catch (err) {
+                console.error('加载支付密码状态失败:', err);
+            }
+        }
+
+        // 更新支付密码入口显示
+        function updatePayPasswordEntry() {
+            const entryText = document.getElementById('payPasswordEntryText');
+            if (entryText) {
+                entryText.textContent = hasPayPassword ? '修改支付密码' : '设置支付密码';
+            }
+        }
+
+        // 打开支付密码设置弹窗
+        async function openPayPasswordModal() {
+            const modal = document.getElementById('payPasswordModal');
+            const titleEl = document.getElementById('payPasswordModalTitle');
+            const saveBtn = document.getElementById('payPasswordSaveBtn');
+            const msgEl = document.getElementById('payPasswordMsg');
+
+            // 清空表单
+            document.getElementById('payPasswordCurrentPassword').value = '';
+            document.getElementById('payPasswordNew').value = '';
+            document.getElementById('payPasswordConfirm').value = '';
+            msgEl.textContent = '';
+
+            // 更新标题和按钮
+            if (titleEl) {
+                titleEl.textContent = hasPayPassword ? '🔐 修改支付密码' : '🔐 设置支付密码';
+            }
+            if (saveBtn) {
+                saveBtn.textContent = hasPayPassword ? '修改支付密码' : '设置支付密码';
+            }
+
+            modal.classList.add('show');
+        }
+
+        // 关闭支付密码弹窗
+        function closePayPasswordModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('payPasswordModal');
+            modal.classList.remove('show');
+        }
+
+        // 保存支付密码
+        async function savePayPassword() {
+            const currentPassword = document.getElementById('payPasswordCurrentPassword').value;
+            const newPassword = document.getElementById('payPasswordNew').value;
+            const confirmPassword = document.getElementById('payPasswordConfirm').value;
+            const msgEl = document.getElementById('payPasswordMsg');
+            const saveBtn = document.getElementById('payPasswordSaveBtn');
+
+            // 验证输入
+            if (!currentPassword) {
+                msgEl.textContent = '请输入当前登录密码';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            if (!/^\d{6}$/.test(newPassword)) {
+                msgEl.textContent = '支付密码必须是6位数字';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                msgEl.textContent = '两次输入的支付密码不一致';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            // 禁用按钮防止重复提交
+            saveBtn.disabled = true;
+            saveBtn.textContent = '提交中...';
+
+            try {
+                const authToken = AuthManager.getToken();
+                const res = await fetch(API_BASE + '/api/auth/set-pay-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        pay_password: newPassword
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    msgEl.textContent = '支付密码设置成功';
+                    msgEl.className = 'settings-msg success';
+                    hasPayPassword = true;
+                    updatePayPasswordEntry();
+                    setTimeout(() => {
+                        closePayPasswordModal();
+                    }, 1500);
+                } else {
+                    msgEl.textContent = data.error || '设置失败';
+                    msgEl.className = 'settings-msg error';
+                }
+            } catch (err) {
+                msgEl.textContent = '网络错误，请稍后重试';
+                msgEl.className = 'settings-msg error';
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = hasPayPassword ? '修改支付密码' : '设置支付密码';
+            }
+        }
+
+        // 支付密码输入框限制只能输入数字
+        document.addEventListener('DOMContentLoaded', function() {
+            const payPasswordNew = document.getElementById('payPasswordNew');
+            const payPasswordConfirm = document.getElementById('payPasswordConfirm');
+
+            if (payPasswordNew) {
+                payPasswordNew.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
+
+            if (payPasswordConfirm) {
+                payPasswordConfirm.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
+        });
+
+        // 加载用户头像
+        async function loadUserAvatar() {
+            try {
+                const authToken = AuthManager.getToken();
+                const res = await fetch(API_BASE + '/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+
+                if (data.success && data.user) {
+                    const avatarInitial = document.getElementById('settingsAvatarInitial');
+                    if (data.user.avatar_image) {
+                        // 有自定义头像
+                        avatarInitial.innerHTML = `<img src="${data.user.avatar_image}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                    } else {
+                        avatarInitial.textContent = data.user.username.charAt(0).toUpperCase();
+                    }
+                }
+            } catch (err) {
+                console.error('加载头像失败:', err);
+            }
+        }
+
+        // 更换头像
+        function changeAvatar() {
+            document.getElementById('avatarModal').classList.add('show');
+            // 显示当前头像
+            const preview = document.getElementById('avatarUploadPreview');
+            const img = document.getElementById('avatarPreviewImg');
+            const def = document.getElementById('avatarPreviewDefault');
+
+            if (currentUser && currentUser.avatar_image) {
+                img.src = currentUser.avatar_image;
+                img.style.display = 'block';
+                def.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                def.style.display = 'block';
+            }
+        }
+
+        // 关闭头像弹窗
+        function closeAvatarModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('avatarModal').classList.remove('show');
+        }
+
+        // 处理头像选择
+        function handleAvatarSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('avatarPreviewImg');
+                const def = document.getElementById('avatarPreviewDefault');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                def.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 保存头像
+        async function saveUserAvatar() {
+            const fileInput = document.getElementById('avatarFileInput2');
+            const file = fileInput.files[0];
+            const msgEl = document.getElementById('avatarUploadMsg');
+
+            if (!file) {
+                msgEl.textContent = '请选择图片';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            try {
+                const authToken = AuthManager.getToken();
+                const formData = new FormData();
+                formData.append('avatar', file);
+
+                const res = await fetch(API_BASE + '/api/user/avatar-upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    msgEl.textContent = '头像保存成功';
+                    msgEl.className = 'settings-msg success';
+
+                    // 更新当前用户头像
+                    if (currentUser) {
+                        currentUser.avatar_image = data.data.avatar_url;
+                    }
+
+                    // 刷新页面显示
+                    setTimeout(() => {
+                        closeAvatarModal();
+                        loadUserAvatar();
+                        loadUserProfile();
+                    }, 1000);
+                } else {
+                    msgEl.textContent = data.error || '保存失败';
+                    msgEl.className = 'settings-msg error';
+                }
+            } catch (err) {
+                console.error('上传头像失败:', err);
+                msgEl.textContent = '上传失败';
+                msgEl.className = 'settings-msg error';
+            }
+        }
+
+        // 删除头像
+        async function deleteUserAvatar() {
+            const msgEl = document.getElementById('avatarUploadMsg');
+
+            try {
+                const authToken = AuthManager.getToken();
+                const res = await fetch(API_BASE + '/api/user/avatar', {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    msgEl.textContent = '头像已删除';
+                    msgEl.className = 'settings-msg success';
+
+                    // 更新当前用户头像
+                    if (currentUser) {
+                        currentUser.avatar_image = null;
+                    }
+
+                    // 刷新页面显示
+                    setTimeout(() => {
+                        closeAvatarModal();
+                        loadUserAvatar();
+                        loadUserProfile();
+                    }, 1000);
+                } else {
+                    msgEl.textContent = data.error || '删除失败';
+                    msgEl.className = 'settings-msg error';
+                }
+            } catch (err) {
+                console.error('删除头像失败:', err);
+                msgEl.textContent = '删除失败';
+                msgEl.className = 'settings-msg error';
+            }
+        }
+
+        // 保存设置
+        async function saveSettings() {
+            const username = document.getElementById('settingsUsername').value.trim();
+            const oldPassword = document.getElementById('settingsOldPassword').value;
+            const newPassword = document.getElementById('settingsNewPassword').value;
+            const confirmPassword = document.getElementById('settingsConfirmPassword').value;
+            const msgEl = document.getElementById('settingsMsg');
+
+            // 验证
+            if (newPassword && !oldPassword) {
+                msgEl.textContent = '请输入当前密码';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            if (newPassword && newPassword.length < 6) {
+                msgEl.textContent = '新密码至少6位';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            if (newPassword && newPassword !== confirmPassword) {
+                msgEl.textContent = '两次密码不一致';
+                msgEl.className = 'settings-msg error';
+                return;
+            }
+
+            try {
+                const authToken = AuthManager.getToken();
+                const res = await fetch(API_BASE + '/api/auth/me', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, oldPassword, newPassword })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    msgEl.textContent = '保存成功';
+                    msgEl.className = 'settings-msg success';
+
+                    // 更新本地用户信息
+                    if (username && currentUser) {
+                        currentUser.username = username;
+                        loadUserProfile();
+                    }
+
+                    // 清空密码
+                    document.getElementById('settingsOldPassword').value = '';
+                    document.getElementById('settingsNewPassword').value = '';
+                    document.getElementById('settingsConfirmPassword').value = '';
+                } else {
+                    msgEl.textContent = data.error || '保存失败';
+                    msgEl.className = 'settings-msg error';
+                }
+            } catch (err) {
+                console.error('保存设置失败:', err);
+                msgEl.textContent = '保存失败';
+                msgEl.className = 'settings-msg error';
+            }
+        }
+
+        // 初始化
+        async function init() {
+            await loadUserProfile();
+            await loadReferralCode();
+            await loadTeamStats();
+            await loadTeamMembers();
+            await loadPayPasswordStatus();
+        }
+
+        init();
+    </script>
+
+    <!-- 底部导航菜单 -->
+    <nav class="bottom-nav">
+        <a href="/game.html" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🎮</span>
+            <span class="bottom-nav-label">游戏</span>
+        </a>
+        <a href="/podcast-list.html" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🎙️</span>
+            <span class="bottom-nav-label">播客</span>
+        </a>
+        <a href="/plaza.html" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🏠</span>
+            <span class="bottom-nav-label">广场</span>
+        </a>
+        <a href="/leaderboard.html" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🏆</span>
+            <span class="bottom-nav-label">排行榜</span>
+        </a>
+    </nav>
+
+    <style>
+        /* 底部导航菜单样式 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid var(--member-border);
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--member-text-light);
+            padding: 4px 12px;
+            transition: color 0.2s;
+        }
+
+        .bottom-nav-item:active {
+            color: var(--member-primary);
+        }
+
+        .bottom-nav-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .bottom-nav-label {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* 为底部导航留出空间 */
+        body {
+            padding-bottom: 70px;
+        }
+    </style>
+    <script src="/js/auth-manager.js"></script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>远红外能量仪 - 守护全家健康</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --main-green: #97cc8a; }
+        .bg-brand { background-color: var(--main-green); }
+        .text-brand { color: #2d5a27; }
+        .btn-gradient { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <header class="bg-brand text-white p-4 text-center sticky top-0 z-50 shadow-md">
+        <h1 class="text-xl font-bold tracking-wider">远红外能量仪</h1>
+        <p class="text-xs opacity-90">国家发明专利：ZL2020302035886.6</p>
+    </header>
+
+    <section class="bg-white pb-8">
+        <img src="https://aibotdemo.skym178.com/pei.jpg" alt="产品主图" class="w-full h-auto">
+        <div class="px-6 -mt-10 relative">
+            <div class="bg-white rounded-2xl shadow-xl p-6 border-t-4 border-green-400">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="bg-red-500 text-white text-xs px-2 py-1 rounded">正品保障</span>
+                    <span class="text-red-600 font-bold text-lg">10分钟见效</span>
+                </div>
+                <h2 class="text-2xl font-black text-gray-900 mb-2">常用能量仪，健康每一天！</h2>
+                <p class="text-gray-600 leading-relaxed text-sm">自主研发生产，真金不怕火炼！针对酸、痛、胀、麻，当场体验，见效神速。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="p-6 grid grid-cols-2 gap-4">
+        <div class="bg-green-50 p-4 rounded-xl text-center">
+            <div class="text-2xl mb-1">🛡️</div>
+            <h3 class="font-bold text-brand">国家专利</h3>
+            <p class="text-[10px] text-gray-500">知识产权保护</p>
+        </div>
+        <div class="bg-green-50 p-4 rounded-xl text-center">
+            <div class="text-2xl mb-1">⚡</div>
+            <h3 class="font-bold text-brand">深度渗透</h3>
+            <p class="text-[10px] text-gray-500">远红外能量波</p>
+        </div>
+    </section>
+
+    <section class="p-6 bg-white">
+        <h3 class="text-center text-xl font-bold mb-6 text-gray-800">
+            <span class="border-b-4 border-green-400">适用人群及症状</span>
+        </h3>
+        <div class="grid grid-cols-3 gap-2 text-center text-sm">
+            <div class="border border-green-100 py-2 rounded">眼睛干涩</div>
+            <div class="border border-green-100 py-2 rounded">偏头痛</div>
+            <div class="border border-green-100 py-2 rounded">耳聋耳鸣</div>
+            <div class="border border-green-100 py-2 rounded">鼻炎咽炎</div>
+            <div class="border border-green-100 py-2 rounded">颈椎腰痛</div>
+            <div class="border border-green-100 py-2 rounded">关节寒湿</div>
+            <div class="border border-green-100 py-2 rounded">宫寒痛经</div>
+            <div class="border border-green-100 py-2 rounded">前列腺炎</div>
+            <div class="border border-green-100 py-2 rounded">胃寒胀气</div>
+        </div>
+        <p class="mt-4 text-xs text-gray-400 text-center">以及：乳房结节、甲状腺结节、手脚冰冷、富贵包、心绞痛、美容去皱等</p>
+    </section>
+
+    <section class="m-6 p-6 bg-brand rounded-3xl text-white text-center">
+        <h3 class="text-xl font-bold mb-2">全国招商加盟</h3>
+        <p class="text-sm opacity-90 mb-4">掌握核心科技，共享健康红利</p>
+        <div class="bg-white/20 rounded-lg p-4 text-sm inline-block">
+            好产品不怕体验，当场见效快！
+        </div>
+    </section>
+
+    <div class="h-24"></div>
+
+    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex gap-3 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+        <button onclick="showWechat()" class="flex-1 bg-gray-100 text-gray-800 font-bold py-3 rounded-full flex items-center justify-center gap-2">
+            <img src="https://img.icons8.com/color/48/weixing.png" class="w-5 h-5">
+            微信咨询
+        </button>
+        <a href="tel:18217387682" class="flex-1 btn-gradient text-white font-bold py-3 rounded-full flex items-center justify-center gap-2">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/phone.png" class="w-5 h-5">
+            立即拨打
+        </a>
+    </footer>
+
+    <div id="wechatModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-6">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-xs text-center relative">
+            <button onclick="hideWechat()" class="absolute top-4 right-4 text-gray-400 text-xl">&times;</button>
+            <h3 class="text-lg font-bold mb-4 text-green-600">添加微信好友</h3>
+            <div class="bg-gray-100 p-4 rounded-lg mb-4 select-all font-mono text-xl" id="wechatNum">psh15952088186</div>
+            <p class="text-sm text-gray-500 mb-6">点击上方号码复制，或直接搜索手机号</p>
+            <button onclick="copyWechat()" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold">复制号码并打开微信</button>
+        </div>
+    </div>
+
+    <script>
+        function showWechat() { document.getElementById('wechatModal').classList.remove('hidden'); }
+        function hideWechat() { document.getElementById('wechatModal').classList.add('hidden'); }
+        function copyWechat() {
+            const num = document.getElementById('wechatNum').innerText;
+            navigator.clipboard.writeText(num).then(() => {
+                alert('号码已复制：' + num + '\n请前往微信添加好友');
+                window.location.href = "weixin://";
+            });
+        }
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

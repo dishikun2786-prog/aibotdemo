@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>分身客服后台 | AI工作室</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff00;
+            --bg-dark: #050505;
+            --glass-bg: rgba(16, 20, 24, 0.85);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            background: var(--bg-dark);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
+        }
+        @media (min-width: 768px) { body { max-width: 100vw; margin: 0 auto; } }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header a { color: var(--neon-blue); text-decoration: none; font-size: 0.9rem; }
+        .header h1 { margin: 0; font-size: 1rem; font-family: 'Orbitron', sans-serif; color: var(--neon-purple); }
+        .header .refresh-btn { color: var(--neon-green); cursor: pointer; }
+
+        .layout { display: flex; height: calc(100vh - 50px); }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; height: auto; }
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.4);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); max-height: 300px; }
+        }
+
+        .sidebar-header {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .avatar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .avatar-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .avatar-item:hover { border-color: var(--neon-blue); }
+        .avatar-item.active { border-color: var(--neon-purple); background: rgba(188, 19, 254, 0.1); }
+        .avatar-item .name { font-weight: bold; color: var(--neon-blue); margin-bottom: 4px; }
+        .avatar-item .desc { font-size: 0.75rem; color: #888; }
+        .avatar-item .stats { font-size: 0.7rem; color: #666; margin-top: 6px; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        .rooms-header {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .rooms-header h2 { margin: 0; font-size: 0.95rem; color: var(--neon-purple); }
+
+        .connection-status {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .typing-indicator {
+            padding: 8px 16px;
+            color: #888;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        /* 流式消息样式 */
+        .message.streaming-msg {
+            position: relative;
+        }
+        .message.streaming-msg .text {
+            min-height: 20px;
+        }
+
+        .room-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .room-card {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .room-card:hover { border-color: var(--neon-blue); }
+        .room-card.active { border-color: var(--neon-gold); background: rgba(255, 215, 0, 0.1); }
+        .room-card .room-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .room-card .session-id { font-size: 0.75rem; color: #666; }
+        .room-card .mode-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .mode-badge.ai { background: rgba(0, 243, 255, 0.2); color: var(--neon-blue); }
+        .mode-badge.human { background: rgba(255, 0, 60, 0.2); color: var(--neon-red); }
+        .room-card .last-msg { font-size: 0.8rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .room-card .time { font-size: 0.7rem; color: #555; margin-top: 4px; }
+
+        .detail-panel {
+            width: 400px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        @media (max-width: 1024px) {
+            .detail-panel { width: 100%; border-left: none; border-top: 1px solid var(--border-color); max-height: 50vh; }
+        }
+
+        .detail-header {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .detail-header h3 { margin: 0; font-size: 0.95rem; color: var(--neon-gold); }
+
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 85%;
+        }
+        .message.user { margin-left: auto; background: rgba(0, 243, 255, 0.15); border: 1px solid var(--neon-blue); }
+        .message.assistant { margin-right: auto; background: rgba(188, 19, 254, 0.12); border: 1px solid var(--neon-purple); }
+        .message.human_operator { margin-left: auto; background: rgba(255, 0, 60, 0.15); border: 1px solid var(--neon-red); }
+        .message.system { margin: 10px auto; text-align: center; color: #888; font-size: 0.8rem; background: transparent; border: none; }
+        .message .role { font-size: 0.7rem; color: #666; margin-bottom: 4px; }
+        .message .time { font-size: 0.65rem; color: #555; margin-top: 4px; }
+
+        .message-input {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+        }
+        .message-input input {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #fff;
+            font-family: inherit;
+        }
+        .message-input input:focus { outline: none; border-color: var(--neon-blue); }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(0, 243, 255, 0.15);
+            color: var(--neon-blue);
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+        .btn:hover { background: var(--neon-blue); color: #000; }
+        .btn-primary { background: var(--neon-purple); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 0 12px var(--neon-purple); }
+        .btn-danger { background: var(--neon-red); color: #fff; }
+        .btn-success { background: var(--neon-green); color: #000; }
+        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+        .loading { text-align: center; padding: 20px; color: var(--neon-blue); }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-dot.online { background: var(--neon-green); }
+        .status-dot.offline { background: var(--neon-red); }
+
+        /* 风格切换样式 */
+        .style-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            margin-left: 8px;
+        }
+        .style-badge.modern {
+            background: rgba(22, 119, 255, 0.2);
+            color: #1677ff;
+        }
+        .style-badge.cyber {
+            background: rgba(188, 19, 254, 0.2);
+            color: #bc13fe;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="aiwork.html">← 返回工作室</a>
+        <h1>分身客服后台</h1>
+        <span class="refresh-btn" onclick="loadAll()">刷新</span>
+    </header>
+
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-header">我的分身</div>
+            <div class="avatar-list" id="avatarList">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="rooms-header">
+                <h2>活跃会话</h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="connectionStatus" class="connection-status" style="color: var(--neon-red);">未连接</span>
+                    <span id="roomCount" style="color: #888; font-size: 0.8rem;">0 个会话</span>
+                </div>
+            </div>
+            <div class="room-list" id="roomList">
+                <div class="empty-state">暂无活跃会话</div>
+            </div>
+        </div>
+
+        <div class="detail-panel" id="detailPanel" style="display: none;">
+            <div class="detail-header">
+                <h3>会话详情</h3>
+                <div class="detail-actions">
+                    <button class="btn btn-sm" id="joinBtn" onclick="joinRoom()">接入</button>
+                    <button class="btn btn-sm btn-danger" id="leaveBtn" onclick="leaveRoom()" style="display:none;">离开</button>
+                    <button class="btn btn-sm btn-primary" id="switchModeBtn" onclick="switchMode()">切换AI</button>
+                    <button class="btn btn-sm btn-danger" id="closeRoomBtn" onclick="closeRoom()">关闭</button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">选择会话查看详情</div>
+            </div>
+            <div class="message-input">
+                <input type="file" id="operatorImageInput" accept="image/*" style="display:none;" onchange="handleOperatorImageUpload(event)">
+                <button class="btn" onclick="document.getElementById('operatorImageInput').click()" title="发送图片" style="padding:8px 12px;">📷</button>
+                <input type="text" id="messageInput" placeholder="输入人工回复内容..." onkeypress="handleKeyPress(event)">
+                <button class="btn btn-primary" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        
+        // 消息提示音
+        const notificationSound = new Audio('/kenney_digital-audio/Audio/pepSound4.ogg');
+
+        function playNotificationSound() {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(err => console.log('播放提示音失败:', err));
+        }
+
+        let currentAvatarId = null;
+        let currentSessionId = null;
+        let currentMode = 'ai';
+
+        // 检查登录
+        async function checkAuth() {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = 'index.html';
+                return null;
+            }
+            return AuthManager.getToken();
+        }
+
+        // 加载所有数据
+        async function loadAll() {
+            await loadAvatars();
+            await loadRooms();
+        }
+
+        // 加载分身列表
+        async function loadAvatars() {
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/avatars', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                console.log('[客服后台] 获取分身列表返回:', data);
+
+                const list = document.getElementById('avatarList');
+                if (!data.success || data.avatars.length === 0) {
+                    list.innerHTML = '<div class="empty-state">暂无分身</div>';
+                    return;
+                }
+
+                list.innerHTML = data.avatars.map(a => `
+                    <div class="avatar-item ${currentAvatarId === a.avatar_id ? 'active' : ''}"
+                         onclick="selectAvatar('${a.avatar_id}')">
+                        <div class="name">${a.name}</div>
+                        <div class="desc">${a.description || '暂无描述'}</div>
+                        <div class="stats">
+                            <span>对话次数: ${a.chat_count || 0}</span>
+                            <span class="style-badge ${a.chat_style || 'modern'}">${a.chat_style === 'cyber' ? '赛博' : '现代'}</span>
+                        </div>
+                        <div class="style-actions" style="margin-top:8px;">
+                            <button class="btn btn-sm" onclick="event.stopPropagation(); changeChatStyle('${a.avatar_id}', '${a.chat_style === 'cyber' ? 'modern' : 'cyber'}')">
+                                切换为${a.chat_style === 'cyber' ? '现代' : '赛博'}风格
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('加载分身失败:', e);
+            }
+        }
+
+        // 选择分身
+        function selectAvatar(avatarId) {
+            currentAvatarId = avatarId;
+            loadAvatars();
+            loadRooms(avatarId);
+        }
+
+        // 加载活跃会话
+        async function loadRooms(avatarId = null) {
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/rooms', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                console.log('[客服后台] 获取会话列表返回:', data);
+
+                if (!data.success) {
+                    document.getElementById('roomList').innerHTML = '<div class="empty-state">加载失败</div>';
+                    return;
+                }
+
+                let rooms = data.rooms;
+                // 如果选择了特定分身，过滤
+                if (avatarId) {
+                    rooms = rooms.filter(r => r.avatarId === avatarId);
+                }
+
+                document.getElementById('roomCount').textContent = rooms.length + ' 个会话';
+
+                if (rooms.length === 0) {
+                    document.getElementById('roomList').innerHTML = '<div class="empty-state">暂无活跃会话</div>';
+                    return;
+                }
+
+                document.getElementById('roomList').innerHTML = rooms.map(r => `
+                    <div class="room-card ${currentSessionId === r.sessionId ? 'active' : ''}"
+                         onclick="selectRoom('${r.sessionId}')">
+                        <div class="room-header">
+                            <span class="session-id">${r.avatarName}</span>
+                            <span class="mode-badge ${r.mode}">${r.mode === 'ai' ? 'AI模式' : '人工模式'}</span>
+                        </div>
+                        <div class="last-msg">${r.lastMessage || '暂无消息'}</div>
+                        <div class="time">${formatTime(r.createdAt)}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('加载会话失败:', e);
+            }
+        }
+
+        // 选择会话
+        async function selectRoom(sessionId) {
+            currentSessionId = sessionId;
+            loadRooms(currentAvatarId); // 刷新列表高亮
+
+            const token = await checkAuth();
+            if (!token) return;
+
+            // 连接或重连Socket
+            if (!socket || !socket.connected) {
+                // 重新初始化Socket连接
+                currentOperatorToken = token;
+                connectSocket(token);
+            } else {
+                // 已连接，重新订阅会话
+                subscribeSession(sessionId);
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/room/' + sessionId, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert('加载会话详情失败');
+                    return;
+                }
+
+                const room = data.room;
+                currentMode = room.mode || 'ai';
+
+                // 显示详情面板
+                document.getElementById('detailPanel').style.display = 'flex';
+
+                // 渲染消息
+                renderMessages(room.messages || []);
+
+                // 更新按钮状态
+                updateButtons();
+
+                // 标记消息已读
+                if (socket && socket.connected) {
+                    socket.emit('mark_read', {});
+                }
+            } catch (e) {
+                console.error('加载会话详情失败:', e);
+            }
+        }
+
+        // 渲染消息
+        function renderMessages(messages) {
+            const container = document.getElementById('chatMessages');
+
+            // 确保有 messageList 容器（与 appendMessage 函数共用）
+            let list = container.querySelector('.messageList');
+            if (!list) {
+                list = document.createElement('div');
+                list.className = 'messageList';
+                container.innerHTML = '';
+                container.appendChild(list);
+            }
+
+            if (messages.length === 0) {
+                list.innerHTML = '<div class="empty-state">暂无消息</div>';
+                return;
+            }
+
+            list.innerHTML = messages.map(m => {
+                const roleMap = {
+                    'user': '用户',
+                    'assistant': 'AI客服',
+                    'human_operator': '人工客服',
+                    'system': '系统'
+                };
+                // 判断是否是图片消息
+                let contentHtml = m.content;
+                if (m.messageType === 'image' && m.imageUrl) {
+                    contentHtml = `<img src="${m.imageUrl}" alt="图片消息" class="msg-image-img" style="max-width:200px;max-height:200px;border-radius:8px;cursor:pointer;">`;
+                }
+                return `<div class="message ${m.role}">
+                    <div class="role">${roleMap[m.role] || m.role}</div>
+                    <div class="content">${contentHtml}</div>
+                    <div class="time">${m.timestamp ? new Date(m.timestamp).toLocaleString('zh-CN') : ''}</div>
+                </div>`;
+            }).join('');
+
+            // 绑定图片点击事件（放大预览）
+            list.querySelectorAll('.msg-image-img').forEach(img => {
+                img.addEventListener('click', function() {
+                    if (window.chatViewer) {
+                        window.chatViewer.destroy();
+                    }
+                    window.chatViewer = new Viewer(img, {
+                        hidden: function() {
+                            window.chatViewer.destroy();
+                        }
+                    });
+                    window.chatViewer.show();
+                });
+            });
+
+            // 滚动到底部
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // 更新按钮状态
+        function updateButtons() {
+            const joinBtn = document.getElementById('joinBtn');
+            const leaveBtn = document.getElementById('leaveBtn');
+            const switchModeBtn = document.getElementById('switchModeBtn');
+
+            if (currentMode === 'ai') {
+                joinBtn.style.display = 'inline-block';
+                leaveBtn.style.display = 'none';
+                switchModeBtn.textContent = '切换人工';
+            } else {
+                joinBtn.style.display = 'none';
+                leaveBtn.style.display = 'inline-block';
+                switchModeBtn.textContent = '切换AI';
+            }
+        }
+
+        // 人工接入
+        async function joinRoom() {
+            if (!currentSessionId) return;
+
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/join/' + currentSessionId, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('已成功接入会话');
+                    selectRoom(currentSessionId); // 刷新
+                    loadRooms(currentAvatarId); // 刷新列表
+                } else {
+                    alert(data.error || '接入失败');
+                }
+            } catch (e) {
+                console.error('接入失败:', e);
+                alert('接入失败');
+            }
+        }
+
+        // 人工离开
+        async function leaveRoom() {
+            if (!currentSessionId) return;
+
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/leave/' + currentSessionId, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('已离开会话');
+                    selectRoom(currentSessionId);
+                    loadRooms(currentAvatarId);
+                } else {
+                    alert(data.error || '操作失败');
+                }
+            } catch (e) {
+                console.error('操作失败:', e);
+                alert('操作失败');
+            }
+        }
+
+        // 切换模式
+        async function switchMode() {
+            if (!currentSessionId) return;
+
+            const newMode = currentMode === 'ai' ? 'human' : 'ai';
+
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/switch-mode/' + currentSessionId, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ mode: newMode })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('模式已切换为: ' + (newMode === 'ai' ? 'AI模式' : '人工模式'));
+                    selectRoom(currentSessionId);
+                    loadRooms(currentAvatarId);
+                } else {
+                    alert(data.error || '切换失败');
+                }
+            } catch (e) {
+                console.error('切换失败:', e);
+                alert('切换失败');
+            }
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            if (!currentSessionId) return;
+
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // 优先使用Socket发送
+            if (socket && socket.connected) {
+                const tempId = 'temp_' + Date.now();
+                const messageData = {
+                    messageId: tempId,
+                    role: 'human_operator',
+                    content: message,
+                    timestamp: new Date(),
+                    read: false
+                };
+
+                // 立即显示消息到界面
+                appendMessage(messageData, true);
+
+                // 发送消息
+                socket.emit('send_message', {
+                    content: message,
+                    tempId: tempId
+                });
+
+                input.value = '';
+                return;
+            }
+
+            // Socket不可用时降级到HTTP
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/send/' + currentSessionId, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    input.value = '';
+                    // 立即显示消息
+                    const messageData = {
+                        messageId: 'msg_' + Date.now(),
+                        tempId: 'http_' + Date.now(),
+                        role: 'human_operator',
+                        content: message,
+                        timestamp: new Date(),
+                        read: false
+                    };
+                    appendMessage(messageData, true);
+                } else {
+                    alert(data.error || '发送失败');
+                }
+            } catch (e) {
+                console.error('发送失败:', e);
+                alert('发送失败');
+            }
+        }
+
+        // 检查消息是否已显示（用于去重）
+        // 同时检查 messageId、tempId 和内容+时间组合
+        function isMessageDisplayed(messageId, tempId, content) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return false;
+            // 检查 messageId
+            if (messageId && container.querySelector(`[data-message-id="${messageId}"]`)) {
+                return true;
+            }
+            // 检查 tempId
+            if (tempId && container.querySelector(`[data-temp-id="${tempId}"]`)) {
+                return true;
+            }
+            // 检查内容相同且时间相近的消息（5秒内认为是同一条）
+            if (content) {
+                const messages = container.querySelectorAll('.message');
+                const now = Date.now();
+                for (const msg of messages) {
+                    const msgTime = parseInt(msg.dataset.time || '0');
+                    const msgContent = msg.querySelector('.text')?.textContent;
+                    if (msgContent && Math.abs(now - msgTime) < 5000 && msgContent === content) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // 添加消息到界面
+        function appendMessage(message, isTempMessage = false) {
+            const container = document.getElementById('chatMessages');
+            const list = container ? container.querySelector('.messageList') : null;
+            if (!list) return;
+
+            const isOwn = message.role === 'human_operator';
+            const div = document.createElement('div');
+            div.className = 'message ' + (isOwn ? 'sent' : 'received');
+            if (message.messageId) {
+                div.setAttribute('data-message-id', message.messageId);
+            }
+            if (message.tempId) {
+                div.setAttribute('data-temp-id', message.tempId);
+            }
+            // 记录消息时间用于去重
+            div.setAttribute('data-time', Date.now());
+
+            const roleName = message.role === 'human_operator' ? '人工客服' :
+                            message.role === 'assistant' ? 'AI助手' :
+                            message.role === 'user' ? '用户' : '系统';
+
+            const avatar = message.role === 'human_operator' ? '👨‍💼' :
+                          message.role === 'assistant' ? '🤖' : '👤';
+
+            // 判断是否是图片消息
+            let contentHtml = escapeHtml(message.content);
+            if (message.messageType === 'image' && message.imageUrl) {
+                contentHtml = `<img src="${message.imageUrl}" alt="图片消息" class="msg-image-img" style="max-width:200px;max-height:200px;border-radius:8px;cursor:pointer;">`;
+            }
+
+            div.innerHTML = `
+                <div class="avatar">${avatar}</div>
+                <div class="content">
+                    <div class="role-name">${roleName}</div>
+                    <div class="text">${contentHtml}</div>
+                    <div class="time">${formatTime(message.timestamp)}</div>
+                </div>
+            `;
+
+            // 绑定图片点击事件
+            const imgEl = div.querySelector('.msg-image-img');
+            if (imgEl) {
+                imgEl.addEventListener('click', function() {
+                    if (window.chatViewer) {
+                        window.chatViewer.destroy();
+                    }
+                    window.chatViewer = new Viewer(imgEl, {
+                        hidden: function() {
+                            window.chatViewer.destroy();
+                        }
+                    });
+                    window.chatViewer.show();
+                });
+            }
+
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // 添加系统消息
+        function addSystemMessage(content) {
+            const container = document.getElementById('chatMessages');
+            const list = container ? container.querySelector('.messageList') : null;
+            if (!list) return;
+
+            const div = document.createElement('div');
+            div.className = 'message system';
+            div.innerHTML = `<div class="system-msg">${escapeHtml(content)}</div>`;
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // 显示正在输入提示
+        function showTypingIndicator(role, isTyping) {
+            let indicator = document.getElementById('typingIndicator');
+            if (!indicator && isTyping) {
+                const container = document.getElementById('chatMessages');
+                const list = container ? container.querySelector('.messageList') : null;
+                if (!list) return;
+
+                indicator = document.createElement('div');
+                indicator.id = 'typingIndicator';
+                indicator.className = 'typing-indicator';
+                indicator.innerHTML = '<span>对方正在输入...</span>';
+                list.appendChild(indicator);
+            }
+
+            if (indicator) {
+                indicator.style.display = isTyping ? 'block' : 'none';
+                if (isTyping) {
+                    list.scrollTop = list.scrollHeight;
+                }
+            }
+        }
+
+        // 创建流式消息占位符（客服端）
+        function appendStreamingMessage(messageId) {
+            const container = document.getElementById('chatMessages');
+            const list = container ? container.querySelector('.messageList') : null;
+            if (!list) return;
+
+            const div = document.createElement('div');
+            div.className = 'message received streaming-msg';
+            div.setAttribute('data-stream-id', messageId);
+
+            const roleName = 'AI助手';
+            const avatar = '🤖';
+
+            div.innerHTML = `
+                <div class="avatar">${avatar}</div>
+                <div class="content">
+                    <div class="role-name">${roleName}</div>
+                    <div class="text streaming-content"></div>
+                    <div class="time">${formatTime(new Date())}</div>
+                </div>
+            `;
+
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+
+            return div;
+        }
+
+        // 追加内容到流式消息（客服端）
+        function appendToStreamingMessage(messageId, chunk) {
+            const container = document.getElementById('chatMessages');
+            const list = container ? container.querySelector('.messageList') : null;
+            if (!list) return;
+
+            const div = list.querySelector(`[data-stream-id="${messageId}"]`);
+            if (div) {
+                const contentDiv = div.querySelector('.streaming-content');
+                if (contentDiv) {
+                    contentDiv.innerHTML += chunk;
+                }
+                list.scrollTop = list.scrollHeight;
+            }
+        }
+
+        // 完成流式消息（客服端）
+        function finishStreamingMessage(messageId, finalContent) {
+            const container = document.getElementById('chatMessages');
+            const list = container ? container.querySelector('.messageList') : null;
+            if (!list) return;
+
+            const div = list.querySelector(`[data-stream-id="${messageId}"]`);
+            if (div) {
+                div.classList.remove('streaming-msg');
+                const contentDiv = div.querySelector('.streaming-content');
+                if (contentDiv) {
+                    contentDiv.innerHTML = finalContent;
+                }
+                list.scrollTop = list.scrollHeight;
+            }
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 关闭会话
+        async function closeRoom() {
+            if (!currentSessionId) return;
+            if (!confirm('确定要关闭此会话吗？')) return;
+
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/agent-chat-admin/close/' + currentSessionId, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('会话已关闭');
+                    currentSessionId = null;
+                    document.getElementById('detailPanel').style.display = 'none';
+                    loadRooms(currentAvatarId);
+                } else {
+                    alert(data.error || '关闭失败');
+                }
+            } catch (e) {
+                console.error('关闭失败:', e);
+                alert('关闭失败');
+            }
+        }
+
+        // 回车发送
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 处理客服图片上传
+        async function handleOperatorImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+
+            // 验证文件大小 (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过5MB');
+                return;
+            }
+
+            if (!currentSessionId) {
+                alert('请先选择一个会话');
+                return;
+            }
+
+            // 显示上传中
+            const tempId = 'temp_' + Date.now();
+            const messageData = {
+                messageId: tempId,
+                role: 'human_operator',
+                content: '[图片消息]',
+                messageType: 'image',
+                imageUrl: URL.createObjectURL(file),
+                timestamp: new Date(),
+                read: false
+            };
+            appendMessage(messageData, true);
+
+            try {
+                // 上传图片
+                const token = await checkAuth();
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const uploadRes = await fetch(API_BASE + '/api/agent-chat/upload-image?token=' + token + '&avatar_id=' + currentAvatarId, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const uploadData = await uploadRes.json();
+
+                if (!uploadData.success) {
+                    alert(uploadData.error || '图片上传失败');
+                    return;
+                }
+
+                const imageUrl = uploadData.image_url;
+
+                // 通过Socket发送图片消息
+                if (socket && socket.connected) {
+                    socket.emit('send_message', {
+                        content: '',
+                        tempId: tempId,
+                        imageUrl: imageUrl,
+                        messageType: 'image'
+                    });
+                } else {
+                    // HTTP降级处理
+                    alert('连接已断开，请刷新页面重试');
+                }
+
+            } catch (err) {
+                alert('上传图片失败: ' + err.message);
+            }
+
+            // 清空文件选择
+            event.target.value = '';
+        }
+
+        // 格式化时间
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // 切换聊天风格
+        async function changeChatStyle(avatarId, newStyle) {
+            const token = await checkAuth();
+            if (!token) return;
+
+            if (!confirm('确定要将该分身的聊天风格切换为' + (newStyle === 'modern' ? '现代简约' : '赛博朋克') + '风格吗？')) {
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/agent-avatars/' + avatarId, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_style: newStyle })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('风格切换成功！');
+                    loadAvatars(); // 刷新列表
+                } else {
+                    alert(data.error || '切换失败');
+                }
+            } catch (e) {
+                console.error('切换风格失败:', e);
+                alert('切换失败');
+            }
+        }
+
+        // ========== Socket 实时消息功能 ==========
+        let socket = null;
+        let currentOperatorToken = null;
+
+        // 初始化Socket连接
+        async function initSocket() {
+            const token = await checkAuth();
+            if (!token) {
+                console.error('未登录，无法连接Socket');
+                return;
+            }
+
+            // 获取operator token
+            currentOperatorToken = token;
+
+            // 如果没有选择会话，先不连接
+            if (!currentSessionId) {
+                console.log('等待选择会话后再连接Socket');
+                return;
+            }
+
+            // 连接Socket
+            connectSocket(token);
+        }
+
+        // 实际连接Socket的函数
+        function connectSocket(token) {
+            if (!currentSessionId) {
+                console.log('没有会话ID，无法连接Socket');
+                return;
+            }
+
+            // 如果已连接，先断开
+            if (socket) {
+                socket.disconnect();
+            }
+
+            socket = io(API_BASE + '/agent-chat', {
+                auth: {
+                    operatorToken: token
+                },
+                query: {
+                    sessionId: currentSessionId,
+                    token: token,
+                    role: 'operator'
+                },
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                console.log('Socket connected');
+                updateConnectionStatus(true);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+                updateConnectionStatus(false);
+            });
+
+            socket.on('connect_error', (err) => {
+                console.error('Socket连接错误:', err.message);
+                updateConnectionStatus(false);
+            });
+
+            // 监听新消息
+            socket.on('new_message', (message) => {
+                console.log('收到新消息:', message);
+                // 播放提示音
+                playNotificationSound();
+                // 只显示当前会话的消息
+                // 由于服务端使用 socket.to() 广播，发送者自己不会收到，所以不需要去重检查
+                if (currentSessionId && message) {
+                    appendMessage(message);
+                    // 标记已读
+                    socket.emit('mark_read', {});
+                }
+            });
+
+            // 监听AI流式开始
+            socket.on('ai_stream_start', (data) => {
+                console.log('AI流式开始(客服端):', data);
+                // 创建流式消息占位符
+                appendStreamingMessage(data.messageId);
+            });
+
+            // 监听AI流式内容块
+            socket.on('ai_stream_chunk', (data) => {
+                console.log('AI流式内容块(客服端):', data.chunk);
+                appendToStreamingMessage(data.messageId, data.chunk);
+            });
+
+            // 监听AI流式结束
+            socket.on('ai_stream_end', (data) => {
+                console.log('AI流式结束(客服端):', data);
+                finishStreamingMessage(data.messageId, data.content);
+            });
+
+            // 监听AI流式错误
+            socket.on('ai_stream_error', (data) => {
+                console.error('AI流式错误(客服端):', data);
+                finishStreamingMessage(data.messageId, '【系统错误】' + data.error);
+            });
+
+            // 监听消息发送成功
+            socket.on('message_sent', (data) => {
+                console.log('消息发送成功:', data);
+                // 找到临时消息，用真实messageId更新
+                const tempId = data.tempId;
+                const realMessageId = data.messageId;
+                const container = document.getElementById('chatMessages');
+                if (container) {
+                    const msgEl = container.querySelector(`[data-temp-id="${tempId}"]`);
+                    if (msgEl) {
+                        msgEl.setAttribute('data-message-id', realMessageId);
+                        msgEl.removeAttribute('data-temp-id');
+                    }
+                }
+            });
+
+            // 监听消息发送失败
+            socket.on('message_error', (data) => {
+                console.error('消息发送失败:', data);
+                alert('发送失败: ' + (data.error || '未知错误'));
+            });
+
+            // 监听typing状态
+            socket.on('typing', (data) => {
+                showTypingIndicator(data.role, data.isTyping);
+            });
+
+            // 监听模式变更
+            socket.on('mode_changed', (data) => {
+                console.log('模式变更:', data);
+                currentMode = data.mode;
+                updateButtons();
+                addSystemMessage(data.mode === 'human' ?
+                    `已切换为人工模式` : `已切换为AI模式`);
+            });
+
+            // 监听人工接入
+            socket.on('operator_joined', (data) => {
+                addSystemMessage(`${data.operatorName} 已接入会话`);
+            });
+
+            // 监听人工离开
+            socket.on('operator_left', (data) => {
+                addSystemMessage(data.message);
+            });
+
+            // 监听消息已读
+            socket.on('messages_read', (data) => {
+                console.log('对方已读消息');
+            });
+        }
+
+        // 更新连接状态显示
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.textContent = connected ? '已连接' : '未连接';
+                statusEl.style.color = connected ? 'var(--neon-green)' : 'var(--neon-red)';
+            }
+        }
+
+        // 通过Socket发送消息
+        function sendMessageViaSocket(content) {
+            if (!socket || !socket.connected) {
+                alert('连接已断开，请刷新页面');
+                return false;
+            }
+
+            const tempId = 'temp_' + Date.now();
+
+            socket.emit('send_message', {
+                content: content,
+                tempId: tempId
+            });
+
+            return true;
+        }
+
+        // 发送正在输入状态
+        function sendTypingStatus(isTyping) {
+            if (!socket || !socket.connected) return;
+            socket.emit('typing', { isTyping });
+        }
+
+        // 订阅会话房间 - 重新连接以加入新房间
+        async function subscribeSession(sessionId) {
+            const token = await checkAuth();
+            if (!token) return;
+
+            // 断开旧连接并重新连接
+            if (socket) {
+                socket.disconnect();
+            }
+            connectSocket(token);
+        }
+
+        // 页面加载时获取数据
+        window.onload = async () => {
+            await loadAll();
+            // 不在这里连接Socket，等待选择会话后再连接
+        };
+
+        // 每10秒刷新一次会话列表
+        setInterval(loadRooms, 10000);
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

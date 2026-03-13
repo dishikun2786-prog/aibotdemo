@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>创建播客 | 能量山：零号协议</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
+    <script src="js/global-podcast-player.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --podcast-bg: #f0f2f5;
+            --podcast-card-bg: rgba(255, 255, 255, 0.92);
+            --podcast-primary: #e91e63;
+            --podcast-primary-dark: #c2185b;
+            --podcast-accent: #ff4081;
+            --podcast-text: #1a1a1a;
+            --podcast-text-secondary: #606266;
+            --podcast-text-light: #909399;
+            --podcast-border: rgba(0, 0, 0, 0.08);
+            --podcast-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --podcast-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --podcast-radius: 12px;
+            --podcast-radius-lg: 16px;
+            --podcast-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--podcast-bg);
+            color: var(--podcast-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 50%, #673ab7 100%);
+            z-index: 0;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--podcast-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--podcast-bg);
+            color: var(--podcast-text);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--podcast-text);
+        }
+
+        .nav-icon-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--podcast-bg);
+            color: var(--podcast-text);
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .nav-icon-link:hover {
+            background: #e91e63;
+            color: white;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: var(--podcast-card-bg);
+            border-radius: var(--podcast-radius);
+            padding: 4px;
+            box-shadow: var(--podcast-shadow);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--podcast-text-secondary);
+            cursor: pointer;
+            border-radius: var(--podcast-radius-sm);
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--podcast-primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            background: var(--podcast-card-bg);
+            border-radius: var(--podcast-radius-lg);
+            box-shadow: var(--podcast-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--podcast-text);
+            margin-bottom: 8px;
+        }
+
+        .form-label .required {
+            color: var(--podcast-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--podcast-border);
+            border-radius: var(--podcast-radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--podcast-primary);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--podcast-border);
+            border-radius: var(--podcast-radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.2s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--podcast-primary);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--podcast-border);
+            border-radius: var(--podcast-radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--podcast-primary);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--podcast-text-light);
+            margin-top: 4px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            color: white;
+            border: none;
+            border-radius: var(--podcast-radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .my-podcasts {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .my-podcast-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--podcast-card-bg);
+            border-radius: var(--podcast-radius);
+            box-shadow: var(--podcast-shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .my-podcast-item:hover {
+            box-shadow: var(--podcast-shadow-hover);
+        }
+
+        .podcast-cover {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--podcast-radius-sm);
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+
+        .podcast-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .podcast-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .podcast-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .podcast-meta {
+            font-size: 13px;
+            color: var(--podcast-text-light);
+            display: flex;
+            gap: 12px;
+        }
+
+        .podcast-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid var(--podcast-border);
+            border-radius: var(--podcast-radius-sm);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--podcast-primary);
+            color: var(--podcast-primary);
+        }
+
+        .action-btn.danger:hover {
+            border-color: #f44336;
+            color: #f44336;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--podcast-text-light);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--podcast-border);
+            border-top-color: var(--podcast-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast:not(.show) {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .form-hint a {
+            color: var(--podcast-primary);
+            text-decoration: underline;
+        }
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .episode-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .episode-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: var(--podcast-radius);
+        }
+
+        .episode-cover {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--podcast-radius-sm);
+            background: linear-gradient(135deg, var(--podcast-primary), #9c27b0);
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .episode-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .episode-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .episode-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .episode-meta {
+            font-size: 12px;
+            color: var(--podcast-text-light);
+        }
+
+        .episode-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .episodes-section {
+            background: var(--podcast-card-bg, #fff);
+            border: 1px solid var(--podcast-border, #e0e0e0);
+            border-radius: var(--podcast-radius-sm, 6px);
+            padding: 12px;
+            margin-top: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .episodes-section::before {
+            content: '剧集列表';
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--podcast-text-light, #666);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--podcast-border, #eee);
+        }
+
+        /* 响应式设计 - 移动端优化 */
+        @media (max-width: 480px) {
+            :root {
+                --podcast-radius: 8px;
+                --podcast-radius-lg: 12px;
+            }
+
+            body {
+                font-size: 14px;
+                padding-bottom: 70px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            .navbar-title {
+                font-size: 16px;
+            }
+
+            .tabs {
+                gap: 8px;
+            }
+
+            .tab {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .form-section {
+                padding: 16px;
+            }
+
+            .form-title {
+                font-size: 16px;
+                margin-bottom: 16px;
+            }
+
+            .form-label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .form-input, .form-textarea, .form-select {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .form-textarea {
+                min-height: 80px;
+            }
+
+            .form-hint {
+                font-size: 11px;
+            }
+
+            .submit-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .my-podcast-item {
+                flex-direction: column;
+                padding: 12px;
+            }
+
+            .my-podcast-cover {
+                width: 100%;
+                height: 120px;
+                border-radius: 8px;
+            }
+
+            .my-podcast-info {
+                padding: 10px 0 0;
+            }
+
+            .my-podcast-title {
+                font-size: 15px;
+            }
+
+            .my-podcast-stats {
+                gap: 8px;
+                font-size: 11px;
+            }
+
+            .episode-item {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .episode-cover {
+                width: 100%;
+                height: 80px;
+                border-radius: 6px;
+            }
+
+            .episode-info {
+                padding: 8px 0 0;
+            }
+
+            .episode-title {
+                font-size: 14px;
+            }
+
+            .episode-actions {
+                padding-top: 8px;
+            }
+
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            /* 移动端底部导航 */
+            .mobile-nav {
+                display: flex;
+            }
+
+            .modal-content {
+                padding: 16px;
+                margin: 12px;
+            }
+        }
+
+        /* 平板 */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .container {
+                max-width: 100%;
+            }
+
+            .my-podcast-item {
+                flex-direction: row;
+            }
+
+            .my-podcast-cover {
+                width: 160px;
+                height: 120px;
+            }
+        }
+
+        /* 桌面 */
+        @media (min-width: 769px) {
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+
+        /* 触摸反馈 */
+        button, .tab, .action-btn {
+            -webkit-tap-highlight-color: rgba(233, 30, 99, 0.1);
+        }
+
+        button:active, .tab:active, .action-btn:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        /* 移动端底部导航 */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--podcast-border);
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            color: var(--podcast-text-light);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--podcast-primary);
+        }
+
+        .mobile-nav-icon {
+            font-size: 24px;
+        }
+
+        /* 深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --podcast-bg: #1a1a1a;
+                --podcast-card-bg: rgba(40, 40, 40, 0.95);
+                --podcast-text: #e0e0e0;
+                --podcast-text-secondary: #a0a0a0;
+                --podcast-text-light: #707070;
+                --podcast-border: rgba(255, 255, 255, 0.1);
+            }
+
+            .mobile-nav {
+                background: #2d2d2d;
+                border-top-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .modal-content {
+                background: #2d2d2d;
+                color: #e0e0e0;
+            }
+
+            .form-input, .form-textarea, .form-select {
+                background: #3d3d3d;
+                border-color: rgba(255, 255, 255, 0.1);
+                color: #e0e0e0;
+            }
+        }
+
+        /* 上传进度条样式 */
+        .upload-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .upload-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e91e63, #ff4081);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="podcast.html" class="back-btn">&#8592;</a>
+            <span class="navbar-title">创建播客</span>
+            <a href="plaza.html" class="nav-icon-link" title="玩家广场">&#128172;</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="create-podcast">创建播客</button>
+            <button class="tab" data-tab="my-podcasts">我的播客</button>
+        </div>
+
+        <div id="create-podcast" class="tab-content active">
+            <div class="form-section">
+                <div class="form-title">&#127911; 播客信息</div>
+
+                <div class="form-group">
+                    <label class="form-label">播客标题 <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="podcastTitle" placeholder="给你的播客起个名字" maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">播客简介</label>
+                    <textarea class="form-textarea" id="podcastDescription" placeholder="介绍一下你的播客..." maxlength="500"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">分类 <span class="required">*</span></label>
+                    <select class="form-select" id="podcastCategory">
+                        <option value="">请选择分类</option>
+                        <option value="科技">科技</option>
+                        <option value="生活">生活</option>
+                        <option value="游戏">游戏</option>
+                        <option value="音乐">音乐</option>
+                        <option value="教育">教育</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="新闻">新闻</option>
+                        <option value="健康">健康</option>
+                        <option value="体育">体育</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">封面图片</label>
+                    <input type="text" class="form-input" id="podcastCover" placeholder="https://example.com/cover.jpg">
+                    <div class="form-hint">
+                        输入图片链接，或<a href="#" onclick="document.getElementById('coverFileInput').click(); return false;">点击上传</a>，建议尺寸 800x800
+                    </div>
+                    <input type="file" id="coverFileInput" accept="image/*" style="display:none" onchange="uploadCoverImage(this)">
+                </div>
+
+                <button class="submit-btn" id="createPodcastBtn" onclick="createPodcast()">创建播客</button>
+            </div>
+        </div>
+
+        <div id="my-podcasts" class="tab-content">
+            <div id="myPodcastsList">
+                <div class="loading"><div class="loading-spinner"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = '';
+        let token = AuthManager.getToken();
+        let myPodcasts = [];
+        let podcastSocket = null;
+
+        // 统一登录函数 - 使用游戏页面的登录弹窗
+        function openLoginPopup() {
+            window.open('game.html?mode=auth', '_blank', 'width=450,height=600,scrollbars=yes');
+        }
+
+        // 监听登录成功消息
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'auth_login_success') {
+                localStorage.setItem('authToken', event.data.token);
+                window.location.reload();
+            }
+        });
+
+        async function init() {
+            if (!token) {
+                showToast('请先登录');
+                openLoginPopup();
+                return;
+            }
+
+            setupTabs();
+            await loadMyPodcasts();
+
+            // 检查URL参数，是否需要编辑指定播客
+            const params = new URLSearchParams(window.location.search);
+            const editPodcastId = params.get('edit');
+            if (editPodcastId) {
+                // 延迟一下确保数据加载完成
+                setTimeout(() => {
+                    // 切换到我的播客标签
+                    document.querySelector('[data-tab="my-podcasts"]').click();
+                    // 查找并编辑对应播客
+                    setTimeout(() => {
+                        editPodcast(editPodcastId);
+                    }, 500);
+                }, 300);
+            }
+
+            // 初始化Socket连接
+            initSocket();
+        }
+
+        // 初始化Socket连接
+        function initSocket() {
+            podcastSocket = io(`${API_BASE}/plaza`, {
+                auth: { token },
+                transports: ['websocket', 'polling']
+            });
+
+            podcastSocket.on('connect', () => {
+                console.log('[Podcast Create] Socket connected');
+                podcastSocket.emit('join_podcast');
+            });
+
+            podcastSocket.on('connect_error', (err) => {
+                console.error('[Podcast Create] Socket error:', err.message);
+            });
+
+            // 监听新播客发布（其他用户创建的）
+            podcastSocket.on('podcast_new', (data) => {
+                showToast('有新播客发布: ' + data.title);
+            });
+
+            // 监听新剧集发布
+            podcastSocket.on('podcast_episode_new', (data) => {
+                showToast('有新剧集发布: ' + data.title);
+            });
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+
+                    if (tab.dataset.tab === 'my-podcasts') {
+                        loadMyPodcasts();
+                    }
+                });
+            });
+        }
+
+        async function loadMyPodcasts() {
+            const list = document.getElementById('myPodcastsList');
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/my-podcasts?page=1&limit=20', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    myPodcasts = data.data.podcasts;
+                    renderMyPodcasts();
+                } else {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-title">加载失败</div></div>';
+                }
+            } catch (e) {
+                console.error('加载我的播客失败:', e);
+                list.innerHTML = '<div class="empty-state"><div class="empty-title">加载失败</div></div>';
+            }
+        }
+
+        function renderMyPodcasts() {
+            const list = document.getElementById('myPodcastsList');
+
+            if (myPodcasts.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">&#127911;</div>
+                        <div class="empty-title">你还没有创建播客</div>
+                        <div>点击上方"创建播客"开始吧</div>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = '';
+            myPodcasts.forEach(podcast => {
+                list.appendChild(createPodcastItem(podcast));
+            });
+        }
+
+        function createPodcastItem(podcast) {
+            const item = document.createElement('div');
+            item.className = 'my-podcast-item';
+            item.dataset.podcastId = podcast.podcast_id;
+
+            const coverHtml = podcast.cover_image
+                ? `<img src="${podcast.cover_image}">`
+                : '&#127911;';
+
+            item.innerHTML = `
+                <div class="podcast-cover">${coverHtml}</div>
+                <div class="podcast-info">
+                    <div class="podcast-title">${escapeHtml(podcast.title)}</div>
+                    <div class="podcast-meta">
+                        <span>${podcast.episode_count} 集</span>
+                        <span>${podcast.subscriber_count} 订阅</span>
+                    </div>
+                    <div class="podcast-actions">
+                        <button class="action-btn" onclick="toggleEpisodes('${podcast.podcast_id}')">管理剧集</button>
+                        <button class="action-btn" onclick="editPodcast('${podcast.podcast_id}')">编辑</button>
+                        <button class="action-btn danger" onclick="deletePodcast('${podcast.podcast_id}')">删除</button>
+                    </div>
+                </div>
+                <div class="episodes-section" id="episodes-${podcast.podcast_id}" style="display: none;">
+                    <div class="loading"><div class="loading-spinner"></div></div>
+                </div>
+            `;
+
+            return item;
+        }
+
+        async function createPodcast() {
+            const title = document.getElementById('podcastTitle').value.trim();
+            const description = document.getElementById('podcastDescription').value.trim();
+            const category = document.getElementById('podcastCategory').value;
+            const cover = document.getElementById('podcastCover').value.trim();
+
+            if (!title) {
+                showToast('请输入播客标题');
+                return;
+            }
+
+            if (!category) {
+                showToast('请选择分类');
+                return;
+            }
+
+            const btn = document.getElementById('createPodcastBtn');
+            btn.disabled = true;
+            btn.textContent = '创建中...';
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/podcasts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        category: category,
+                        cover_image: cover
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('创建成功');
+                    // 切换到我的播客页面
+                    document.querySelector('[data-tab="my-podcasts"]').click();
+                    // 清空表单
+                    document.getElementById('podcastTitle').value = '';
+                    document.getElementById('podcastDescription').value = '';
+                    document.getElementById('podcastCategory').value = '';
+                    document.getElementById('podcastCover').value = '';
+                } else {
+                    showToast(data.error || '创建失败');
+                }
+            } catch (e) {
+                console.error('创建播客失败:', e);
+                showToast('创建失败');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '创建播客';
+            }
+        }
+
+        // 展开/收起剧集列表
+        async function toggleEpisodes(podcastId) {
+            const section = document.getElementById(`episodes-${podcastId}`);
+            if (!section) return;
+
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                await loadEpisodes(podcastId);
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // 加载剧集列表
+        async function loadEpisodes(podcastId) {
+            const section = document.getElementById(`episodes-${podcastId}`);
+            if (!section) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/podcast/podcasts/${podcastId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (data.success && data.data.episodes) {
+                    renderEpisodes(podcastId, data.data.episodes);
+                } else {
+                    section.innerHTML = '<div class="empty-state">加载剧集失败</div>';
+                }
+            } catch (e) {
+                console.error('加载剧集失败:', e);
+                section.innerHTML = '<div class="empty-state">加载剧集失败</div>';
+            }
+        }
+
+        // 渲染剧集列表（带编辑/删除按钮）
+        function renderEpisodes(podcastId, episodes) {
+            const section = document.getElementById(`episodes-${podcastId}`);
+            if (!section) return;
+
+            if (episodes.length === 0) {
+                section.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: var(--podcast-text-light);">
+                        暂无剧集
+                    </div>
+                    <button class="action-btn" style="margin: 10px auto; display: block;" onclick="addEpisode('${podcastId}')">添加第一个剧集</button>
+                `;
+                return;
+            }
+
+            // 添加标题（因为CSS使用::before显示，这里需要保留空内容让它生效）
+            let html = '';
+            episodes.forEach(episode => {
+                const coverHtml = episode.cover_image
+                    ? `<img src="${episode.cover_image}">`
+                    : '&#127908;';
+
+                const duration = formatDuration(episode.duration);
+
+                html += `
+                    <div class="episode-item">
+                        <div class="episode-cover">${coverHtml}</div>
+                        <div class="episode-info">
+                            <div class="episode-title">${escapeHtml(episode.title)}</div>
+                            <div class="episode-meta">
+                                <span>${duration}</span>
+                                <span>${episode.plays_count || 0} 播放</span>
+                            </div>
+                        </div>
+                        <div class="episode-actions">
+                            <button class="action-btn" onclick="editEpisode('${episode.episode_id}', '${podcastId}')">编辑</button>
+                            <button class="action-btn danger" onclick="deleteEpisode('${episode.episode_id}', '${podcastId}')">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            html += `<button class="action-btn" style="margin: 12px auto; display: block;" onclick="addEpisode('${podcastId}')">+ 添加剧集</button>`;
+
+            section.innerHTML = html;
+        }
+
+        // 格式化时长
+        function formatDuration(seconds) {
+            if (!seconds || seconds <= 0) return '00:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 编辑剧集 - 打开模态框
+        async function editEpisode(episodeId, podcastId) {
+            try {
+                const res = await fetch(API_BASE + `/api/podcast/episodes/${episodeId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast(data.error || '获取剧集信息失败');
+                    return;
+                }
+
+                const episode = data.data;
+
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                        <h3 style="margin-bottom: 20px;">编辑剧集</h3>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label">剧集标题 <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="editEpisodeTitle" value="${escapeHtml(episode.title)}" placeholder="剧集标题" required>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label">剧集描述</label>
+                            <textarea class="form-textarea" id="editEpisodeDesc" placeholder="剧集描述">${escapeHtml(episode.description || '')}</textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label">音频URL</label>
+                            <input type="text" class="form-input" id="editEpisodeAudioUrl" value="${escapeHtml(episode.audio_url || '')}" placeholder="https://example.com/audio.mp3">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label">时长（秒）</label>
+                            <input type="number" class="form-input" id="editEpisodeDuration" value="${episode.duration || 0}" placeholder="时长（秒）">
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button class="action-btn" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                            <button class="action-btn primary" onclick="submitEditEpisode('${episodeId}', '${podcastId}')">保存</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+            } catch (e) {
+                console.error('获取剧集信息失败:', e);
+                showToast('获取剧集信息失败');
+            }
+        }
+
+        // 提交编辑剧集
+        async function submitEditEpisode(episodeId, podcastId) {
+            const title = document.getElementById('editEpisodeTitle').value.trim();
+            const description = document.getElementById('editEpisodeDesc').value.trim();
+            const audio_url = document.getElementById('editEpisodeAudioUrl').value.trim();
+            const duration = parseInt(document.getElementById('editEpisodeDuration').value) || 0;
+
+            if (!title) {
+                alert('请输入剧集标题');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + `/api/podcast/episodes/${episodeId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        audio_url: audio_url,
+                        duration: duration
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('更新成功');
+                    document.querySelector('.modal-overlay')?.remove();
+                    loadEpisodes(podcastId);
+                    loadMyPodcasts(); // 更新剧集计数
+                } else {
+                    showToast(data.error || '更新失败');
+                }
+            } catch (e) {
+                console.error('更新剧集失败:', e);
+                showToast('更新失败');
+            }
+        }
+
+        // 删除剧集
+        async function deleteEpisode(episodeId, podcastId) {
+            if (!confirm('确定要删除这个剧集吗？此操作不可恢复！')) {
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + `/api/podcast/episodes/${episodeId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('删除成功');
+                    loadEpisodes(podcastId);
+                    loadMyPodcasts(); // 更新剧集计数
+                } else {
+                    showToast(data.error || '删除失败');
+                }
+            } catch (e) {
+                console.error('删除剧集失败:', e);
+                showToast('删除失败');
+            }
+        }
+
+        function addEpisode(podcastId) {
+            // 创建简单的模态框来添加剧集
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <h3 style="margin-bottom: 20px;">添加剧集</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">剧集标题 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="episodeTitleInput" placeholder="剧集标题" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">剧集描述</label>
+                        <textarea class="form-textarea" id="episodeDescInput" placeholder="剧集描述"></textarea>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">音频文件</label>
+                        <input type="file" id="episodeAudioFile" accept="audio/*" style="margin-bottom: 10px;" onchange="handleAudioFileSelect(this)">
+                        <div id="audioUploadStatus" style="font-size: 12px; color: #666;"></div>
+                        <input type="hidden" id="episodeAudioUrl" value="">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">或输入音频URL</label>
+                        <input type="text" class="form-input" id="episodeAudioUrlInput" placeholder="https://example.com/audio.mp3">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label">时长（秒）</label>
+                        <input type="number" class="form-input" id="episodeDuration" placeholder="自动获取或手动输入">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="action-btn" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                        <button class="action-btn primary" onclick="submitNewEpisode('${podcastId}')">添加</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 点击遮罩关闭
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        // 处理音频文件选择 - 智能上传（SDK方式优先，失败则降级到服务器代理）
+        async function handleAudioFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('audioUploadStatus');
+
+            // 优先尝试SDK上传（官方推荐方式）
+            try {
+                statusEl.innerHTML = '正在初始化上传...';
+                await ossSDKUpload(file, statusEl);
+                return;
+            } catch (ossError) {
+                console.warn('SDK上传失败，降级到预签名URL方式:', ossError.message);
+            }
+
+            // 降级：预签名URL分片上传
+            const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+            try {
+                statusEl.innerHTML = '正在尝试快速上传...';
+                await ossChunkUpload(file, statusEl, CHUNK_SIZE, totalChunks);
+                return;
+            } catch (ossError) {
+                console.warn('预签名URL上传失败，降级到服务器代理:', ossError.message);
+            }
+
+            // 降级：服务器代理上传
+            try {
+                statusEl.innerHTML = '正在通过服务器上传...<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill"></div></div>';
+
+                const formData = new FormData();
+                formData.append('audio', file);
+
+                const xhr = new XMLHttpRequest();
+
+                // 监听上传进度
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        const progressFill = document.getElementById('audioProgressFill');
+                        if (progressFill) {
+                            progressFill.style.width = percent + '%';
+                        }
+                        statusEl.innerHTML = `正在通过服务器上传... ${percent}%<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill" style="width:${percent}%"></div></div>`;
+                    }
+                };
+
+                // 使用Promise包装XHR
+                const response = await new Promise((resolve, reject) => {
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.success) {
+                                    resolve(data);
+                                } else {
+                                    reject(new Error(data.error || '上传失败'));
+                                }
+                            } catch (e) {
+                                reject(new Error('解析响应失败'));
+                            }
+                        } else {
+                            reject(new Error('上传失败，状态码: ' + xhr.status));
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('网络错误'));
+                    xhr.ontimeout = () => reject(new Error('上传超时'));
+
+                    xhr.open('POST', API_BASE + '/api/podcast/upload-audio');
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    xhr.send(formData);
+                });
+
+                // 上传成功
+                console.log('音频上传成功:', response.data);
+                statusEl.innerHTML = '<span style="color:green">上传成功!</span>';
+
+                // 将URL保存到隐藏字段
+                document.getElementById('episodeAudioUrl').value = response.data.audio_url;
+
+            } catch (err) {
+                console.error('上传失败:', err);
+                statusEl.innerHTML = '<span style="color:red">上传失败: ' + err.message + '</span>';
+            }
+        }
+
+        // 使用Browser.js SDK上传（官方推荐方式）
+        async function ossSDKUpload(file, statusEl) {
+            // 检查SDK是否加载
+            if (typeof OSS === 'undefined') {
+                throw new Error('OSS SDK未加载');
+            }
+
+            const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB，官方推荐
+            const fileSize = file.size;
+
+            // 显示进度
+            statusEl.innerHTML = '正在获取上传凭证...<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill" style="width:5%"></div></div>';
+
+            // 获取STS临时凭证
+            let stsToken = null;
+            try {
+                const stsRes = await fetch(API_BASE + '/api/podcast/get-sts-token', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const stsData = await stsRes.json();
+                if (!stsData.success) {
+                    throw new Error(stsData.error || '获取STS凭证失败');
+                }
+                stsToken = stsData.data;
+            } catch (err) {
+                console.error('获取STS凭证失败:', err);
+                throw new Error('获取上传凭证失败: ' + err.message);
+            }
+
+            // 获取自定义域名（用于直接播放音频），默认为boke.skym178.com
+            const customDomain = stsToken.customDomain || 'https://boke.skym178.com';
+            console.log('[ossSDKUpload] 使用自定义域名:', customDomain);
+
+            // 检查凭证是否过期
+            const expireTime = new Date(stsToken.expiration).getTime();
+            const now = Date.now();
+            if (expireTime - now < 300000) { // 少于5分钟过期
+                console.warn('STS凭证即将过期，需要刷新');
+                throw new Error('凭证即将过期，请刷新页面后重试');
+            }
+
+            // 生成OSS存储路径
+            const objectName = 'podcast-audio/' + Date.now() + '_' + file.name;
+
+            // 更新进度
+            statusEl.innerHTML = '正在初始化OSS客户端...<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill" style="width:10%"></div></div>';
+
+            // 初始化OSS客户端（使用STS临时凭证或长期AK）
+            // 使用外网Endpoint（如果传输加速未开启，使用此配置）
+            // 注意：使用长期AK时必须添加 authorizationV4: true
+            const clientConfig = {
+                region: 'oss-cn-shenzhen',
+                bucket: stsToken.bucket,
+                accessKeyId: stsToken.accessKeyId,
+                accessKeySecret: stsToken.accessKeySecret,
+                endpoint: 'oss-cn-shenzhen.aliyuncs.com',
+                cname: false,
+                secure: true,
+                timeout: 600000, // 10分钟超时
+                authorizationV4: true // 使用V4签名（长期AK必须配置）
+            };
+
+            // 只有使用STS时才需要stsToken，长期AK不需要
+            if (stsToken.stsToken) {
+                clientConfig.stsToken = stsToken.stsToken;
+                clientConfig.authorizationV4 = false; // STS模式不需要V4签名
+            }
+
+            const client = new OSS(clientConfig);
+
+            // 使用multipartUpload上传（官方推荐方式）
+            statusEl.innerHTML = '正在上传到OSS... <span id="uploadPercent">0%</span><div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill"></div></div>';
+
+            try {
+                // 获取文件的MIME类型，默认为audio/mpeg
+                const mimeType = file.type || 'audio/mpeg';
+                console.log('[ossSDKUpload] 上传文件MIME类型:', mimeType);
+                
+                const result = await client.multipartUpload(objectName, file, {
+                    progress: (p) => {
+                        const percent = Math.round(p * 100);
+                        const percentEl = document.getElementById('uploadPercent');
+                        const progressFill = document.getElementById('audioProgressFill');
+                        if (percentEl) percentEl.textContent = percent + '%';
+                        if (progressFill) progressFill.style.width = percent + '%';
+                    },
+                    partSize: CHUNK_SIZE, // 5MB分片
+                    parallel: 4, // 4个并发
+                    mime: mimeType // 指定MIME类型，确保浏览器能识别为音频
+                });
+
+                console.log('OSS上传成功:', result);
+
+                // 获取文件访问URL - 使用自定义域名（支持直接播放）
+                const finalUrl = customDomain + '/' + objectName;
+                console.log('[ossSDKUpload] 上传成功，音频URL:', finalUrl);
+
+                document.getElementById('episodeAudioUrl').value = finalUrl;
+                statusEl.innerHTML = '<span style="color:green">上传成功!</span>';
+
+                // 获取音频时长
+                const tempAudio = new Audio();
+                tempAudio.src = finalUrl;
+                tempAudio.onloadedmetadata = () => {
+                    document.getElementById('episodeDuration').value = Math.floor(tempAudio.duration);
+                };
+
+                return finalUrl;
+            } catch (err) {
+                console.error('OSS SDK上传失败:', err);
+                throw new Error('OSS上传失败: ' + err.message);
+            }
+        }
+
+        // OSS直传分片上传（备用方案 - 使用预签名URL）
+        async function ossChunkUpload(file, statusEl, CHUNK_SIZE, totalChunks) {
+            let uploadId = localStorage.getItem('ossUploadId');
+            let uploadedParts = [];
+            let partUrls = [];
+
+            // 尝试恢复之前的上传进度（从localStorage）
+            if (uploadId) {
+                try {
+                    const savedParts = localStorage.getItem('ossUploadedParts_' + uploadId);
+                    const savedUrls = localStorage.getItem('ossPartUrls_' + uploadId);
+                    if (savedParts) {
+                        uploadedParts = JSON.parse(savedParts);
+                        console.log('恢复OSS上传进度:', uploadedParts.length + '/' + totalChunks);
+                    }
+                    if (savedUrls) {
+                        partUrls = JSON.parse(savedUrls);
+                        console.log('恢复OSS预签名URL:', partUrls.length + '个');
+
+                        // 检查URL是否有效（不包含 [object）
+                        const firstUrl = partUrls[0]?.url || '';
+                        if (firstUrl.includes('[object')) {
+                            console.log('检测到无效的预签名URL，清除缓存重新初始化');
+                            uploadId = null;
+                            partUrls = [];
+                            uploadedParts = [];
+                            // 清理所有相关的localStorage
+                            const keysToRemove = [];
+                            for (let i = 0; i < localStorage.length; i++) {
+                                const key = localStorage.key(i);
+                                if (key && (key.startsWith('ossUploadId') || key.startsWith('ossUploadedParts_') || key.startsWith('ossPartUrls_'))) {
+                                    keysToRemove.push(key);
+                                }
+                            }
+                            keysToRemove.forEach(key => localStorage.removeItem(key));
+                        }
+                    }
+                } catch (e) {
+                    console.log('无法恢复OSS上传进度');
+                    uploadId = null;
+                }
+            }
+
+            // 如果没有上传ID或partUrls为空或上传已完成，初始化新的上传
+            if (!uploadId || !partUrls || partUrls.length === 0 || uploadedParts.length >= totalChunks) {
+                statusEl.innerHTML = '正在初始化OSS直传...';
+
+                // 初始化OSS分片上传
+                const initRes = await fetch(API_BASE + '/api/podcast/init-oss-upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        totalChunks: totalChunks,
+                        fileSize: file.size,
+                        mimetype: file.type
+                    })
+                });
+
+                const initData = await initRes.json();
+                if (!initData.success) {
+                    throw new Error(initData.error || '初始化OSS上传失败');
+                }
+
+                uploadId = initData.data.uploadId;
+                partUrls = initData.data.partUrls;
+                localStorage.setItem('ossUploadId', uploadId);
+                uploadedParts = [];
+                localStorage.setItem('ossUploadedParts_' + uploadId, JSON.stringify(uploadedParts));
+                localStorage.setItem('ossPartUrls_' + uploadId, JSON.stringify(partUrls));
+            }
+
+            statusEl.innerHTML = '正在上传到OSS... <span id="chunkProgress">0/' + totalChunks + '</span> 分片<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill"></div></div>';
+
+            // 上传每个分片到OSS
+            for (let i = 0; i < totalChunks; i++) {
+                // 跳过已上传的分片
+                if (uploadedParts.find(p => p.partNumber === i + 1)) {
+                    continue;
+                }
+
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunk = file.slice(start, end);
+
+                // 获取预签名URL
+                let partUrl;
+                if (!partUrls[i]) {
+                    // 如果没有预签名URL，重新获取
+                    throw new Error('缺少预签名URL，请重新选择文件');
+                }
+                partUrl = partUrls[i].url;
+
+                // 上传分片到OSS（使用预签名URL）
+                const uploadPartWithRetry = async (retryCount = 0, maxRetries = 3) => {
+                    try {
+                        const xhr = new XMLHttpRequest();
+
+                        await new Promise((resolve, reject) => {
+                            xhr.open('PUT', partUrl, true);
+                            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+                            xhr.timeout = 300000; // 5分钟超时
+
+                            xhr.onload = () => {
+                                if (xhr.status === 200) {
+                                    // 获取ETag
+                                    const etag = xhr.getResponseHeader('ETag') || 'etag-' + Date.now();
+                                    uploadedParts.push({
+                                        partNumber: i + 1,
+                                        etag: etag
+                                    });
+                                    localStorage.setItem('ossUploadedParts_' + uploadId, JSON.stringify(uploadedParts));
+
+                                    const percent = Math.round(((i + 1) / totalChunks) * 100);
+                                    document.getElementById('chunkProgress').textContent = (i + 1) + '/' + totalChunks;
+                                    const progressFill = document.getElementById('audioProgressFill');
+                                    if (progressFill) progressFill.style.width = percent + '%';
+
+                                    resolve();
+                                } else {
+                                    reject(new Error('上传失败，状态码: ' + xhr.status));
+                                }
+                            };
+
+                            xhr.onerror = () => reject(new Error('网络错误'));
+                            xhr.ontimeout = () => reject(new Error('上传超时'));
+
+                            xhr.send(chunk);
+                        });
+                    } catch (e) {
+                        if (retryCount < maxRetries) {
+                            console.log('分片 ' + (i + 1) + ' 上传失败，' + (retryCount + 1) + '秒后重试...');
+                            statusEl.innerHTML = '<span style="color:orange">网络不稳定，分片 ' + (i + 1) + ' 正在重试...</span>';
+                            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                            return uploadPartWithRetry(retryCount + 1, maxRetries);
+                        }
+                        throw e;
+                    }
+                };
+
+                await uploadPartWithRetry();
+            }
+
+            // 所有分片上传完成，完成OSS分片上传
+            statusEl.innerHTML = '正在完成上传...';
+
+            const completeRes = await fetch(API_BASE + '/api/podcast/complete-oss-upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    uploadId: uploadId,
+                    uploadedParts: uploadedParts
+                })
+            });
+
+            const completeData = await completeRes.json();
+            if (!completeData.success) {
+                throw new Error(completeData.error || '完成上传失败');
+            }
+
+            // 清理
+            localStorage.removeItem('ossUploadId');
+            localStorage.removeItem('ossUploadedParts_' + uploadId);
+
+            // 返回结果
+            const audioUrl = completeData.data.url;
+            document.getElementById('episodeAudioUrl').value = audioUrl;
+            statusEl.innerHTML = '<span style="color:green">上传成功!</span>';
+
+            // 获取音频时长
+            const tempAudio = new Audio();
+            tempAudio.src = audioUrl;
+            tempAudio.onloadedmetadata = () => {
+                document.getElementById('episodeDuration').value = Math.floor(tempAudio.duration);
+            };
+
+            return audioUrl;
+        }
+
+        // 传统分片上传函数（备用方案）
+        async function chunkUpload(file, statusEl, CHUNK_SIZE, totalChunks) {
+            let uploadId = localStorage.getItem('currentUploadId');
+            let uploadedChunks = [];
+
+            // 尝试恢复之前的上传进度
+            if (uploadId) {
+                try {
+                    const res = await fetch(API_BASE + '/api/podcast/upload-status/' + uploadId, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    if (data.success && data.data.uploadedChunks) {
+                        uploadedChunks = data.data.uploadedChunks;
+                        console.log('恢复上传进度:', uploadedChunks.length + '/' + totalChunks);
+                    }
+                } catch (e) {
+                    console.log('无法恢复上传进度');
+                    uploadId = null;
+                }
+            }
+
+            // 如果没有上传ID或上传已完成，开始新的上传
+            if (!uploadId || uploadedChunks.length >= totalChunks) {
+                // 初始化上传（带重试）
+                const initWithRetry = async (retryCount = 0, maxRetries = 3) => {
+                    try {
+                        const initRes = await fetch(API_BASE + '/api/podcast/upload-chunk-init', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify({
+                                filename: file.name,
+                                totalChunks: totalChunks,
+                                fileSize: file.size,
+                                mimetype: file.type
+                            })
+                        });
+                        const initData = await initRes.json();
+                        if (!initData.success) {
+                            statusEl.innerHTML = '<span style="color:red">初始化上传失败: ' + initData.error + '</span>';
+                            return null;
+                        }
+                        return initData.data.uploadId;
+                    } catch (e) {
+                        if (retryCount < maxRetries) {
+                            console.log('初始化失败，' + (retryCount + 1) + '秒后重试...');
+                            statusEl.innerHTML = '<span style="color:orange">正在连接服务器... (' + (retryCount + 1) + '/' + maxRetries + ')</span>';
+                            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                            return initWithRetry(retryCount + 1, maxRetries);
+                        }
+                        throw e;
+                    }
+                };
+
+                try {
+                    const newUploadId = await initWithRetry();
+                    if (!newUploadId) return;
+                    uploadId = newUploadId;
+                    localStorage.setItem('currentUploadId', uploadId);
+                    uploadedChunks = [];
+                } catch (e) {
+                    statusEl.innerHTML = '<span style="color:red">初始化上传失败: ' + e.message + '，请检查网络连接</span>';
+                    return;
+                }
+            }
+
+            statusEl.innerHTML = '正在上传音频... <span id="chunkProgress">0/' + totalChunks + '</span> 分片<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill"></div></div>';
+
+            // 上传每个分片
+            for (let i = 0; i < totalChunks; i++) {
+                // 跳过已上传的分片
+                if (uploadedChunks.includes(i)) {
+                    continue;
+                }
+
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunk = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append('chunk', chunk);
+                formData.append('uploadId', uploadId);
+                formData.append('chunkIndex', i);
+                formData.append('totalChunks', totalChunks);
+
+                // 分片上传函数（带重试）
+                const uploadChunkWithRetry = async (retryCount = 0, maxRetries = 3) => {
+                    try {
+                        const xhr = new XMLHttpRequest();
+                        xhr.timeout = 300000; // 每个分片5分钟超时（应对慢网络）
+
+                        await new Promise((resolve, reject) => {
+                            xhr.open('POST', API_BASE + '/api/podcast/upload-chunk');
+                            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+
+                            xhr.onload = () => {
+                                try {
+                                    const data = JSON.parse(xhr.responseText);
+                                    if (data.success) {
+                                        uploadedChunks.push(i);
+                                        localStorage.setItem('uploadedChunks_' + uploadId, JSON.stringify(uploadedChunks));
+
+                                        const percent = Math.round(((i + 1) / totalChunks) * 100);
+                                        document.getElementById('chunkProgress').textContent = (i + 1) + '/' + totalChunks;
+                                        const progressFill = document.getElementById('audioProgressFill');
+                                        if (progressFill) progressFill.style.width = percent + '%';
+
+                                        resolve();
+                                    } else {
+                                        reject(new Error(data.error || '上传失败'));
+                                    }
+                                } catch (e) {
+                                    reject(e);
+                                }
+                            };
+
+                            xhr.onerror = () => reject(new Error('网络错误'));
+                            xhr.ontimeout = () => reject(new Error('上传超时'));
+
+                            xhr.send(formData);
+                        });
+                    } catch (e) {
+                        // 失败重试
+                        if (retryCount < maxRetries) {
+                            console.log('分片 ' + (i + 1) + ' 上传失败，' + (retryCount + 1) + '秒后重试... (' + (retryCount + 1) + '/' + maxRetries + ')');
+                            statusEl.innerHTML = '<span style="color:orange">网络不稳定，分片 ' + (i + 1) + ' 正在重试... (' + (retryCount + 1) + '/' + maxRetries + ')</span>';
+                            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                            return uploadChunkWithRetry(retryCount + 1, maxRetries);
+                        }
+                        throw e;
+                    }
+                };
+
+                await uploadChunkWithRetry();
+            }
+
+            // 所有分片上传完成，合并分片
+            statusEl.innerHTML = '正在合并音频文件...<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill" style="width:100%"></div></div>';
+
+            // 合并分片（带重试）
+            const mergeWithRetry = async (retryCount = 0, maxRetries = 3) => {
+                try {
+                    const mergeRes = await fetch(API_BASE + '/api/podcast/merge-chunks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({
+                            uploadId: uploadId,
+                            filename: file.name,
+                            mimetype: file.type
+                        })
+                    });
+                    const mergeData = await mergeRes.json();
+
+                    if (mergeData.success) {
+                        document.getElementById('episodeAudioUrl').value = mergeData.data.audio_url;
+                        statusEl.innerHTML = '<span style="color:green">上传成功: ' + mergeData.data.filename + '</span>';
+
+                        // 清理本地存储
+                        localStorage.removeItem('currentUploadId');
+                        localStorage.removeItem('uploadedChunks_' + uploadId);
+
+                        // 获取音频时长
+                        const audio = new Audio();
+                        audio.src = mergeData.data.audio_url;
+                        audio.onloadedmetadata = () => {
+                            document.getElementById('episodeDuration').value = Math.floor(audio.duration);
+                        };
+                    } else {
+                        if (retryCount < maxRetries) {
+                            console.log('合并失败，重试中...');
+                            statusEl.innerHTML = '<span style="color:orange">正在处理... (' + (retryCount + 1) + '/' + maxRetries + ')</span>';
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            return mergeWithRetry(retryCount + 1, maxRetries);
+                        }
+                        statusEl.innerHTML = '<span style="color:red">合并失败: ' + mergeData.error + '</span>';
+                    }
+                } catch (e) {
+                    if (retryCount < maxRetries) {
+                        console.log('合并失败，重试中...');
+                        statusEl.innerHTML = '<span style="color:orange">正在处理... (' + (retryCount + 1) + '/' + maxRetries + ')</span>';
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        return mergeWithRetry(retryCount + 1, maxRetries);
+                    }
+                    statusEl.innerHTML = '<span style="color:red">合并失败: ' + e.message + '</span>';
+                }
+            };
+
+            await mergeWithRetry();
+        }
+
+        // 简单上传函数（保留原有逻辑，但增加重试）
+        async function simpleUpload(file, statusEl) {
+            // 大幅增加超时时间：文件大小 / 50KB/s（很慢的网速）+ 3倍缓冲
+            const estimatedTime = (file.size / (50 * 1024)) * 1000 * 3;
+            const uploadTimeout = Math.max(60000, Math.min(Math.round(estimatedTime), 1800000)); // 最小1分钟，最大30分钟
+
+            const maxRetries = 5; // 增加重试次数
+
+            const uploadAudio = async (retryCount = 0) => {
+                statusEl.innerHTML = '正在上传音频...(预估最长' + Math.round(uploadTimeout/60) + '分钟)<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill"></div></div>';
+                statusEl.style.color = '#666';
+
+                const formData = new FormData();
+                formData.append('audio', file);
+
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.timeout = uploadTimeout;
+
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            const progressFill = document.getElementById('audioProgressFill');
+                            if (progressFill) progressFill.style.width = percent + '%';
+                            statusEl.innerHTML = '正在上传音频... ' + percent + '% (预估最长' + Math.round(uploadTimeout/60) + '分钟)<div class="upload-progress-bar"><div class="upload-progress-fill" id="audioProgressFill" style="width:' + percent + '%"></div></div>';
+                        }
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                document.getElementById('episodeAudioUrl').value = data.data.audio_url;
+                                statusEl.innerHTML = '<span style="color:green">上传成功: ' + data.data.filename + '</span>';
+
+                                const audio = new Audio();
+                                audio.src = data.data.audio_url;
+                                audio.onloadedmetadata = () => {
+                                    document.getElementById('episodeDuration').value = Math.floor(audio.duration);
+                                };
+                                resolve();
+                            } else {
+                                reject(new Error(data.error || '未知错误'));
+                            }
+                        } catch (e) {
+                            reject(new Error('解析响应错误'));
+                        }
+                    });
+
+                    xhr.addEventListener('error', () => {
+                        if (retryCount < maxRetries) {
+                            console.log('上传失败，' + (retryCount + 1) + '秒后重试... (' + (retryCount + 1) + '/' + maxRetries + ')');
+                            statusEl.innerHTML = '<span style="color:orange">网络不稳定，正在重试... (' + (retryCount + 1) + '/' + maxRetries + ')</span>';
+                            setTimeout(() => {
+                                uploadAudio(retryCount + 1).then(resolve).catch(reject);
+                            }, 1000 * (retryCount + 1));
+                        } else {
+                            reject(new Error('网络错误'));
+                        }
+                    });
+
+                    xhr.addEventListener('timeout', () => {
+                        if (retryCount < maxRetries) {
+                            console.log('上传超时，' + (retryCount + 1) + '秒后重试...');
+                            statusEl.innerHTML = '<span style="color:orange">上传超时，正在重试... (' + (retryCount + 1) + '/' + maxRetries + ')</span>';
+                            setTimeout(() => {
+                                uploadAudio(retryCount + 1).then(resolve).catch(reject);
+                            }, 1000 * (retryCount + 1));
+                        } else {
+                            reject(new Error('上传超时'));
+                        }
+                    });
+
+                    xhr.open('POST', API_BASE + '/api/podcast/upload-audio');
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    xhr.send(formData);
+                });
+            };
+
+            return uploadAudio(0);
+        }
+
+        // 提交新剧集
+        async function submitNewEpisode(podcastId) {
+            const title = document.getElementById('episodeTitleInput').value.trim();
+            const description = document.getElementById('episodeDescInput').value.trim();
+            const audioUrlInput = document.getElementById('episodeAudioUrl').value || document.getElementById('episodeAudioUrlInput').value.trim();
+            const duration = parseInt(document.getElementById('episodeDuration').value) || 0;
+            
+            if (!title) {
+                alert('请输入剧集标题');
+                return;
+            }
+            
+            if (!audioUrlInput) {
+                alert('请上传音频或输入音频URL');
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/episodes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        podcast_id: podcastId,
+                        title: title,
+                        description: description,
+                        audio_url: audioUrlInput,
+                        duration: duration
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('剧集添加成功');
+                    document.querySelector('.modal-overlay')?.remove();
+                    loadMyPodcasts();
+                } else {
+                    showToast(data.error || '添加失败');
+                }
+            } catch (e) {
+                console.error('添加剧集失败:', e);
+                showToast('添加失败');
+            }
+        }
+
+        async function createEpisode(podcastId, title, description, audioUrl, duration) {
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/episodes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        podcast_id: podcastId,
+                        title: title,
+                        description: description,
+                        audio_url: audioUrl,
+                        duration: duration
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('剧集添加成功');
+                    loadMyPodcasts();
+                } else {
+                    showToast(data.error || '添加失败');
+                }
+            } catch (e) {
+                console.error('添加剧集失败:', e);
+                showToast('添加失败');
+            }
+        }
+
+        // 编辑播客 - 打开模态框
+        function editPodcast(podcastId) {
+            const podcast = myPodcasts.find(p => p.podcast_id === podcastId);
+            if (!podcast) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <h3 style="margin-bottom: 20px;">编辑播客</h3>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">播客标题 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="editPodcastTitle" value="${escapeHtml(podcast.title)}" placeholder="播客标题" maxlength="50">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">播客简介</label>
+                        <textarea class="form-textarea" id="editPodcastDesc" placeholder="播客简介" maxlength="500">${escapeHtml(podcast.description || '')}</textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">分类 <span class="required">*</span></label>
+                        <select class="form-select" id="editPodcastCategory">
+                            <option value="">请选择分类</option>
+                            <option value="科技">科技</option>
+                            <option value="生活">生活</option>
+                            <option value="游戏">游戏</option>
+                            <option value="音乐">音乐</option>
+                            <option value="教育">教育</option>
+                            <option value="娱乐">娱乐</option>
+                            <option value="新闻">新闻</option>
+                            <option value="健康">健康</option>
+                            <option value="体育">体育</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label">封面图片</label>
+                        <input type="text" class="form-input" id="editPodcastCover" value="${escapeHtml(podcast.cover_image || '')}" placeholder="https://example.com/cover.jpg">
+                        <div class="form-hint">
+                            输入图片链接，或<a href="#" onclick="document.getElementById('editCoverFileInput').click(); return false;">点击上传</a>，建议尺寸 800x800
+                        </div>
+                        <input type="file" id="editCoverFileInput" accept="image/*" style="display:none" onchange="uploadEditCoverImage(this, '${podcastId}')">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="action-btn" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                        <button class="action-btn primary" onclick="submitEditPodcast('${podcastId}')">保存</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            // 设置分类选中
+            setTimeout(() => {
+                const categorySelect = document.getElementById('editPodcastCategory');
+                if (categorySelect && podcast.category) {
+                    categorySelect.value = podcast.category;
+                }
+            }, 100);
+        }
+
+        // 上传编辑时的封面
+        async function uploadEditCoverImage(input, podcastId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const toast = showUploadToast('上传封面中... 0%', 0);
+
+            const formData = new FormData();
+            formData.append('cover', file);
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    if (toast) {
+                        toast.textContent = `上传封面中... ${percent}%`;
+                    }
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.success) {
+                        document.getElementById('editPodcastCover').value = data.data.cover_url;
+                        if (toast) {
+                            toast.textContent = '封面上传成功';
+                            toast.style.background = '#4caf50';
+                            setTimeout(() => toast.classList.remove('show'), 1500);
+                        }
+                    } else {
+                        if (toast) {
+                            toast.textContent = data.error || '上传失败';
+                            toast.style.background = '#f44336';
+                            setTimeout(() => toast.classList.remove('show'), 2000);
+                        }
+                    }
+                } catch (e) {
+                    if (toast) {
+                        toast.textContent = '上传失败';
+                        toast.style.background = '#f44336';
+                        setTimeout(() => toast.classList.remove('show'), 2000);
+                    }
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                if (toast) {
+                    toast.textContent = '上传失败';
+                    toast.style.background = '#f44336';
+                    setTimeout(() => toast.classList.remove('show'), 2000);
+                }
+            });
+
+            xhr.open('POST', API_BASE + '/api/podcast/upload-cover');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            xhr.send(formData);
+
+            input.value = '';
+        }
+
+        // 提交编辑播客
+        async function submitEditPodcast(podcastId) {
+            const title = document.getElementById('editPodcastTitle').value.trim();
+            const description = document.getElementById('editPodcastDesc').value.trim();
+            const category = document.getElementById('editPodcastCategory').value;
+            const cover_image = document.getElementById('editPodcastCover').value.trim();
+
+            if (!title) {
+                alert('请输入播客标题');
+                return;
+            }
+
+            if (!category) {
+                alert('请选择分类');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/podcasts/' + podcastId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        category: category,
+                        cover_image: cover_image
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('更新成功');
+                    document.querySelector('.modal-overlay')?.remove();
+                    loadMyPodcasts();
+                } else {
+                    showToast(data.error || '更新失败');
+                }
+            } catch (e) {
+                console.error('更新播客失败:', e);
+                showToast('更新失败');
+            }
+        }
+
+        async function updatePodcast(podcastId, title, description) {
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/podcasts/' + podcastId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('更新成功');
+                    loadMyPodcasts();
+                } else {
+                    showToast(data.error || '更新失败');
+                }
+            } catch (e) {
+                console.error('更新播客失败:', e);
+                showToast('更新失败');
+            }
+        }
+
+        async function deletePodcast(podcastId) {
+            if (!confirm('确定要删除这个播客吗？此操作不可恢复！')) {
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/podcasts/' + podcastId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('删除成功');
+                    loadMyPodcasts();
+                } else {
+                    showToast(data.error || '删除失败');
+                }
+            } catch (e) {
+                console.error('删除播客失败:', e);
+                showToast('删除失败');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            // 如果需要长时间显示（如上传进度），返回toast元素
+            setTimeout(() => toast.classList.remove('show'), 2000);
+            return toast;
+        }
+
+        function showUploadToast(message, duration = 0) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            if (duration === 0) {
+                // 不自动隐藏，用于上传进度
+                return toast;
+            }
+            setTimeout(() => toast.classList.remove('show'), duration);
+            return toast;
+        }
+
+        // 上传封面图片
+        async function uploadCoverImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const toast = showUploadToast('上传封面中... 0%', 0);
+
+            const formData = new FormData();
+            formData.append('cover', file);
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    if (toast) {
+                        toast.textContent = `上传封面中... ${percent}%`;
+                    }
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.success) {
+                        document.getElementById('podcastCover').value = data.data.cover_url;
+                        if (toast) {
+                            toast.textContent = '封面上传成功';
+                            toast.style.background = '#4caf50';
+                            setTimeout(() => toast.classList.remove('show'), 1500);
+                        }
+                    } else {
+                        if (toast) {
+                            toast.textContent = data.error || '上传失败';
+                            toast.style.background = '#f44336';
+                            setTimeout(() => toast.classList.remove('show'), 2000);
+                        }
+                    }
+                } catch (e) {
+                    if (toast) {
+                        toast.textContent = '上传失败';
+                        toast.style.background = '#f44336';
+                        setTimeout(() => toast.classList.remove('show'), 2000);
+                    }
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                if (toast) {
+                    toast.textContent = '上传失败';
+                    toast.style.background = '#f44336';
+                    setTimeout(() => toast.classList.remove('show'), 2000);
+                }
+            });
+
+            xhr.open('POST', API_BASE + '/api/podcast/upload-cover');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            xhr.send(formData);
+
+            input.value = '';
+        }
+
+        // 上传音频文件
+        async function uploadAudioFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('audio', file);
+
+            showToast('上传音频中...');
+
+            try {
+                const res = await fetch(API_BASE + '/api/podcast/upload-audio', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    // 填充音频URL和时长
+                    const audioUrlInput = document.getElementById('episodeAudioUrl');
+                    if (audioUrlInput) {
+                        audioUrlInput.value = data.data.audio_url;
+                    }
+                    showToast('音频上传成功');
+
+                    // 获取音频时长
+                    const audio = new Audio();
+                    audio.src = data.data.audio_url;
+                    audio.onloadedmetadata = () => {
+                        const durationInput = document.getElementById('episodeDuration');
+                        if (durationInput) {
+                            durationInput.value = Math.floor(audio.duration);
+                        }
+                    };
+                } else {
+                    showToast(data.error || '上传失败');
+                }
+            } catch (e) {
+                console.error('上传失败:', e);
+                showToast('上传失败');
+            }
+
+            input.value = '';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        init();
+    </script>
+
+    <!-- 移动端底部导航 -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="podcast.html" class="mobile-nav-item">
+                <span class="mobile-nav-icon">&#127911;</span>
+                <span>广场</span>
+            </a>
+            <a href="podcast-create.html" class="mobile-nav-item active">
+                <span class="mobile-nav-icon">&#10010;</span>
+                <span>创建</span>
+            </a>
+            <a href="game.html" class="mobile-nav-item">
+                <span class="mobile-nav-icon">&#127918;</span>
+                <span>游戏</span>
+            </a>
+            <a href="plaza.html" class="mobile-nav-item">
+                <span class="mobile-nav-icon">&#128172;</span>
+                <span>动态</span>
+            </a>
+        </div>
+    </nav>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>
