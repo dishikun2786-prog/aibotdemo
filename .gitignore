@@ -1,0 +1,54 @@
+# 依赖
+node_modules/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+*.log
+logs/
+backups/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*.zip
+*.sql
+*.bson
+
+# 测试
+__tests__/
+coverage/
+
+# 备份
+aibot*.zip
+aibot_*.sql
+public.zip
+server*.zip
+novel_chapters.json
+huaxia*.json
+
+# 其他项目
+energy-mountain-app/
+pdf2text/
+novel/
+tesseract-ocr/
+
+# 临时HTML
+baixing.html
+promotion.html
+landing.html
+supply-chain.html
+aiwork.html
+knowledge-manage.html
