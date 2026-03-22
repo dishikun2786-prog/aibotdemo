@@ -29,6 +29,11 @@ const ENERGY_TRADE_MESSAGES_COLLECTION = 'energy_trade_messages';  // 能量交�
 const ENERGY_TRADE_NOTIFICATIONS_COLLECTION = 'energy_trade_notifications';  // 能量交易通知
 const CHESS_ROOMS_COLLECTION = 'chess_rooms';  // 象棋房间
 const CHESS_GAMES_COLLECTION = 'chess_games';  // 象棋对局记录
+const BUSINESS_CARD_CONTENTS_COLLECTION = 'business_card_contents';  // 名片模板内容
+const MARKETING_VIDEOS_COLLECTION = 'marketing_videos';  // 营销视频
+const MARKETING_VIDEO_COMMENTS_COLLECTION = 'marketing_video_comments';  // 营销视频评论
+const MARKETING_VIDEO_LIKES_COLLECTION = 'marketing_video_likes';  // 营销视频点赞
+const PAYMENT_ORDER_LOGS_COLLECTION = 'payment_order_logs';  // 支付订单操作日志
 
 let client = null;
 let mongoDb = null;
@@ -1248,6 +1253,106 @@ async function getOperatorSessions(operatorId) {
   }).sort({ assignedAt: -1 }).toArray();
 }
 
+/**
+ * 获取名片模板内容集合
+ * @returns {Promise<import('mongodb').Collection>}
+ */
+async function getBusinessCardContentCollection() {
+  const database = await getDb();
+  const coll = database.collection(BUSINESS_CARD_CONTENTS_COLLECTION);
+  // 创建索引
+  await coll.createIndex({ cardId: 1 }, { unique: true });
+  return coll;
+}
+
+/**
+ * 保存名片模板内容
+ * @param {number} cardId - 名片ID
+ * @param {object} templateData - 模板数据（新的JSON格式）
+ * @returns {Promise<import('mongodb').UpdateResult>}
+ */
+async function saveBusinessCardContent(cardId, templateData) {
+  const coll = await getBusinessCardContentCollection();
+  return await coll.updateOne(
+    { cardId },
+    {
+      $set: {
+        cardId,
+        shop_name: templateData.shop_name || '',
+        subtitle: templateData.subtitle || '',
+        intro: templateData.intro || '',
+        phone: templateData.phone || '',
+        email: templateData.email || '',
+        address: templateData.address || '',
+        bg_image: templateData.bg_image || '',
+        // 百姓饭店扩展字段
+        boss_message: templateData.boss_message || '',
+        menu_images: templateData.menu_images || [],
+        wechat_qr: templateData.wechat_qr || '',
+        map_lat: templateData.map_lat || '',
+        map_lng: templateData.map_lng || '',
+        service_link: templateData.service_link || '',
+        updatedAt: new Date()
+      },
+      $setOnInsert: { createdAt: new Date() }
+    },
+    { upsert: true }
+  );
+}
+
+/**
+ * 获取名片模板内容
+ * @param {number} cardId - 名片ID
+ * @returns {Promise<object|null>}
+ */
+async function getBusinessCardContent(cardId) {
+  const coll = await getBusinessCardContentCollection();
+  const result = await coll.findOne({ cardId });
+  return result || null;
+}
+
+/**
+ * 删除名片模板内容
+ * @param {number} cardId - 名片ID
+ * @returns {Promise<import('mongodb').DeleteResult>}
+ */
+async function deleteBusinessCardContent(cardId) {
+  const coll = await getBusinessCardContentCollection();
+  return await coll.deleteOne({ cardId });
+}
+
+/**
+ * 保存名片拖拽布局数据
+ * @param {number} cardId - 名片ID
+ * @param {Array} layoutData - 拖拽布局的组件数据
+ * @returns {Promise<import('mongodb').UpdateResult>}
+ */
+async function saveBusinessCardLayout(cardId, layoutData) {
+  const coll = await getBusinessCardContentCollection();
+  return await coll.updateOne(
+    { cardId },
+    {
+      $set: {
+        layout_components: layoutData,
+        updatedAt: new Date()
+      },
+      $setOnInsert: { createdAt: new Date() }
+    },
+    { upsert: true }
+  );
+}
+
+/**
+ * 获取名片拖拽布局数据
+ * @param {number} cardId - 名片ID
+ * @returns {Promise<Array>} 布局组件数组
+ */
+async function getBusinessCardLayout(cardId) {
+  const coll = await getBusinessCardContentCollection();
+  const result = await coll.findOne({ cardId });
+  return result?.layout_components || [];
+}
+
 module.exports = {
   getClient,
   getDb,
@@ -1358,6 +1463,14 @@ module.exports = {
   getChessRoomsCollection,
   getChessGamesCollection,
   createChessRoom,
+
+  // 名片功能
+  getBusinessCardContentCollection,
+  saveBusinessCardContent,
+  getBusinessCardContent,
+  deleteBusinessCardContent,
+  saveBusinessCardLayout,
+  getBusinessCardLayout,
   getChessRoom,
   updateChessRoom,
   deleteChessRoom,
@@ -1368,6 +1481,26 @@ module.exports = {
   getChessRoomById,
   getAllChessGames,
   getChessGameById,
+
+  // 营销视频
+  getMarketingVideosCollection,
+  getMarketingVideoCommentsCollection,
+  getMarketingVideoLikesCollection,
+  createMarketingVideo,
+  getMarketingVideoById,
+  getMarketingVideosByUser,
+  getHotMarketingVideos,
+  updateMarketingVideo,
+  deleteMarketingVideo,
+  incrementVideoViews,
+  incrementVideoLikes,
+  addVideoComment,
+  getVideoComments,
+  deleteVideoComment,
+  isVideoLiked,
+  likeVideo,
+  unlikeVideo,
+  getUserLikedVideoIds,
 
   // 访客记录
   getVisitorLogsCollection,
@@ -2009,6 +2142,16 @@ async function getAllChessRooms(filter = {}, options = {}) {
   // 构建查询条件
   const query = { isDeleted: { $ne: true } };
 
+  // 处理 is_ai_challenge 过滤条件
+  if (filter.is_ai_challenge !== undefined) {
+    query.is_ai_challenge = filter.is_ai_challenge;
+  }
+
+  // 处理 challenge_status 过滤条件
+  if (filter.challenge_status) {
+    query.challenge_status = filter.challenge_status;
+  }
+
   if (filter.status) {
     query.gameStatus = filter.status;
   }
@@ -2096,5 +2239,366 @@ async function getChessGameById(gameId) {
   const coll = await getChessGamesCollection();
   const { ObjectId } = require('mongodb');
   return await coll.findOne({ _id: ObjectId.createFromHexString(gameId) });
+}
+
+// ============================================================
+// 营销视频功能
+// ============================================================
+
+/**
+ * 获取营销视频集合
+ * @returns {Promise<import('mongodb').Collection>}
+ */
+async function getMarketingVideosCollection() {
+  const database = await getDb();
+  const coll = database.collection(MARKETING_VIDEOS_COLLECTION);
+  await coll.createIndex({ user_id: 1, created_at: -1 });
+  await coll.createIndex({ status: 1 });
+  await coll.createIndex({ created_at: -1 });
+  return coll;
+}
+
+/**
+ * 获取营销视频评论集合
+ * @returns {Promise<import('mongodb').Collection>}
+ */
+async function getMarketingVideoCommentsCollection() {
+  const database = await getDb();
+  const coll = database.collection(MARKETING_VIDEO_COMMENTS_COLLECTION);
+  await coll.createIndex({ video_id: 1, created_at: -1 });
+  await coll.createIndex({ user_id: 1 });
+  return coll;
+}
+
+/**
+ * 获取视频点赞集合
+ * @returns {Promise<import('mongodb').Collection>}
+ */
+async function getMarketingVideoLikesCollection() {
+  const database = await getDb();
+  const coll = database.collection(MARKETING_VIDEO_LIKES_COLLECTION);
+  await coll.createIndex({ video_id: 1, user_id: 1 }, { unique: true });
+  return coll;
+}
+
+/**
+ * 检查用户是否点赞视频
+ * @param {string} videoId - 视频ID
+ * @param {number} userId - 用户ID
+ * @returns {Promise<boolean>}
+ */
+async function isVideoLiked(videoId, userId) {
+  const coll = await getMarketingVideoLikesCollection();
+  const like = await coll.findOne({ video_id: videoId, user_id: userId });
+  return !!like;
+}
+
+/**
+ * 点赞视频
+ * @param {string} videoId - 视频ID
+ * @param {number} userId - 用户ID
+ * @returns {Promise<boolean>} 是否新增点赞
+ */
+async function likeVideo(videoId, userId) {
+  const coll = await getMarketingVideoLikesCollection();
+  try {
+    await coll.insertOne({
+      video_id: videoId,
+      user_id: userId,
+      created_at: new Date()
+    });
+    return true;
+  } catch (e) {
+    if (e.code === 11000) {
+      return false; // 已点赞
+    }
+    throw e;
+  }
+}
+
+/**
+ * 取消点赞视频
+ * @param {string} videoId - 视频ID
+ * @param {number} userId - 用户ID
+ * @returns {Promise<boolean>} 是否取消成功
+ */
+async function unlikeVideo(videoId, userId) {
+  const coll = await getMarketingVideoLikesCollection();
+  const result = await coll.deleteOne({ video_id: videoId, user_id: userId });
+  return result.deletedCount > 0;
+}
+
+/**
+ * 获取用户的视频点赞列表
+ * @param {number} userId - 用户ID
+ * @returns {Promise<Array<string>>} 视频ID列表
+ */
+async function getUserLikedVideoIds(userId) {
+  const coll = await getMarketingVideoLikesCollection();
+  const likes = await coll.find({ user_id: userId }).project({ video_id: 1 }).toArray();
+  return likes.map(l => l.video_id);
+}
+
+/**
+ * 创建视频
+ * @param {Object} video - 视频数据
+ * @returns {Promise<string>} 视频ID
+ */
+async function createMarketingVideo(video) {
+  const coll = await getMarketingVideosCollection();
+  const now = new Date();
+  const videoId = 'vid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  const doc = {
+    video_id: videoId,
+    user_id: video.user_id,
+    title: video.title,
+    description: video.description || '',
+    cover_image: video.cover_image || '',
+    video_url: video.video_url,
+    duration: video.duration || 0,
+    custom_menu: video.custom_menu || [],
+    views_count: 0,
+    likes_count: 0,
+    comments_count: 0,
+    status: 'active',
+    created_at: now,
+    updated_at: now
+  };
+  await coll.insertOne(doc);
+  return videoId;
+}
+
+/**
+ * 根据ID获取视频
+ * @param {string} videoId - 视频ID
+ * @returns {Promise<Object|null>}
+ */
+async function getMarketingVideoById(videoId) {
+  const coll = await getMarketingVideosCollection();
+  const video = await coll.findOne({ video_id: videoId, status: 'active' });
+
+  if (video && video.user_id) {
+    // 获取发布者用户名和头像
+    try {
+      const db = require('./db');
+      const users = await db.query('SELECT username, avatar_image FROM users WHERE id = ?', [video.user_id]);
+      if (users.length > 0) {
+        video.username = users[0].username;
+        video.user_avatar = users[0].avatar_image || '';
+      }
+    } catch (err) {
+      console.error('获取用户名失败:', err);
+    }
+  }
+
+  return video;
+}
+
+/**
+ * 获取用户的视频列表
+ * @param {number} userId - 用户ID
+ * @param {Object} options - 分页选项
+ * @returns {Promise<Array>}
+ */
+async function getMarketingVideosByUser(userId, options = {}) {
+  const coll = await getMarketingVideosCollection();
+  const { page = 1, limit = 20 } = options;
+  const skip = (page - 1) * limit;
+
+  const videos = await coll.find({ user_id: userId, status: 'active' })
+    .sort({ created_at: -1 })
+    .skip(skip)
+    .limit(limit)
+    .toArray();
+
+  const total = await coll.countDocuments({ user_id: userId, status: 'active' });
+
+  return { videos, total };
+}
+
+/**
+ * 获取热门视频
+ * @param {number} limit - 返回数量
+ * @returns {Promise<Array>}
+ */
+async function getHotMarketingVideos(limit = 10) {
+  const coll = await getMarketingVideosCollection();
+  return await coll.find({ status: 'active' })
+    .sort({ views_count: -1, created_at: -1 })
+    .limit(limit)
+    .toArray();
+}
+
+/**
+ * 更新视频
+ * @param {string} videoId - 视频ID
+ * @param {Object} updates - 更新数据
+ * @returns {Promise<Object>}
+ */
+async function updateMarketingVideo(videoId, updates) {
+  const coll = await getMarketingVideosCollection();
+  const updateDoc = { ...updates, updated_at: new Date() };
+  return await coll.updateOne(
+    { video_id: videoId },
+    { $set: updateDoc }
+  );
+}
+
+/**
+ * 删除视频（软删除）
+ * @param {string} videoId - 视频ID
+ * @param {number} userId - 用户ID（验证所有权）
+ * @returns {Promise<Object>}
+ */
+async function deleteMarketingVideo(videoId, userId) {
+  const coll = await getMarketingVideosCollection();
+  return await coll.updateOne(
+    { video_id: videoId, user_id: userId },
+    { $set: { status: 'deleted', updated_at: new Date() } }
+  );
+}
+
+/**
+ * 增加视频观看次数
+ * @param {string} videoId - 视频ID
+ * @param {number} count - 增长数量
+ * @returns {Promise<Object>}
+ */
+async function incrementVideoViews(videoId, count = 1) {
+  const coll = await getMarketingVideosCollection();
+  return await coll.updateOne(
+    { video_id: videoId },
+    { $inc: { views_count: count }, $set: { updated_at: new Date() } }
+  );
+}
+
+/**
+ * 增加视频点赞数
+ * @param {string} videoId - 视频ID
+ * @param {number} count - 增长数量
+ * @returns {Promise<Object>}
+ */
+async function incrementVideoLikes(videoId, count = 1) {
+  const coll = await getMarketingVideosCollection();
+  return await coll.updateOne(
+    { video_id: videoId },
+    { $inc: { likes_count: count }, $set: { updated_at: new Date() } }
+  );
+}
+
+// ============================================================
+// 视频评论功能
+// ============================================================
+
+/**
+ * 添加视频评论
+ * @param {Object} comment - 评论数据
+ * @returns {Promise<ObjectId>}
+ */
+async function addVideoComment(comment) {
+  const coll = await getMarketingVideoCommentsCollection();
+  const now = new Date();
+  const doc = {
+    comment_id: 'com_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    video_id: comment.video_id,
+    user_id: comment.user_id,
+    username: comment.username,
+    avatar_url: comment.avatar_url || '',
+    content: comment.content,
+    created_at: now
+  };
+  const result = await coll.insertOne(doc);
+
+  // 更新视频评论数
+  await incrementVideoCommentsCount(comment.video_id, 1);
+
+  return result.insertedId;
+}
+
+/**
+ * 获取视频评论列表
+ * @param {string} videoId - 视频ID
+ * @param {Object} options - 分页选项
+ * @returns {Promise<Array>}
+ */
+async function getVideoComments(videoId, options = {}) {
+  const coll = await getMarketingVideoCommentsCollection();
+  const { page = 1, limit = 20 } = options;
+  const skip = (page - 1) * limit;
+
+  const comments = await coll.find({ video_id: videoId })
+    .sort({ created_at: -1 })
+    .skip(skip)
+    .limit(limit)
+    .toArray();
+
+  // 获取每个评论者的用户名和头像
+  if (comments.length > 0) {
+    const userIds = [...new Set(comments.map(c => c.user_id))];
+    try {
+      const db = require('./db');
+      const placeholders = userIds.map(() => '?').join(',');
+      const users = await db.query(
+        `SELECT id, username, avatar_image FROM users WHERE id IN (${placeholders})`,
+        userIds
+      );
+      const userMap = {};
+      users.forEach(u => {
+        userMap[u.id] = { username: u.username, avatar_url: u.avatar_url || '' };
+      });
+      comments.forEach(c => {
+        if (userMap[c.user_id]) {
+          c.username = userMap[c.user_id].username;
+          c.avatar_url = userMap[c.user_id].avatar_url;
+        }
+      });
+    } catch (err) {
+      console.error('获取评论者信息失败:', err);
+    }
+  }
+
+  const total = await coll.countDocuments({ video_id: videoId });
+
+  return { comments, total };
+}
+
+/**
+ * 删除评论
+ * @param {string} commentId - 评论ID
+ * @param {number} userId - 用户ID（验证所有权）
+ * @returns {Promise<Object>}
+ */
+async function deleteVideoComment(commentId, userId) {
+  const coll = await getMarketingVideoCommentsCollection();
+
+  // 先获取评论信息
+  const comment = await coll.findOne({ comment_id: commentId });
+  if (!comment) {
+    return { modifiedCount: 0 };
+  }
+
+  // 删除评论
+  const result = await coll.deleteOne({ comment_id: commentId, user_id: userId });
+
+  // 更新视频评论数
+  if (result.deletedCount > 0) {
+    await incrementVideoCommentsCount(comment.video_id, -1);
+  }
+
+  return result;
+}
+
+/**
+ * 增加视频评论数
+ * @param {string} videoId - 视频ID
+ * @param {number} count - 增长数量
+ * @returns {Promise<Object>}
+ */
+async function incrementVideoCommentsCount(videoId, count = 1) {
+  const coll = await getMarketingVideosCollection();
+  return await coll.updateOne(
+    { video_id: videoId },
+    { $inc: { comments_count: count }, $set: { updated_at: new Date() } }
+  );
 }
 

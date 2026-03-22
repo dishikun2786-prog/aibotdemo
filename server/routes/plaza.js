@@ -159,7 +159,7 @@ router.get('/posts', async (req, res) => {
       }
       return {
         id: post._id.toString(),
-        userId: post.userId,
+        user_id: post.userId,
         title: post.title,
         content: post.content,
         images: post.images || [],
@@ -317,7 +317,7 @@ router.get('/posts/:id', async (req, res) => {
       success: true,
       data: {
         id: post._id.toString(),
-        userId: post.userId,
+        user_id: post.userId,
         title: post.title,
         content: post.content,
         images: post.images || [],
@@ -568,7 +568,13 @@ router.put('/posts/:id', authenticateToken, async (req, res) => {
     if (images !== undefined) {
       updateData.images = images && Array.isArray(images) ? images.slice(0, 9) : [];
     }
-    if (menus !== undefined) {
+    // 如果帖子有关联PK自由团，不允许修改菜单（PK团信息）
+    if (post.hasFreePKGroup) {
+      if (menus !== undefined) {
+        return res.status(400).json({ error: '该帖子关联了PK自由团，无法修改菜单' });
+      }
+      console.log(`[Plaza] 帖子 ${postId} 有关联PK团，编辑时保留了原有菜单`);
+    } else if (menus !== undefined) {
       updateData.menus = validMenus;
     }
 
@@ -1051,7 +1057,7 @@ router.get('/user/:id/posts', async (req, res) => {
 
     const processedPosts = posts.map(post => ({
       id: post._id.toString(),
-      userId: post.userId,
+      user_id: post.userId,
       title: post.title,
       content: post.content,
       images: post.images || [],
@@ -1838,7 +1844,7 @@ router.get('/admin/posts', authenticateToken, requireAdmin, async (req, res) => 
     const processedPosts = posts.map(post => {
       const baseData = {
         id: post._id.toString(),
-        userId: post.userId,
+        user_id: post.userId,
         username: post.username || '未知用户',
         title: post.title,
         content: post.content,
@@ -1900,7 +1906,7 @@ router.get('/admin/posts/:id', authenticateToken, requireAdmin, async (req, res)
       success: true,
       data: {
         id: post._id.toString(),
-        userId: post.userId,
+        user_id: post.userId,
         username: post.username || '未知用户',
         title: post.title,
         content: post.content,

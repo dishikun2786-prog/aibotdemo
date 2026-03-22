@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能语音名目计算器 V4.1 - 专业效率版</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2ed573;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --record-active: #ff4757;
+            --tip-bg: #e1f5fe;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 顶部使用说明区域 */
+        .usage-guide {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--tip-bg);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            border-left: 6px solid var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .guide-item h4 { margin: 0 0 8px 0; color: var(--primary-color); display: flex; align-items: center; gap: 8px; }
+        .guide-item p { margin: 0; font-size: 0.85rem; color: #555; line-height: 1.5; }
+        .kbd { background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc; font-family: monospace; font-weight: bold; }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .container { grid-template-columns: 1fr; }
+            .usage-guide { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        h2 { margin-top: 0; font-size: 1.1rem; color: var(--primary-color); border-left: 4px solid var(--primary-color); padding-left: 10px; }
+
+        /* 计算器核心 UI */
+        #display {
+            width: 100%;
+            height: 90px;
+            font-size: 2.5rem;
+            text-align: right;
+            padding: 15px;
+            box-sizing: border-box;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fafafa;
+            color: #222;
+            transition: border-color 0.3s;
+            font-family: 'Consolas', monospace;
+        }
+        #display:focus { border-color: var(--primary-color); outline: none; }
+
+        .voice-btn {
+            width: 100%;
+            margin: 15px 0;
+            padding: 12px;
+            background: #fff;
+            border: 2px dashed var(--primary-color);
+            border-radius: 10px;
+            color: var(--primary-color);
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .voice-btn.recording {
+            background: var(--record-active);
+            color: white;
+            border-style: solid;
+            border-color: var(--record-active);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .keypad button {
+            padding: 18px;
+            font-size: 1.3rem;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .keypad button:hover { background: #f8f9fa; }
+        .keypad button:active { transform: translateY(2px); background: #eee; }
+        .btn-op { background: #f1f3f5 !important; color: var(--primary-color); font-weight: bold; }
+        .btn-eq { background: var(--primary-color) !important; color: white !important; grid-column: span 2; }
+        .btn-clear { background: #fff1f0 !important; color: #ff4d4f; border-color: #ffa39e !important; }
+
+        /* 历史记录与统计 */
+        .summary-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8fbff;
+            border-radius: 10px;
+            border: 1px solid #e1e9f5;
+        }
+
+        .summary-item {
+            background: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            font-size: 0.9rem;
+        }
+
+        .total-badge { background: var(--primary-color); color: white; font-weight: bold; }
+
+        .history-panel { display: flex; flex-direction: column; min-height: 600px; }
+        .table-wrapper { flex-grow: 1; overflow-y: auto; border-radius: 8px; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #fafafa; position: sticky; top: 0; font-size: 0.85rem; color: #888; }
+        .row-name { font-weight: bold; }
+        .row-res { color: var(--primary-color); font-weight: 800; font-family: monospace; font-size: 1.1rem; }
+
+        .actions { margin-top: 20px; display: flex; gap: 12px; }
+        .btn-export { background: var(--secondary-color); color: white; flex: 2; font-weight: bold; }
+        .btn-del-all { background: #747d8c; color: white; flex: 1; }
+
+    </style>
+</head>
+<body>
+
+    <h1 style="color: #2c3e50; margin-bottom: 5px;">智能语音名目计算器</h1>
+    <p style="color: #7f8c8d; margin-bottom: 25px;">高效办公 · 自动统计 · 隐私安全</p>
+
+    <div class="usage-guide">
+        <div class="guide-item">
+            <h4>⌨️ 键盘大师模式</h4>
+            <p>支持物理数字键、加减乘除符号。按 <span class="kbd">Enter</span> 保存记录并清空，按 <span class="kbd">Esc</span> 清屏。</p>
+        </div>
+        <div class="guide-item">
+            <h4>🎙️ 语音智能录入</h4>
+            <p>点击“开始识别”后直接说话。说出“一百加五十”识别算式，说“好了”或“计算”自动归档。</p>
+        </div>
+        <div class="guide-item">
+            <h4>📊 自动化管理</h4>
+            <p>更改“当前名目”可自动分类，上方实时显示各名目小计。数据仅存本地，支持导出 CSV。</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="left-col">
+            <div class="card">
+                <h2>计算面板</h2>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem; color: #666; font-weight: bold;">当前记账名目：</label>
+                    <input type="text" id="item-name" placeholder="输入名目，如：午餐" value="默认">
+                </div>
+                
+                <input type="text" id="display" readonly placeholder="0">
+
+                <button id="voice-trigger" class="voice-btn">
+                    <span>🎤</span> <span id="voice-text">点击开始语音录入</span>
+                </button>
+
+                <div class="keypad">
+                    <button class="btn-clear" onclick="clearDisplay()">C</button>
+                    <button class="btn-op" onclick="appendDisplay('/')">÷</button>
+                    <button class="btn-op" onclick="appendDisplay('*')">×</button>
+                    <button class="btn-op" onclick="deleteLast()">⌫</button>
+                    
+                    <button onclick="appendDisplay('7')">7</button>
+                    <button onclick="appendDisplay('8')">8</button>
+                    <button onclick="appendDisplay('9')">9</button>
+                    <button class="btn-op" onclick="appendDisplay('-')">-</button>
+                    
+                    <button onclick="appendDisplay('4')">4</button>
+                    <button onclick="appendDisplay('5')">5</button>
+                    <button onclick="appendDisplay('6')">6</button>
+                    <button class="btn-op" onclick="appendDisplay('+')">+</button>
+                    
+                    <button onclick="appendDisplay('1')">1</button>
+                    <button onclick="appendDisplay('2')">2</button>
+                    <button onclick="appendDisplay('3')">3</button>
+                    <button class="btn-eq" onclick="calculate()">保存结算 (Enter)</button>
+                    
+                    <button onclick="appendDisplay('0')" style="grid-column: span 2;">0</button>
+                    <button onclick="appendDisplay('.')">.</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="card history-panel">
+                <h2>智能统计与记录</h2>
+                
+                <div id="summary-container" class="summary-box">
+                    <div class="summary-item total-badge">总计求和：0</div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>名目</th>
+                                <th>计算过程</th>
+                                <th>结果</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-export" onclick="exportToCSV()">💾 导出 CSV 报表</button>
+                    <button class="btn-del-all" onclick="clearHistory()">🗑️ 清空记录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const historyBody = document.getElementById('history-body');
+        const itemNameInput = document.getElementById('item-name');
+        const summaryContainer = document.getElementById('summary-container');
+        const voiceBtn = document.getElementById('voice-trigger');
+        const voiceText = document.getElementById('voice-text');
+
+        // --- 1. 核心：语音识别系统 ---
+        let recognition;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'zh-CN';
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                processVoiceInput(transcript);
+            };
+
+            recognition.onend = () => { if(isRecording) recognition.start(); }; // 自动保持识别
+        }
+
+        function processVoiceInput(text) {
+            // 语义转化
+            let cleanText = text.replace(/加/g, '+').replace(/减/g, '-').replace(/乘/g, '*').replace(/除/g, '/').replace(/点/g, '.').replace(/ /g, '');
+            
+            // 提取有效算式
+            const mathMatch = cleanText.match(/[0-9+\-*/.]+/g);
+            if (mathMatch) appendDisplay(mathMatch.join(''));
+
+            // 指令识别
+            if (text.includes("计算") || text.includes("好了") || text.includes("保存") || text.includes("等于")) {
+                calculate();
+                stopRecording();
+            }
+        }
+
+        voiceBtn.onclick = () => { isRecording ? stopRecording() : startRecording(); };
+
+        function startRecording() {
+            if(!recognition) return alert("您的浏览器不支持语音识别");
+            recognition.start();
+            isRecording = true;
+            voiceBtn.classList.add('recording');
+            voiceText.innerText = "正在倾听... (再次点击停止)";
+        }
+
+        function stopRecording() {
+            recognition.stop();
+            isRecording = false;
+            voiceBtn.classList.remove('recording');
+            voiceText.innerText = "点击开始语音录入";
+        }
+
+        // --- 2. 键盘监听逻辑 ---
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement === itemNameInput) {
+                if (e.key === 'Enter') itemNameInput.blur();
+                return;
+            }
+            if (/[0-9.]/.test(e.key)) appendDisplay(e.key);
+            if (['+', '-', '*', '/'].includes(e.key)) appendDisplay(e.key);
+            if (e.key === 'Enter') { e.preventDefault(); calculate(); }
+            if (e.key === 'Backspace') deleteLast();
+            if (e.key === 'Escape') clearDisplay();
+        });
+
+        // --- 3. 计算与业务逻辑 ---
+        function appendDisplay(val) {
+            display.value = (display.value === '0' && val !== '.') ? val : display.value + val;
+        }
+
+        function clearDisplay() { display.value = ''; }
+        function deleteLast() { display.value = display.value.slice(0, -1); }
+
+        function calculate() {
+            try {
+                const expr = display.value;
+                if (!expr) return;
+                const res = new Function('return ' + expr)();
+                const record = {
+                    name: itemNameInput.value.trim() || "默认",
+                    formula: expr,
+                    result: parseFloat(res.toFixed(4)),
+                    time: new Date().toLocaleTimeString()
+                };
+                saveRecord(record);
+                clearDisplay();
+            } catch (e) { alert("算式有误，请检查"); }
+        }
+
+        function saveRecord(rec) {
+            let data = JSON.parse(localStorage.getItem('calc_final_v41') || '[]');
+            data.unshift(rec);
+            localStorage.setItem('calc_final_v41', JSON.stringify(data));
+            render();
+        }
+
+        function render() {
+            let data = JSON.parse(localStorage.getItem('calc_final_v41') || '[]');
+            historyBody.innerHTML = data.map(i => `
+                <tr>
+                    <td class="row-name">${i.name}</td>
+                    <td style="color:#666">${i.formula}</td>
+                    <td class="row-res">${i.result}</td>
+                    <td style="font-size:11px; color:#999">${i.time}</td>
+                </tr>
+            `).join('');
+            
+            // 统计
+            let total = 0, cats = {};
+            data.forEach(i => {
+                total += i.result;
+                cats[i.name] = (cats[i.name] || 0) + i.result;
+            });
+
+            let html = `<div class="summary-item total-badge">💰 总计：${total.toFixed(2)}</div>`;
+            for(let k in cats) html += `<div class="summary-item"><strong>${k}</strong>: ${cats[k].toFixed(2)}</div>`;
+            summaryContainer.innerHTML = html;
+        }
+
+        function clearHistory() {
+            if(confirm("确定删除所有本地记录吗？")) { localStorage.removeItem('calc_final_v41'); render(); }
+        }
+
+        function exportToCSV() {
+            let data = JSON.parse(localStorage.getItem('calc_final_v41') || '[]');
+            if(!data.length) return alert("暂无数据");
+            let csv = "\uFEFF名目,过程,结果,时间\n" + data.map(i => `"${i.name}","${i.formula}","${i.result}","${i.time}"`).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `结算清单_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+
+        window.onload = render;
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

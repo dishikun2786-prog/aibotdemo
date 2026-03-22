@@ -33,7 +33,8 @@ async function getOSSConfig() {
       'oss_endpoint',
       'oss_accelerate_domain',
       'oss_bucket_domain',
-      'oss_use_accelerate'
+      'oss_use_accelerate',
+      'oss_cname_domain'
     ];
 
     const results = await db.query(
@@ -100,14 +101,14 @@ async function getOSSClient() {
 /**
  * 同步获取OSS客户端（不读取数据库，用于测试）
  */
-function getOSSClientSync(ossConfig) {
+function getOSSClientSync(ossConfig, useCname = false) {
   return new OSS({
     region: ossConfig.region || 'oss-cn-shenzhen',
     accessKeyId: ossConfig.accessKeyId,
     accessKeySecret: ossConfig.accessKeySecret,
     bucket: ossConfig.bucket,
     endpoint: ossConfig.endpoint || `${ossConfig.region || 'oss-cn-shenzhen'}.aliyuncs.com`,
-    cname: false,
+    cname: useCname,
     secure: true,
     timeout: 10000
   });
@@ -200,15 +201,49 @@ function getFileUrl(objectName, expires = 31536000) {
 }
 
 /**
- * 获取文件公开访问 URL（不带签名）
+ * 获取文件访问URL（带签名，解决防盗链问题）
  * @param {string} objectName - OSS存储对象名称
- * @returns {string} 文件访问URL
+ * @param {number} expires - 过期时间（秒），默认1小时
+ * @returns {Promise<string>} 文件访问URL
  */
-function getPublicUrl(objectName) {
-  // 从config.oss读取（配置文件中的默认值）
+async function getPublicUrl(objectName, expires = 3600) {
+  // 从数据库异步获取OSS配置（带缓存）
+  const ossConfigFromDB = await getOSSConfig();
+
   const configOSS = config.oss || {};
-  const accelerateDomain = configOSS.accelerateDomain || 'https://boke.skym178.com';
-  return `${accelerateDomain}/${objectName}`;
+  const ossConfig = {
+    region: ossConfigFromDB.oss_region || configOSS.region || 'oss-cn-shenzhen',
+    accessKeyId: ossConfigFromDB.oss_access_key_id || configOSS.accessKeyId || '',
+    accessKeySecret: ossConfigFromDB.oss_access_key_secret || configOSS.accessKeySecret || '',
+    bucket: ossConfigFromDB.oss_bucket || configOSS.bucket || 'aibotboke'
+  };
+
+  // 获取自定义域名/加速域名
+  let customDomain = ossConfigFromDB.oss_cname_domain || configOSS.cnameDomain || '';
+  if (!customDomain) {
+    customDomain = ossConfigFromDB.oss_accelerate_domain || configOSS.accelerateDomain || 'boke.skym178.com';
+  }
+  // 移除协议前缀
+  customDomain = customDomain.replace(/^https?:\/\//, '');
+
+  // 检查凭证是否有效
+  if (!ossConfig.accessKeyId || !ossConfig.accessKeySecret) {
+    console.error('OSS配置无效: 缺少accessKeyId或accessKeySecret');
+    return null;
+  }
+
+  // 检查是否使用自定义域名/加速域名
+  const useCname = !!(customDomain && customDomain !== '' && customDomain !== 'boke.skym178.com' && customDomain !== 'https://boke.skym178.com');
+
+  // 使用同步客户端生成签名URL
+  const client = getOSSClientSync(ossConfig, useCname);
+  const signedUrl = client.signatureUrl(objectName, { expires: expires });
+
+  // 替换域名：使用bucket名称进行替换
+  const bucketName = ossConfig.bucket;
+  const url = signedUrl.replace(`https://${bucketName}.oss-cn-shenzhen.aliyuncs.com`, `https://${customDomain}`);
+
+  return url;
 }
 
 /**
@@ -442,14 +477,21 @@ async function getSTSToken(durationSeconds = 3600) {
       const accessKeyId = ossConfig.oss_access_key_id || dbConfig.accessKeyId || process.env.OSS_ACCESS_KEY_ID;
       const accessKeySecret = ossConfig.oss_access_key_secret || dbConfig.accessKeySecret || process.env.OSS_ACCESS_KEY_SECRET;
 
+      // 传输加速域名
+      const accelerateDomain = 'oss-accelerate.aliyuncs.com';
+      // 地区标识（只需要 cn-shenzhen，不需要 oss- 前缀）
+      const region = (ossConfig.oss_region || dbConfig.region || 'cn-shenzhen').replace('oss-', '');
+      
       return {
         accessKeyId: accessKeyId,
         accessKeySecret: accessKeySecret,
-        stsToken: '',  // 无需STS Token
+        stsToken: null,  // 无需STS Token
         expiration: new Date(Date.now() + durationSeconds * 1000).toISOString(),
-        region: ossConfig.oss_region || dbConfig.region || 'oss-cn-shenzhen',
+        region: region,
         bucket: ossConfig.oss_bucket || dbConfig.bucket || 'aibotboke',
-        useLongTermKey: true  // 标记使用了长期AK
+        useLongTermKey: true,  // 标记使用了长期AK
+        accelerateDomain: accelerateDomain,
+        useAccelerate: ossConfig.oss_use_accelerate === 'true' || dbConfig.useAccelerate === true
       };
     }
 

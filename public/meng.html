@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能量山：致梦想合伙人的巅峰白皮书</title>
+    <style>
+        /* --- 核心样式与颜色变量 --- */
+        :root {
+            --bg-color: #03050a; /* 深蓝偏黑背景 */
+            --main-gold: #e6c17a; /* 主金色 */
+            --light-gold: #f5e0ac; /* 亮金色 */
+            --text-color: #d1d5db; /* 主文字颜色 */
+            --accent-purple: #3e2b5e; /* 辅助紫色 */
+            --panel-bg: rgba(20, 25, 40, 0.8); /* 面板半透明背景 */
+            --font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            color: var(--main-gold);
+            font-weight: 600;
+        }
+
+        /* --- 顶部视差 Banner --- */
+        .banner {
+            position: relative;
+            width: 100%;
+            height: 80vh; /* 视口高度的80% */
+            background-image: url('../public/bg/meng.jpg'); /* 您的图片文件名称 */
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20vh;
+            background: linear-gradient(to bottom, rgba(3, 5, 10, 0), rgba(3, 5, 10, 1));
+        }
+
+        .banner-content {
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(230, 193, 122, 0.3);
+        }
+
+        .banner h1 {
+            font-size: 3.5rem;
+            margin: 0;
+            text-shadow: 0 0 15px var(--main-gold);
+        }
+
+        .banner p {
+            font-size: 1.5rem;
+            color: var(--light-gold);
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+
+        /* --- 主体内容区域 --- */
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        section {
+            margin-bottom: 60px;
+            padding: 30px;
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            border: 1px solid rgba(230, 193, 122, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        section:hover {
+            transform: translateY(-5px);
+            border-color: rgba(230, 193, 122, 0.3);
+        }
+
+        section h2 {
+            border-bottom: 2px solid var(--accent-purple);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            display: inline-block;
+        }
+
+        /* 强调文字 */
+        .highlight {
+            color: var(--light-gold);
+            font-weight: bold;
+        }
+
+        /* PK 规则表格样式 */
+        .pk-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .pk-table th, .pk-table td {
+            border: 1px solid rgba(230, 193, 122, 0.2);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .pk-table th {
+            background-color: var(--accent-purple);
+            color: var(--main-gold);
+        }
+
+        /* --- 互动报名与评论区样式 --- */
+        .registration-section {
+            background-image: linear-gradient(135deg, var(--panel-bg) 0%, #1a1a2e 100%);
+        }
+
+        .comment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: var(--main-gold);
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(230, 193, 122, 0.3);
+            color: var(--text-color);
+            padding: 12px;
+            border-radius: 6px;
+            font-family: var(--font-family);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--main-gold);
+            box-shadow: 0 0 10px rgba(230, 193, 122, 0.5);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+        }
+
+        .checkbox-group input {
+            accent-color: var(--main-gold);
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-submit {
+            background-color: var(--main-gold);
+            color: var(--bg-color);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--light-gold);
+            transform: scale(1.03);
+        }
+
+        /* 评论列表显示区 */
+        .comments-container {
+            margin-top: 40px;
+            border-top: 1px solid rgba(230, 193, 122, 0.2);
+            padding-top: 20px;
+        }
+
+        .comments-title {
+            color: var(--main-gold);
+            margin-bottom: 20px;
+        }
+
+        .comment-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .comment-card:hover {
+            border-color: rgba(230, 193, 122, 0.2);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--light-gold);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .comment-body {
+            font-size: 1rem;
+        }
+
+        .comment-body .highlight {
+            color: var(--main-gold);
+        }
+
+        /* --- 页脚 --- */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: rgba(209, 213, 219, 0.6);
+            border-top: 1px solid rgba(230, 193, 122, 0.1);
+        }
+
+        /* --- 响应式设计 --- */
+        @media (max-width: 768px) {
+            .banner h1 { font-size: 2.2rem; }
+            .banner p { font-size: 1.1rem; }
+            .main-container { padding: 20px 10px; }
+            section { padding: 20px; }
+            .pk-table { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="banner">
+        <div class="banner-content">
+            <h1>致玩家的白皮书！</h1>
+            <p>【官方团队】</p>
+            <p class="highlight">—— 我为人人，人人为我 ——</p>
+        </div>
+    </div>
+
+    <div class="main-container">
+
+        <section id="intro">
+            <h2>💎【序言：信任与愿景】</h2>
+            <p>幸运的玩家您好：欢迎来到能量山的玩家广场。</p>
+            <p>我们这个游戏有一个宗旨：<span class="highlight">我为人人，人人为我！</span></p>
+            <p>平台中的每一个人都是由熟人推荐进入的，也是因为大家的信任，让我们彼此都能够实现我们每一个人的愿望，让我们可以用微小的善意来实现大家的梦想！</p>
+        </section>
+
+        <section id="ecology">
+            <h2>💡【核心生态：能量驱动未来】</h2>
+            <p>在能量山，“能量”是连接现实商品与未来 AI 服务的唯一凭证。</p>
+            <ul>
+                <li>我们可以通过<span class="highlight">宏骏隆微信公众号商店</span>购买对应的商品或者皮肤，获得平台赠送的<span class="highlight">能量激活码</span>。</li>
+                <li>在能量山激活码后获得能量。能量可用于：
+                    <ul>
+                        <li><span class="highlight">AI实验室</span>：AI助理的问答和制作图片。</li>
+                        <li><span class="highlight">数字分身</span>：创建分身客服，制作自己的个人名片客服。</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="gameplay">
+            <h2>⚔️【圆梦玩法：自由团 PK 赛】</h2>
+            <p>大家可以在玩家广场发帖，写上自己想实现的愿望（例如：买个苹果手机8000块，附带京东链接）。您可以邀请玩家广场的用户一起参与 <span class="highlight">PK自由团</span> 进行 PK，获得能量联系平台客服进行兑换。</p>
+            <p>自由PK团玩法公平，有趣，好玩刺激！</p>
+            
+            <h3>📊 PK 规则示例</h3>
+            <table class="pk-table">
+                <thead>
+                    <tr>
+                        <th>身份</th>
+                        <th>攻击 (0-100)</th>
+                        <th>防御 (1-100)</th>
+                        <th>计算绝对值 (差值)</th>
+                        <th>获胜标准</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="highlight">我方</td>
+                        <td>10</td>
+                        <td>55</td>
+                        <td>|10 - 对方防御|</td>
+                        <td rowspan="2">绝对值 <span class="highlight">越小</span> 获胜<br>(相等则平局)</td>
+                    </tr>
+                    <tr>
+                        <td>对方</td>
+                        <td>15</td>
+                        <td>99</td>
+                        <td>|15 - 我方防御|</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>具体结果：我方（|10-99|=89）vs 对方（|15-55|=40）。<span class="highlight">对方获胜（40＜89）</span>。</p>
+        </section>
+
+        <section id="honor">
+            <h2>🏆【荣誉与回馈：合伙人计划】</h2>
+            <p>排行榜让大家都能看到：<span class="highlight">我贡献了多少能量，贡献给谁了；谁给我贡献了能量，哪些玩家给我贡献了</span>。所有数据均<span class="highlight">实时更新、实时同步</span>！</p>
+            <p>我们励志让每一个人都能够通过我们的平台实现自己的梦想！为此，平台提供：</p>
+            <ul>
+                <li><span class="highlight">特别匹配机制</span>：针对贡献多的玩家。</li>
+                <li><span class="highlight">社区合伙人</span>：贡献多的玩家将被吸纳成为合伙人，获得<span class="highlight">长期平台收益分红</span>。您的每一份付出，都不是无缘无故毫无回应！</li>
+            </ul>
+        </section>
+
+        <section id="register" class="registration-section">
+            <h2>📝【加入我们：参与报名】</h2>
+            <p>感谢大家的支持！希望大家在游戏当中怀着我为人人，人人为我的精神，一起发扬光大，邀请更多您认可的、<span class="highlight">讲诚信、善良</span>的朋友加入我们这个大家庭共建共享！</p>
+            <p>如果您认可我们的思想，请在下方留言，向我们提交您的梦想意向：</p>
+            
+            <form id="enrollForm" class="comment-form">
+                <div class="form-group">
+                    <label for="nickname">您的昵称：</label>
+                    <input type="text" id="nickname" class="form-control" placeholder="请输入您的游戏昵称或称呼" required>
+                </div>
+                <div class="form-group">
+                    <label for="dream">您的梦想目标：</label>
+                    <textarea id="dream" class="form-control" placeholder="例如：一台 iPhone 15 Pro Max / 一次前往西藏的旅行" required></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreement" required>
+                    <label for="agreement">我已阅读白皮书，承诺在社区中秉持“我为人人，人人为我”的精神。</label>
+                </div>
+                <button type="submit" class="btn-submit">提交梦想报名</button>
+            </form>
+
+            <div id="commentsList" class="comments-container" style="display: none;">
+                <h3 class="comments-title">最新合伙人圆梦申请：</h3>
+                </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>平台团队向您致敬！</p>
+        <p>© 2024 能量山 Energy Mountain. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('enrollForm');
+            const commentsList = document.getElementById('commentsList');
+
+            form.addEventListener('submit', function(e) {
+                // 1. 阻止表单默认提交（不刷新页面）
+                e.preventDefault();
+
+                // 2. 获取用户输入
+                const nickname = document.getElementById('nickname').value;
+                const dream = document.getElementById('dream').value;
+                const dateString = new Date().toLocaleString('zh-CN', { hour12: false });
+
+                // 3. 动态创建新的评论卡片 HTML
+                const newComment = document.createElement('div');
+                newComment.className = 'comment-card';
+                newComment.innerHTML = `
+                    <div class="comment-header">
+                        <span class="highlight">${escapeHtml(nickname)}</span>
+                        <span>${dateString}</span>
+                    </div>
+                    <div class="comment-body">
+                        我的圆梦计划：<span class="highlight">${escapeHtml(dream)}</span>
+                    </div>
+                `;
+
+                // 4. 将新评论添加到列表顶部
+                commentsList.style.display = 'block'; // 显示列表容器
+                commentsList.insertBefore(newComment, commentsList.childNodes[2] || null);
+
+                // 5. 清空表单
+                form.reset();
+
+                // 6. 可选：平滑滚动到新评论
+                newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            // 简单的 HTML 转义函数，防止脚本注入
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -374,6 +374,34 @@ async function lPop(key) {
 }
 
 /**
+ * Redis List: 右侧弹出
+ */
+async function rPop(key) {
+  try {
+    const client = await getClient();
+    if (!client || !client.isOpen) return null;
+    return await client.rPop(key);
+  } catch (error) {
+    console.error('Redis rPop错误:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Redis List: 右侧推送
+ */
+async function rPush(key, value) {
+  try {
+    const client = await getClient();
+    if (!client || !client.isOpen) return 0;
+    return await client.rPush(key, value);
+  } catch (error) {
+    console.error('Redis rPush错误:', error.message);
+    return 0;
+  }
+}
+
+/**
  * Redis List: 左侧推送
  */
 async function lPush(key, value) {
@@ -651,6 +679,8 @@ module.exports = {
   hDel,
   lPush,
   lPop,
+  rPop,
+  rPush,
   lRange,
   lTrim,
   zAdd,

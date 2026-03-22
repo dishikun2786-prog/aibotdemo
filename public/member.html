@@ -830,6 +830,135 @@
         .avatar-file-label:hover {
             background: #e8e8e8;
         }
+
+        /* AI导航区域 */
+        .ai-nav-section {
+            margin-bottom: 16px;
+        }
+
+        .ai-nav-card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            box-shadow: var(--member-shadow);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .ai-nav-card:hover {
+            box-shadow: var(--member-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .ai-nav-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .ai-nav-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .ai-nav-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ai-nav-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--member-text);
+            margin-bottom: 2px;
+        }
+
+        .ai-nav-desc {
+            font-size: 12px;
+            color: var(--member-text-light);
+        }
+
+        .ai-nav-arrow {
+            font-size: 20px;
+            color: var(--member-text-light);
+            flex-shrink: 0;
+        }
+
+        /* 弹窗通用样式 */
+        .history-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .history-modal.show { display: flex; }
+
+        .history-panel {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius-lg);
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .history-panel h3 {
+            margin: 0 0 15px 0;
+            color: var(--member-text);
+            font-size: 18px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--member-border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .history-item:hover { background: var(--member-bg); }
+        .history-item strong { color: var(--member-text); }
+        .history-item .time { font-size: 12px; color: var(--member-text-light); margin-top: 4px; }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-row .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+            background: var(--member-primary);
+            color: #fff;
+        }
+        .btn-row .btn:hover { opacity: 0.8; }
+        .btn-row .btn-secondary {
+            background: var(--member-bg);
+            color: var(--member-text);
+        }
     </style>
 </head>
 <body>
@@ -920,6 +1049,51 @@
                     加载中...
                 </div>
             </div>
+        </div>
+
+        <!-- AI分身导航区 -->
+        <div class="ai-nav-section">
+            <a href="javascript:void(0);" class="ai-nav-card" onclick="openAIModal(); return false;">
+                <div class="ai-nav-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">🤖</div>
+                <div class="ai-nav-text">
+                    <div class="ai-nav-title">AI分身管理</div>
+                    <div class="ai-nav-desc">创建和管理我的AI分身</div>
+                </div>
+                <div class="ai-nav-arrow">›</div>
+            </a>
+            <a href="/agent-chat-admin.html" class="ai-nav-card">
+                <div class="ai-nav-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">💬</div>
+                <div class="ai-nav-text">
+                    <div class="ai-nav-title">客服工作台</div>
+                    <div class="ai-nav-desc">管理分身客服对话</div>
+                </div>
+                <div class="ai-nav-arrow">›</div>
+            </a>
+            <a href="/file-manager.html" class="ai-nav-card" onclick="openDiskWithPassword(); return false;">
+                <div class="ai-nav-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">📁</div>
+                <div class="ai-nav-text">
+                    <div class="ai-nav-title">我的网盘</div>
+                    <div class="ai-nav-desc">管理我的文件存储</div>
+                </div>
+                <div class="ai-nav-arrow">›</div>
+            </a>
+            
+            <!-- 支付商户入口卡片 -->
+            <a href="/payment-merchant.html" class="ai-nav-card">
+                <div class="ai-nav-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">💳</div>
+                <div class="ai-nav-text">
+                    <div class="ai-nav-title">支付商户</div>
+                    <div class="ai-nav-desc">管理收款和订单</div>
+                </div>
+                <div class="ai-nav-arrow">›</div>
+            </a>
+        </div>
+
+        <!-- 营销主页入口卡片 -->
+        <div class="settings-entry-card" onclick="window.location.href='/marketing.html'">
+            <div class="settings-entry-icon">🌐</div>
+            <div class="settings-entry-text">我的营销主页</div>
+            <div class="settings-entry-arrow">›</div>
         </div>
 
         <!-- 皮肤激活码商店入口卡片 -->
@@ -1021,6 +1195,25 @@
         </div>
     </div>
 
+    <!-- 网盘访问支付密码验证弹窗 -->
+    <div class="settings-modal-overlay" id="diskPasswordModal" onclick="closeDiskPasswordModal(event)">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2>验证支付密码</h2>
+                <button class="settings-modal-close" onclick="closeDiskPasswordModal()">×</button>
+            </div>
+            <div class="settings-modal-body">
+                <p style="margin-bottom: 15px; color: #666;">请输入支付密码以访问网盘</p>
+                <div class="settings-section">
+                    <label class="settings-label">支付密码 <span style="color: #ff4d4f;">*</span></label>
+                    <input type="password" id="diskPayPassword" class="settings-input" placeholder="请输入6位数字支付密码" maxlength="6" style="ime-mode:disabled;">
+                </div>
+                <button class="settings-save-btn" id="diskPasswordBtn" onclick="verifyDiskPassword()">确认</button>
+                <p id="diskPasswordMsg" class="settings-msg"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- 头像上传弹窗 -->
     <div class="settings-modal-overlay" id="avatarModal" onclick="closeAvatarModal(event)">
         <div class="settings-modal-content" style="max-width: 350px;">
@@ -1047,19 +1240,97 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
+    <!-- AI技能弹窗 -->
+    <div class="history-modal" id="aiSkillModal">
+        <div class="history-panel">
+            <h3>AI技能 - 我的AI分身</h3>
+            <div class="btn-row">
+                <button class="btn" type="button" id="btnCreateAvatar2" style="background:var(--member-primary);color:#fff;">+ 创建新分身</button>
+                <button class="btn" type="button" id="btnRefreshAvatars2">刷新</button>
+                <a href="/agent-chat-admin.html" target="_blank" class="btn" style="background:var(--neon-blue,#00f3ff);color:#000;text-decoration:none;">客服管理后台</a>
+            </div>
+            <div class="history-list" id="avatarList2"></div>
+            <div class="btn-row">
+                <button class="btn" type="button" id="btnCloseAiSkill2">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建分身弹窗 -->
+    <div class="history-modal" id="createAvatarModal2">
+        <div class="history-panel">
+            <h3>创建AI分身</h3>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label style="display:block;margin-bottom:4px;font-size:14px;">分身名称 *</label>
+                <input type="text" id="avatarName2" class="settings-input" placeholder="给分身起个名字" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label style="display:block;margin-bottom:4px;font-size:14px;">描述</label>
+                <input type="text" id="avatarDescription2" class="settings-input" placeholder="简单描述分身用途" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label style="display:block;margin-bottom:4px;font-size:14px;">提示词模板</label>
+                <select id="promptTemplate2" class="settings-input" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="">选择模板...</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label style="display:block;margin-bottom:4px;font-size:14px;">欢迎语</label>
+                <textarea id="avatarWelcomeMessage2" class="settings-input" placeholder="用户首次对话时的欢迎语" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;min-height:60px;resize:vertical;"></textarea>
+            </div>
+            <div class="btn-row">
+                <button class="btn" type="button" id="btnSaveAvatar2" style="background:var(--member-primary);color:#fff;">创建</button>
+                <button class="btn" type="button" id="btnCancelCreate2" class="btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分身详情弹窗 -->
+    <div class="history-modal" id="avatarDetailModal2">
+        <div class="history-panel">
+            <h3>分身详情</h3>
+            <div id="avatarDetailContent"></div>
+            <div class="btn-row">
+                <button class="btn" type="button" id="btnCopyLink2" style="background:var(--member-primary);color:#fff;">复制链接</button>
+                <button class="btn" type="button" id="btnDeleteAvatar2" style="background:#f56c6c;color:#fff;">删除</button>
+                <button class="btn" type="button" id="btnCloseDetail2">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth-manager.js"></script>
     <script>
         const API_BASE = window.location.origin;
         let currentUser = null;
         let referralData = null;
         let teamData = [];
 
-        // 检查登录状态
+        // 检查登录状态（增强版：验证 token 有效性）
         async function checkAuth() {
             const authToken = AuthManager.getToken();
             if (!authToken) {
-                window.location.href = '/login.html';
+                window.location.href = '/game.html?redirect=' + encodeURIComponent(window.location.href);
                 return null;
             }
+
+            // 验证 token 有效性
+            try {
+                const res = await fetch(API_BASE + '/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                if (res.status === 401) {
+                    const data = await res.json().catch(() => ({}));
+                    if (data.error && (data.error.includes('过期') || data.error.includes('无效') || data.error.includes('expired') || data.error.includes('invalid') || data.error.includes('认证失败'))) {
+                        AuthManager.clearToken();
+                        window.location.href = '/game.html?redirect=' + encodeURIComponent(window.location.href);
+                        return null;
+                    }
+                }
+            } catch (err) {
+                // 网络错误时不阻断流程
+            }
+
             return authToken;
         }
 
@@ -1120,9 +1391,18 @@
                 const authToken = await checkAuth();
                 if (!authToken) return;
 
+                // checkAuth 已验证 token 有效性，直接使用结果
                 const res = await fetch(API_BASE + '/api/auth/me', {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
+
+                // 额外检查 401（防御性编程）
+                if (res.status === 401) {
+                    AuthManager.clearToken();
+                    window.location.href = '/game.html?redirect=' + encodeURIComponent(window.location.href);
+                    return;
+                }
+
                 const data = await res.json();
 
                 if (data.success) {
@@ -1448,6 +1728,92 @@
                     this.value = this.value.replace(/\D/g, '');
                 });
             }
+
+            // 网盘访问支付密码验证
+            let pendingDiskUrl = '';
+
+            // 打开网盘前验证支付密码
+            async function openDiskWithPassword() {
+                const authToken = AuthManager.getToken();
+                if (!authToken) {
+                    window.location.href = '/game.html?redirect=' + encodeURIComponent(window.location.href);
+                    return;
+                }
+
+                // 检查是否已设置支付密码
+                if (!hasPayPassword) {
+                    // 未设置，提示并跳转到设置页面
+                    if (confirm('您还未设置支付密码，是否现在去设置？')) {
+                        openPayPasswordModal();
+                    }
+                    return;
+                }
+
+                // 已设置，显示验证弹窗
+                pendingDiskUrl = 'https://aibotdemo.skym178.com/file-manager.html';
+                document.getElementById('diskPayPassword').value = '';
+                document.getElementById('diskPasswordMsg').textContent = '';
+                document.getElementById('diskPasswordModal').classList.add('show');
+            }
+
+            // 关闭网盘密码验证弹窗
+            function closeDiskPasswordModal(event) {
+                if (event && event.target !== event.currentTarget) return;
+                document.getElementById('diskPasswordModal').classList.remove('show');
+                pendingDiskUrl = '';
+            }
+
+            // 验证支付密码
+            async function verifyDiskPassword() {
+                const payPassword = document.getElementById('diskPayPassword').value;
+                const msgEl = document.getElementById('diskPasswordMsg');
+                const btnEl = document.getElementById('diskPasswordBtn');
+
+                if (!/^\d{6}$/.test(payPassword)) {
+                    msgEl.textContent = '请输入6位数字支付密码';
+                    msgEl.className = 'settings-msg error';
+                    return;
+                }
+
+                btnEl.disabled = true;
+                btnEl.textContent = '验证中...';
+
+                const authToken = AuthManager.getToken();
+                try {
+                    const res = await fetch(API_BASE + '/api/auth/verify-pay-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + authToken
+                        },
+                        body: JSON.stringify({ pay_password: payPassword })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        // 验证成功，跳转到网盘
+                        closeDiskPasswordModal();
+                        window.open(pendingDiskUrl, '_blank');
+                    } else {
+                        msgEl.textContent = data.error || '支付密码错误';
+                        msgEl.className = 'settings-msg error';
+                    }
+                } catch (err) {
+                    msgEl.textContent = '验证失败，请重试';
+                    msgEl.className = 'settings-msg error';
+                } finally {
+                    btnEl.disabled = false;
+                    btnEl.textContent = '确认';
+                }
+            }
+
+            // 添加网盘密码输入限制
+            const diskPayPassword = document.getElementById('diskPayPassword');
+            if (diskPayPassword) {
+                diskPayPassword.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
         });
 
         // 加载用户头像
@@ -1668,6 +2034,219 @@
             }
         }
 
+        // ========== AI技能弹窗功能 ==========
+        var currentAvatarId = null;
+        var promptTemplates = [];
+
+        // 打开AI技能弹窗
+        async function openAIModal() {
+            await loadPromptTemplates2();
+            await loadAvatars2();
+            document.getElementById('aiSkillModal').classList.add('show');
+        }
+
+        // 关闭AI技能弹窗
+        function closeAiSkillModal() {
+            document.getElementById('aiSkillModal').classList.remove('show');
+        }
+
+        // 关闭创建分身弹窗
+        function closeCreateAvatarModal() {
+            document.getElementById('createAvatarModal2').classList.remove('show');
+        }
+
+        // 关闭详情弹窗
+        function closeAvatarDetailModal() {
+            document.getElementById('avatarDetailModal2').classList.remove('show');
+        }
+
+        // 加载提示词模板
+        async function loadPromptTemplates2() {
+            try {
+                const authToken = AuthManager.getToken();
+                if (!authToken) {
+                    showToast('请先登录');
+                    return;
+                }
+                const r = await fetch(API_BASE + '/api/agent-avatars/templates', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const d = await r.json();
+                if (d.success && d.templates) {
+                    promptTemplates = d.templates;
+                    var select = document.getElementById('promptTemplate2');
+                    select.innerHTML = '<option value="">选择模板...</option>';
+                    promptTemplates.forEach(function(t) {
+                        select.innerHTML += '<option value="' + t.id + '">' + t.name + ' - ' + t.description + '</option>';
+                    });
+                }
+            } catch (e) {
+                console.error('加载模板失败:', e);
+            }
+        }
+
+        // 加载分身列表
+        async function loadAvatars2() {
+            var avatarList = document.getElementById('avatarList2');
+            try {
+                const authToken = AuthManager.getToken();
+                if (!authToken) {
+                    avatarList.innerHTML = '<div class="empty-state">请先登录</div>';
+                    return;
+                }
+                const r = await fetch(API_BASE + '/api/agent-avatars/my-avatars', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const d = await r.json();
+                if (d.success && d.avatars && d.avatars.length > 0) {
+                    avatarList.innerHTML = d.avatars.map(function(a) {
+                        var time = a.created_at ? new Date(a.created_at).toLocaleString('zh-CN') : '';
+                        return '<div class="history-item" data-avatar-id="' + a.avatar_id + '">' +
+                            '<div><strong>' + (a.name || '未命名') + '</strong></div>' +
+                            '<div class="time">对话次数: ' + (a.chat_count || 0) + ' | 链接: ' + (a.link_count || 0) + '</div>' +
+                            '<div class="time">' + time + '</div></div>';
+                    }).join('');
+                    avatarList.querySelectorAll('.history-item').forEach(function(el) {
+                        el.addEventListener('click', function() {
+                            var avatarId = el.getAttribute('data-avatar-id');
+                            if (avatarId) showAvatarDetail2(avatarId);
+                        });
+                    });
+                } else {
+                    avatarList.innerHTML = '<div class="empty-state">暂无AI分身，点击"创建新分身"开始创建</div>';
+                }
+            } catch (e) {
+                avatarList.innerHTML = '<div class="empty-state">加载失败，请重试</div>';
+            }
+        }
+
+        // 显示分身详情
+        async function showAvatarDetail2(avatarId) {
+            currentAvatarId = avatarId;
+            try {
+                const authToken = AuthManager.getToken();
+                const r = await fetch(API_BASE + '/api/agent-avatars/' + avatarId, {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const d = await r.json();
+                if (d.success && d.avatar) {
+                    const a = d.avatar;
+                    const shareLink = window.location.origin + '/agent-chat.html?avatar=' + a.avatar_id + '&token=' + (a.link_token || '');
+                    document.getElementById('avatarDetailContent').innerHTML = 
+                        '<div style="padding:10px;background:var(--member-bg);border-radius:8px;margin-bottom:10px;">' +
+                        '<p><strong>名称:</strong> ' + (a.name || '未命名') + '</p>' +
+                        '<p><strong>描述:</strong> ' + (a.description || '无') + '</p>' +
+                        '<p><strong>欢迎语:</strong> ' + (a.welcome_message || '无') + '</p>' +
+                        '<p><strong>分享链接:</strong> <a href="' + shareLink + '" target="_blank" style="color:var(--member-primary);">点击打开</a></p>' +
+                        '<input type="text" id="shareLinkInput" value="' + shareLink + '" style="width:100%;padding:8px;margin-top:8px;border:1px solid var(--member-border);border-radius:4px;" readonly>' +
+                        '</div>';
+                    document.getElementById('avatarDetailModal2').classList.add('show');
+                } else {
+                    showToast('加载失败: ' + (d.error || '未知错误'));
+                }
+            } catch (e) {
+                showToast('加载失败: ' + e.message);
+            }
+        }
+
+        // 复制分享链接
+        function copyShareLink2() {
+            const input = document.getElementById('shareLinkInput');
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                showToast('链接已复制到剪贴板', 'success');
+            }
+        }
+
+        // 删除分身
+        async function deleteAvatar2() {
+            if (!currentAvatarId) return;
+            if (!confirm('确定要删除这个AI分身吗？此操作不可恢复。')) return;
+            try {
+                const authToken = AuthManager.getToken();
+                const r = await fetch(API_BASE + '/api/agent-avatars/' + currentAvatarId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const d = await r.json();
+                if (d.success) {
+                    showToast('删除成功', 'success');
+                    closeAvatarDetailModal();
+                    loadAvatars2();
+                } else {
+                    showToast('删除失败: ' + (d.error || '未知错误'));
+                }
+            } catch (e) {
+                showToast('删除失败: ' + e.message);
+            }
+        }
+
+        // 创建分身
+        async function createAvatar2() {
+            const name = document.getElementById('avatarName2').value.trim();
+            if (!name) {
+                showToast('请输入分身名称');
+                return;
+            }
+            const description = document.getElementById('avatarDescription2').value.trim();
+            const template = document.getElementById('promptTemplate2').value;
+            const welcome_message = document.getElementById('avatarWelcomeMessage2').value.trim();
+
+            try {
+                const authToken = AuthManager.getToken();
+                const r = await fetch(API_BASE + '/api/agent-avatars/create', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        prompt_template: template,
+                        welcome_message: welcome_message
+                    })
+                });
+                const d = await r.json();
+                if (d.success) {
+                    showToast('AI分身创建成功！', 'success');
+                    closeCreateAvatarModal();
+                    loadAvatars2();
+                    // 清空表单
+                    document.getElementById('avatarName2').value = '';
+                    document.getElementById('avatarDescription2').value = '';
+                    document.getElementById('promptTemplate2').value = '';
+                    document.getElementById('avatarWelcomeMessage2').value = '';
+                } else {
+                    showToast('创建失败: ' + (d.error || '未知错误'));
+                }
+            } catch (e) {
+                showToast('创建失败: ' + e.message);
+            }
+        }
+
+        // 绑定AI技能弹窗事件
+        document.getElementById('btnCreateAvatar2').addEventListener('click', function() {
+            loadPromptTemplates2();
+            document.getElementById('createAvatarModal2').classList.add('show');
+        });
+        document.getElementById('btnRefreshAvatars2').addEventListener('click', loadAvatars2);
+        document.getElementById('btnCloseAiSkill2').addEventListener('click', closeAiSkillModal);
+        document.getElementById('btnCancelCreate2').addEventListener('click', closeCreateAvatarModal);
+        document.getElementById('btnSaveAvatar2').addEventListener('click', createAvatar2);
+        document.getElementById('btnCloseDetail2').addEventListener('click', closeAvatarDetailModal);
+        document.getElementById('btnCopyLink2').addEventListener('click', copyShareLink2);
+        document.getElementById('btnDeleteAvatar2').addEventListener('click', deleteAvatar2);
+        // 点击弹窗外部关闭
+        document.getElementById('aiSkillModal').addEventListener('click', function(e) {
+            if (e.target === document.getElementById('aiSkillModal')) closeAiSkillModal();
+        });
+        document.getElementById('createAvatarModal2').addEventListener('click', function(e) {
+            if (e.target === document.getElementById('createAvatarModal2')) closeCreateAvatarModal();
+        });
+        document.getElementById('avatarDetailModal2').addEventListener('click', function(e) {
+            if (e.target === document.getElementById('avatarDetailModal2')) closeAvatarDetailModal();
+        });
+        // ========== AI技能弹窗功能结束 ==========
+
         // 初始化
         async function init() {
             await loadUserProfile();
@@ -1686,8 +2265,8 @@
             <span class="bottom-nav-icon">🎮</span>
             <span class="bottom-nav-label">游戏</span>
         </a>
-        <a href="/podcast-list.html" class="bottom-nav-item">
-            <span class="bottom-nav-icon">🎙️</span>
+        <a href="podcast.html" class="bottom-nav-item">
+            <span class="bottom-nav-icon">&#127911;</span>
             <span class="bottom-nav-label">播客</span>
         </a>
         <a href="/plaza.html" class="bottom-nav-item">
@@ -1695,58 +2274,15 @@
             <span class="bottom-nav-label">广场</span>
         </a>
         <a href="/leaderboard.html" class="bottom-nav-item">
-            <span class="bottom-nav-icon">🏆</span>
+            <span class="bottom-nav-icon">&#127942;</span>
             <span class="bottom-nav-label">排行榜</span>
+        </a>
+        <a href="member.html" class="bottom-nav-item active">
+            <span class="bottom-nav-icon">&#128100;</span>
+            <span class="bottom-nav-label">我的</span>
         </a>
     </nav>
 
-    <style>
-        /* 底部导航菜单样式 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-around;
-            background: white;
-            border-top: 1px solid var(--member-border);
-            padding: 8px 0;
-            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-            z-index: 100;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: var(--member-text-light);
-            padding: 4px 12px;
-            transition: color 0.2s;
-        }
-
-        .bottom-nav-item:active {
-            color: var(--member-primary);
-        }
-
-        .bottom-nav-icon {
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        .bottom-nav-label {
-            font-size: 11px;
-            margin-top: 4px;
-        }
-
-        /* 为底部导航留出空间 */
-        body {
-            padding-bottom: 70px;
-        }
-    </style>
-    <script src="/js/auth-manager.js"></script>
     <script src="/js/visitor-tracker.js"></script>
 </body>
 </html>

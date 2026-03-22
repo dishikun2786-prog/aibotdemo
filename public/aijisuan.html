@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能名目计算器 V3.0 - 键盘强化版</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2ed573;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        h2 { margin-top: 0; font-size: 1.1rem; color: var(--primary-color); border-left: 4px solid var(--primary-color); padding-left: 10px; }
+
+        /* 统计卡片样式 */
+        .summary-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #eef5ff;
+            border-radius: 8px;
+        }
+
+        .summary-item {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #d1e3ff;
+            font-size: 0.85rem;
+        }
+
+        .total-badge {
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 计算器 UI */
+        #display {
+            width: 100%;
+            height: 70px;
+            font-size: 2rem;
+            text-align: right;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: #fff;
+            color: #222;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        #item-name {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            background: #fff;
+        }
+        #item-name:focus { border-color: var(--primary-color); outline: none; }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s;
+            background: #fff;
+            border: 1px solid #eee;
+        }
+
+        button:hover { background: #f8f9fa; }
+        button:active { transform: scale(0.95); background: #e9ecef; }
+        
+        .btn-op { background: #f0f2f5; font-weight: bold; color: var(--primary-color); }
+        .btn-eq { background: var(--primary-color); color: white; grid-column: span 2; }
+        .btn-eq:hover { background: #357abd; }
+        .btn-clear { background: #ff4757; color: white; }
+
+        /* 历史记录表格 */
+        .history-panel { display: flex; flex-direction: column; height: 650px; }
+        .table-wrapper { flex-grow: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+        
+        .row-name { font-weight: bold; color: #555; }
+        .row-res { color: var(--primary-color); font-weight: bold; }
+
+        .actions { margin-top: 15px; display: flex; gap: 10px; }
+        .btn-export { background: var(--secondary-color); color: white; flex: 2; }
+        .btn-del-all { background: #747d8c; color: white; flex: 1; }
+        
+        .hint { font-size: 0.75rem; color: #999; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1 style="margin-bottom: 20px;">智能名目计算器</h1>
+
+    <div class="container">
+        <div class="left-col">
+            <div class="card">
+                <h2>计算面板</h2>
+                <div class="input-group">
+                    <label style="font-size: 0.8rem; color: #666;">名目 (键盘Tab键可切换输入)：</label>
+                    <input type="text" id="item-name" placeholder="例如：食材费" value="通用">
+                </div>
+                
+                <input type="text" id="display" readonly placeholder="0">
+                <div class="keypad">
+                    <button class="btn-clear" onclick="clearDisplay()">C (Esc)</button>
+                    <button class="btn-op" onclick="appendDisplay('/')">÷</button>
+                    <button class="btn-op" onclick="appendDisplay('*')">×</button>
+                    <button class="btn-op" onclick="deleteLast()">⌫</button>
+                    
+                    <button onclick="appendDisplay('7')">7</button>
+                    <button onclick="appendDisplay('8')">8</button>
+                    <button onclick="appendDisplay('9')">9</button>
+                    <button class="btn-op" onclick="appendDisplay('-')">-</button>
+                    
+                    <button onclick="appendDisplay('4')">4</button>
+                    <button onclick="appendDisplay('5')">5</button>
+                    <button onclick="appendDisplay('6')">6</button>
+                    <button class="btn-op" onclick="appendDisplay('+')">+</button>
+                    
+                    <button onclick="appendDisplay('1')">1</button>
+                    <button onclick="appendDisplay('2')">2</button>
+                    <button onclick="appendDisplay('3')">3</button>
+                    <button class="btn-eq" onclick="calculate()">保存 (Enter)</button>
+                    
+                    <button onclick="appendDisplay('0')" style="grid-column: span 2;">0</button>
+                    <button onclick="appendDisplay('.')">.</button>
+                </div>
+                <div class="hint">支持物理键盘输入数字、符号及回车</div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="card history-panel">
+                <h2>统计明细</h2>
+                
+                <div id="summary-container" class="summary-box">
+                    <div class="summary-item total-badge">总计求和：0</div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>名目</th>
+                                <th>过程</th>
+                                <th>结果</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-export" onclick="exportToCSV()">导出 CSV</button>
+                    <button class="btn-del-all" onclick="clearHistory()">清空</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const historyBody = document.getElementById('history-body');
+        const itemNameInput = document.getElementById('item-name');
+        const summaryContainer = document.getElementById('summary-container');
+
+        // 页面初始化
+        window.onload = () => { renderPage(); };
+
+        // --- 核心逻辑：键盘识别 ---
+        window.addEventListener('keydown', function(e) {
+            // 如果用户正在名目输入框里打字，不触发计算器快捷键
+            if (document.activeElement === itemNameInput) {
+                if (e.key === 'Enter') {
+                    itemNameInput.blur(); // 按回车退出名目编辑
+                }
+                return; 
+            }
+
+            const key = e.key;
+            
+            // 数字和小数点
+            if (/[0-9.]/.test(key)) {
+                appendDisplay(key);
+            } 
+            // 运算符
+            else if (['+', '-', '*', '/'].includes(key)) {
+                appendDisplay(key);
+            } 
+            // 执行计算 (Enter)
+            else if (key === 'Enter') {
+                e.preventDefault();
+                calculate();
+            } 
+            // 退格 (Backspace)
+            else if (key === 'Backspace') {
+                deleteLast();
+            } 
+            // 清空 (Escape)
+            else if (key === 'Escape') {
+                clearDisplay();
+            }
+        });
+
+        // --- 计算器基础功能 ---
+        function appendDisplay(value) {
+            if (display.value === '0' && value !== '.') display.value = value;
+            else display.value += value;
+        }
+
+        function clearDisplay() { display.value = ''; }
+        function deleteLast() { display.value = display.value.slice(0, -1); }
+
+        function calculate() {
+            try {
+                const expression = display.value;
+                if (!expression) return;
+
+                // 计算结果
+                const result = new Function('return ' + expression)(); 
+                const itemName = itemNameInput.value.trim() || "未命名";
+                const timestamp = new Date().toLocaleString();
+
+                const record = {
+                    name: itemName,
+                    formula: expression,
+                    result: parseFloat(result.toFixed(4)),
+                    time: timestamp
+                };
+
+                saveRecord(record);
+                
+                // 【核心更新】：计算保存后自动清零
+                clearDisplay(); 
+                
+            } catch (e) {
+                alert("表达式有误");
+            }
+        }
+
+        // --- 存储与渲染 ---
+        function saveRecord(record) {
+            let history = JSON.parse(localStorage.getItem('calc_history_v3') || '[]');
+            history.unshift(record);
+            localStorage.setItem('calc_history_v3', JSON.stringify(history));
+            renderPage();
+        }
+
+        function renderPage() {
+            let history = JSON.parse(localStorage.getItem('calc_history_v3') || '[]');
+            
+            historyBody.innerHTML = history.map(item => `
+                <tr>
+                    <td class="row-name">${item.name}</td>
+                    <td>${item.formula}</td>
+                    <td class="row-res">${item.result}</td>
+                    <td style="font-size: 11px; color: #999;">${item.time}</td>
+                </tr>
+            `).join('');
+
+            updateStatistics(history);
+        }
+
+        function updateStatistics(history) {
+            if (history.length === 0) {
+                summaryContainer.innerHTML = '<div class="summary-item total-badge">总计求和：0</div>';
+                return;
+            }
+
+            let totalSum = 0;
+            let categorySums = {};
+
+            history.forEach(item => {
+                const val = parseFloat(item.result) || 0;
+                totalSum += val;
+                categorySums[item.name] = (categorySums[item.name] || 0) + val;
+            });
+
+            let html = `<div class="summary-item total-badge">总计：${totalSum.toFixed(2)}</div>`;
+            for (let name in categorySums) {
+                html += `<div class="summary-item"><strong>${name}</strong>: ${categorySums[name].toFixed(2)}</div>`;
+            }
+            summaryContainer.innerHTML = html;
+        }
+
+        function clearHistory() {
+            if (confirm("确定清空吗？")) {
+                localStorage.removeItem('calc_history_v3');
+                renderPage();
+            }
+        }
+
+        function exportToCSV() {
+            let history = JSON.parse(localStorage.getItem('calc_history_v3') || '[]');
+            if (history.length === 0) return;
+
+            let csvContent = "\uFEFF名目,计算过程,结果,时间\n";
+            history.forEach(item => {
+                csvContent += `"${item.name}","${item.formula}","${item.result}","${item.time}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `结算单_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+        }
+    </script>
+    <script src="/js/visitor-tracker.js"></script>
+</body>
+</html>

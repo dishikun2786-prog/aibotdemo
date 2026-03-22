@@ -574,6 +574,8 @@
             box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
         }
     </style>
+    <script src="/js/auth-manager.js"></script>
+    <script src="/js/visitor-tracker.js"></script>
 </head>
 <body>
     <div class="scanlines"></div>
@@ -598,6 +600,10 @@
             <div class="tab" onclick="admin.switchTab('podcast-comments')">播客评论</div>
             <div class="tab" onclick="admin.switchTab('novels')">小说管理</div>
             <div class="tab" onclick="admin.switchTab('energy-trade')">能量担保</div>
+            <div class="tab" onclick="admin.switchTab('payment-merchants')">支付商户</div>
+            <div class="tab" onclick="admin.switchTab('file-manager')">网盘管理</div>
+            <div class="tab" onclick="admin.switchTab('business-cards')">名片管理</div>
+            <div class="tab" onclick="admin.switchTab('marketing-profiles')">营销主页</div>
             <div class="tab" onclick="admin.switchTab('visitor')">访客统计</div>
             <div class="tab" onclick="admin.switchTab('config')">游戏配置</div>
             <div class="tab" onclick="admin.switchTab('logs')">操作日志</div>
@@ -637,31 +643,51 @@
 
         <!-- 象棋管理 -->
         <div id="chess-tab" class="tab-content">
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
-                <input type="text" id="chess-room-search" placeholder="搜索房间名称/玩家名..." style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); color: var(--neon-green); padding: 10px; font-family: 'Share Tech Mono';">
-                <select id="chess-room-status-filter" style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); color: var(--neon-green); padding: 10px;">
-                    <option value="">全部状态</option>
-                    <option value="waiting">等待中</option>
-                    <option value="playing">对战中</option>
-                    <option value="finished">已结束</option>
-                </select>
-                <button class="btn" style="background: linear-gradient(135deg, var(--neon-green), #2e7d32);" onclick="admin.loadChessRooms(1)">搜索</button>
+            <!-- 子标签切换 -->
+            <div style="display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                <button class="btn" id="chess-pvp-tab-btn" style="background: var(--neon-green); color: #000; padding: 8px 16px; font-size: 14px;" onclick="admin.switchChessSubTab('pvp')">人对人</button>
+                <button class="btn" id="chess-ai-tab-btn" style="background: #333; color: #aaa; padding: 8px 16px; font-size: 14px;" onclick="admin.switchChessSubTab('ai')">AI挑战</button>
             </div>
-            <div style="display: flex; gap: 20px;">
-                <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4 style="color: var(--neon-green); margin: 0;">象棋房间列表</h4>
-                        <button class="btn" style="background: var(--neon-green); color: #000; padding: 8px 16px; font-size: 14px;" onclick="admin.showCreateChessRoomModal()">+ 新建房间</button>
-                    </div>
-                    <div id="chess-rooms-table-container"></div>
-                    <div class="pagination" id="chess-rooms-pagination"></div>
+
+            <!-- PVP房间管理 -->
+            <div id="chess-pvp-section">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <input type="text" id="chess-room-search" placeholder="搜索房间名称/玩家名..." style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); color: var(--neon-green); padding: 10px; font-family: 'Share Tech Mono';">
+                    <select id="chess-room-status-filter" style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); color: var(--neon-green); padding: 10px;">
+                        <option value="">全部状态</option>
+                        <option value="waiting">等待中</option>
+                        <option value="playing">对战中</option>
+                        <option value="finished">已结束</option>
+                    </select>
+                    <button class="btn" style="background: linear-gradient(135deg, var(--neon-green), #2e7d32);" onclick="admin.loadChessRooms(1)">搜索</button>
                 </div>
-                <div style="flex: 1; min-width: 0; border-left: 1px solid #333; padding-left: 20px;">
-                    <h4 style="color: var(--neon-green); margin-bottom: 10px;">对局记录</h4>
-                    <div id="chess-games-table-container">
-                        <p style="text-align: center; color: #888;">请选择一个房间查看对局记录</p>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="color: var(--neon-green); margin: 0;">象棋房间列表</h4>
+                            <button class="btn" style="background: var(--neon-green); color: #000; padding: 8px 16px; font-size: 14px;" onclick="admin.showCreateChessRoomModal()">+ 新建房间</button>
+                        </div>
+                        <div id="chess-rooms-table-container"></div>
+                        <div class="pagination" id="chess-rooms-pagination"></div>
                     </div>
-                    <div class="pagination" id="chess-games-pagination"></div>
+                    <div style="flex: 1; min-width: 0; border-left: 1px solid #333; padding-left: 20px;">
+                        <h4 style="color: var(--neon-green); margin-bottom: 10px;">对局记录</h4>
+                        <div id="chess-games-table-container">
+                            <p style="text-align: center; color: #888;">请选择一个房间查看对局记录</p>
+                        </div>
+                        <div class="pagination" id="chess-games-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI挑战管理 -->
+            <div id="chess-ai-section" style="display: none;">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <button class="btn" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);" onclick="admin.showCreateAIChallengeModal()">+ 创建AI挑战</button>
+                    <button class="btn" style="background: #333;" onclick="admin.loadAIChallengeRooms()">刷新列表</button>
+                </div>
+                <div id="ai-challenge-rooms-table-container">
+                    <p style="text-align: center; color: #888;">加载中...</p>
                 </div>
             </div>
         </div>
@@ -970,6 +996,273 @@
             <button class="btn" onclick="admin.loadStats()">刷新数据</button>
         </div>
 
+        <!-- 支付商户管理 -->
+        <div id="payment-merchants-tab" class="tab-content">
+            <div class="section-title" style="color: var(--neon-green);">支付商户管理</div>
+
+            <!-- 商户列表 -->
+            <div id="payment-merchant-list">
+                <!-- 搜索栏 -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <input type="text" id="payment-search" placeholder="搜索商户名称/用户名..." style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid rgba(99,102,241,0.3); background: rgba(20,20,30,0.8); color: #fff;">
+                    <select id="payment-status" style="padding: 10px; border-radius: 8px; border: 1px solid rgba(99,102,241,0.3); background: rgba(20,20,30,0.8); color: #fff;">
+                        <option value="">全部状态</option>
+                        <option value="active">正常</option>
+                        <option value="inactive">禁用</option>
+                        <option value="banned">封禁</option>
+                    </select>
+                    <button class="btn" onclick="admin.loadPaymentMerchants()">搜索</button>
+                </div>
+
+                <!-- 商户列表表格 -->
+                <div style="overflow-x: auto;">
+                    <table id="payment-merchants-table" style="width: 100%; border-collapse: collapse; background: rgba(20,20,30,0.8); border-radius: 12px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: rgba(99,102,241,0.2);">
+                                <th style="padding: 12px; text-align: left;">商户ID</th>
+                                <th style="padding: 12px; text-align: left;">商户名称</th>
+                                <th style="padding: 12px; text-align: left;">用户名</th>
+                                <th style="padding: 12px; text-align: left;">状态</th>
+                                <th style="padding: 12px; text-align: right;">订单数</th>
+                                <th style="padding: 12px; text-align: right;">总金额</th>
+                                <th style="padding: 12px; text-align: left;">创建时间</th>
+                                <th style="padding: 12px; text-align: center;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payment-merchants-tbody">
+                            <tr>
+                                <td colspan="8" style="padding: 40px; text-align: center; color: #888;">点击"搜索"加载商户列表</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div id="payment-merchants-pagination" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;"></div>
+            </div>
+
+            <!-- 商户详情（隐藏） -->
+            <div id="payment-merchant-detail" class="hidden" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <button class="btn" onclick="admin.showPaymentMerchantList()" style="background: rgba(99,102,241,0.3);">← 返回列表</button>
+                    <h3 id="payment-merchant-detail-title" style="margin: 0; color: #fff;">商户详情</h3>
+                </div>
+
+                <!-- 子Tab -->
+                <div class="sub-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(99,102,241,0.3); padding-bottom: 10px;">
+                    <div class="sub-tab active" onclick="admin.switchPaymentSubTab('stats')" style="padding: 10px 20px; cursor: pointer; border-radius: 8px; background: rgba(99,102,241,0.2); color: #fff;">交易数据</div>
+                    <div class="sub-tab" onclick="admin.switchPaymentSubTab('orders')" style="padding: 10px 20px; cursor: pointer; border-radius: 8px; background: rgba(30,30,40,0.8); color: #888;">收款明细</div>
+                    <div class="sub-tab" onclick="admin.switchPaymentSubTab('visits')" style="padding: 10px 20px; cursor: pointer; border-radius: 8px; background: rgba(30,30,40,0.8); color: #888;">访问统计</div>
+                </div>
+
+                <!-- 商户基本信息 -->
+                <div id="payment-merchant-info" style="background: rgba(20,20,30,0.8); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 15px 0; color: #a78bfa;">商户信息</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div><span style="color: #888;">商户ID：</span><span id="pm-id"></span></div>
+                        <div><span style="color: #888;">商户名称：</span><span id="pm-name"></span></div>
+                        <div><span style="color: #888;">用户名：</span><span id="pm-username"></span></div>
+                        <div><span style="color: #888;">状态：</span><span id="pm-status"></span></div>
+                        <div><span style="color: #888;">API密钥：</span><span id="pm-api-key" style="font-family: monospace; font-size: 12px;"></span></div>
+                        <div><span style="color: #888;">创建时间：</span><span id="pm-created-at"></span></div>
+                    </div>
+                </div>
+
+                <!-- 交易数据 -->
+                <div id="payment-stats-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="color: #888; font-size: 14px;">总订单数</div>
+                            <div id="pm-total-orders" style="color: #fff; font-size: 28px; font-weight: bold; margin-top: 5px;">0</div>
+                        </div>
+                        <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="color: #888; font-size: 14px;">总金额</div>
+                            <div id="pm-total-amount" style="color: #10b981; font-size: 28px; font-weight: bold; margin-top: 5px;">0</div>
+                        </div>
+                        <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="color: #888; font-size: 14px;">待确认</div>
+                            <div id="pm-pending-orders" style="color: #f59e0b; font-size: 28px; font-weight: bold; margin-top: 5px;">0</div>
+                        </div>
+                        <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="color: #888; font-size: 14px;">今日订单</div>
+                            <div id="pm-today-orders" style="color: #fff; font-size: 28px; font-weight: bold; margin-top: 5px;">0</div>
+                        </div>
+                    </div>
+                    <!-- 支付方式统计 -->
+                    <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #a78bfa;">支付方式统计</h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div style="text-align: center;">
+                                <div style="color: #1677ff; font-size: 24px; font-weight: bold;">支付宝</div>
+                                <div id="pm-alipay-count" style="color: #fff; font-size: 18px;">0 笔</div>
+                                <div id="pm-alipay-amount" style="color: #10b981;">¥0</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: #07c160; font-size: 24px; font-weight: bold;">微信</div>
+                                <div id="pm-wechat-count" style="color: #fff; font-size: 18px;">0 笔</div>
+                                <div id="pm-wechat-amount" style="color: #10b981;">¥0</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: #f59e0b; font-size: 24px; font-weight: bold;">银行卡</div>
+                                <div id="pm-bank-count" style="color: #fff; font-size: 18px;">0 笔</div>
+                                <div id="pm-bank-amount" style="color: #10b981;">¥0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收款明细 -->
+                <div id="payment-orders-content" style="display: none;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                        <select id="payment-order-status" style="padding: 10px; border-radius: 8px; border: 1px solid rgba(99,102,241,0.3); background: rgba(20,20,30,0.8); color: #fff;">
+                            <option value="">全部状态</option>
+                            <option value="pending">待确认</option>
+                            <option value="paid">已付款</option>
+                            <option value="confirmed">已确认</option>
+                            <option value="rejected">已拒绝</option>
+                        </select>
+                        <button class="btn" onclick="admin.loadPaymentMerchantOrders()">筛选</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; background: rgba(20,20,30,0.8); border-radius: 12px; overflow: hidden;">
+                            <thead>
+                                <tr style="background: rgba(99,102,241,0.2);">
+                                    <th style="padding: 12px; text-align: left;">订单号</th>
+                                    <th style="padding: 12px; text-align: left;">名目</th>
+                                    <th style="padding: 12px; text-align: right;">金额</th>
+                                    <th style="padding: 12px; text-align: left;">支付方式</th>
+                                    <th style="padding: 12px; text-align: left;">状态</th>
+                                    <th style="padding: 12px; text-align: left;">创建时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payment-orders-tbody">
+                                <tr>
+                                    <td colspan="6" style="padding: 40px; text-align: center; color: #888;">暂无数据</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="payment-orders-pagination" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;"></div>
+                </div>
+
+                <!-- 访问统计 -->
+                <div id="payment-visits-content" style="display: none;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="color: #888; font-size: 14px;">总访问量</div>
+                            <div id="pm-total-visits" style="color: #fff; font-size: 28px; font-weight: bold; margin-top: 5px;">0</div>
+                        </div>
+                        <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                            <div style="color: #888; font-size: 14px;">今日访问</div>
+                            <div id="pm-today-visits" style="color: #10b981; font-size: 28px; font-weight: bold; margin-top: 5px;">0</div>
+                        </div>
+                    </div>
+                    <div style="background: linear-gradient(145deg, rgba(30,30,40,0.9), rgba(20,20,30,0.9)); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; padding: 20px;">
+                        <h4 style="margin: 0 0 15px 0; color: #a78bfa;">最近访问记录</h4>
+                        <div id="pm-recent-visits">
+                            <div style="padding: 20px; text-align: center; color: #888;">暂无访问记录</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 网盘管理 -->
+        <div id="file-manager-tab" class="tab-content">
+            <div class="section-title" style="color: var(--neon-blue);">网盘文件管理</div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                <input type="text" id="file-search" placeholder="搜索文件名..." style="flex: 1;">
+                <input type="number" id="file-user-search" placeholder="用户ID" style="width: 100px;">
+                <button class="btn" onclick="admin.loadAdminFiles()">搜索</button>
+                <button class="btn" onclick="admin.loadFileStats()">查看统计</button>
+            </div>
+
+            <!-- 存储统计 -->
+            <div id="file-stats-container" style="display: none; background: linear-gradient(145deg, rgba(30,30,40,0.8), rgba(20,20,30,0.9)); border: 1px solid rgba(24,144,255,0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <h4 style="margin: 0 0 16px 0; color: #60a5fa; font-size: 16px;">存储统计</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="color: #9ca3af; font-size: 13px;">总存储</div>
+                        <div id="file-total-size" style="font-size: 24px; color: var(--neon-blue);">-</div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="color: #9ca3af; font-size: 13px;">总文件数</div>
+                        <div id="file-total-count" style="font-size: 24px; color: var(--neon-cyan);">-</div>
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <div style="color: #9ca3af; font-size: 13px; margin-bottom: 8px;">用户存储排行</div>
+                    <div id="file-user-stats" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <div id="admin-files-table-container"></div>
+            <div class="pagination" id="admin-files-pagination"></div>
+        </div>
+
+        <!-- 名片管理 -->
+        <div id="business-cards-tab" class="tab-content">
+            <div class="section-title" style="color: var(--neon-green);">名片网页管理</div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                <input type="text" id="business-card-search" placeholder="搜索用户名或名片名称..." style="flex: 1;">
+                <select id="business-card-published-filter" style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); color: var(--neon-green); padding: 10px;">
+                    <option value="">全部状态</option>
+                    <option value="1">已发布</option>
+                    <option value="0">未发布</option>
+                </select>
+                <button class="btn" onclick="admin.loadBusinessCards()">搜索</button>
+            </div>
+
+            <div id="business-cards-table-container"></div>
+            <div class="pagination" id="business-cards-pagination"></div>
+
+            <!-- 名片详情弹窗 -->
+            <div id="business-card-detail-modal" class="modal" onclick="if(event.target.id === 'business-card-detail-modal') admin.closeBusinessCardDetailModal()">
+                <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow: auto;">
+                    <button class="modal-close" onclick="admin.closeBusinessCardDetailModal()">&times;</button>
+                    <h3 style="margin: 0 0 20px 0;">名片详情</h3>
+                    <div id="business-card-detail-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 营销主页管理 -->
+        <div id="marketing-profiles-tab" class="tab-content">
+            <div class="section-title" style="color: var(--neon-purple);">营销主页管理</div>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="marketing-profile-search" placeholder="搜索用户名或展示名称..." style="flex: 1;">
+                <select id="marketing-profile-public-filter" style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-bottom: 2px solid var(--neon-purple); color: var(--neon-purple); padding: 10px;">
+                    <option value="">全部状态</option>
+                    <option value="1">已公开</option>
+                    <option value="0">已禁用</option>
+                </select>
+                <button class="btn" onclick="admin.loadMarketingProfiles()">搜索</button>
+            </div>
+
+            <div id="marketing-profiles-table-container"></div>
+            <div class="pagination" id="marketing-profiles-pagination"></div>
+
+            <!-- 营销主页详情弹窗 -->
+            <div id="marketing-profile-detail-modal" class="modal" onclick="if(event.target.id === 'marketing-profile-detail-modal') admin.closeMarketingProfileDetailModal()">
+                <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow: auto;">
+                    <button class="modal-close" onclick="admin.closeMarketingProfileDetailModal()">&times;</button>
+                    <h3 style="margin: 0 0 20px 0;">营销主页详情</h3>
+                    <div id="marketing-profile-detail-content"></div>
+                </div>
+            </div>
+
+            <!-- 营销主页编辑弹窗 -->
+            <div id="marketing-profile-edit-modal" class="modal" onclick="if(event.target.id === 'marketing-profile-edit-modal') admin.closeMarketingProfileEditModal()">
+                <div class="modal-content" style="max-width: 600px;">
+                    <button class="modal-close" onclick="admin.closeMarketingProfileEditModal()">&times;</button>
+                    <h3 style="margin: 0 0 20px 0;">编辑营销主页</h3>
+                    <div id="marketing-profile-edit-form"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 访客统计 -->
         <div id="visitor-tab" class="tab-content">
             <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
@@ -1032,7 +1325,9 @@
                 <div style="margin-top: 15px;">
                     <button class="btn" onclick="admin.previewTheme('q')">预览Q版</button>
                     <button class="btn" onclick="admin.previewTheme('cyber')" style="margin-left: 10px;">预览赛博</button>
+                    <button class="btn btn-gold" onclick="admin.saveThemeStyle()" style="margin-left: 10px;">保存</button>
                 </div>
+                <div id="theme-style-message" style="margin-top: 10px;"></div>
             </div>
 
             <!-- AI 服务提供商 -->
@@ -1046,6 +1341,10 @@
                     </select>
                     <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">切换后，游戏内 AI 智能体将使用所选提供商的对话、图像、视频、语音能力</div>
                 </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveAIProvider()">保存</button>
+                </div>
+                <div id="ai-provider-message" style="margin-top: 10px;"></div>
             </div>
             <!-- Minimax API配置区域 -->
             <div class="cyber-box" style="margin-bottom: 20px; border-color: var(--neon-blue);">
@@ -1158,7 +1457,8 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <button class="btn btn-gold" onclick="admin.testMinimaxConnection()">测试API连接</button>
+                    <button class="btn btn-gold" onclick="admin.saveMinimaxConfig()">保存配置</button>
+                    <button class="btn" onclick="admin.testMinimaxConnection()" style="margin-left: 10px;">测试API连接</button>
                     <div id="minimax-test-result" style="margin-top: 10px;"></div>
                 </div>
             </div>
@@ -1273,11 +1573,12 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <button class="btn btn-gold" onclick="admin.testBailianConnection()">测试百炼连接</button>
+                    <button class="btn btn-gold" onclick="admin.saveBailianConfig()">保存配置</button>
+                    <button class="btn" onclick="admin.testBailianConnection()" style="margin-left: 10px;">测试百炼连接</button>
                     <div id="bailian-test-result" style="margin-top: 10px;"></div>
                 </div>
             </div>
-            
+
             <!-- 游戏客户端配置区域 -->
             <div class="cyber-box" style="margin-bottom: 20px; border-color: var(--neon-green);">
                 <div class="section-title" style="color: var(--neon-green);">游戏客户端配置</div>
@@ -1309,6 +1610,9 @@
                         <input type="number" id="config-client_reconnect_delay" data-key="client_reconnect_delay" min="100" max="10000" value="1000">
                     </div>
                 </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveClientConfig()">保存</button>
+                </div>
             </div>
             
             <!-- 游戏规则配置区域 -->
@@ -1333,6 +1637,9 @@
                         <input type="number" id="config-pk_skin_defense_distance_threshold" data-key="pk_skin_defense_distance_threshold" min="1" max="99" value="30">
                         <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">对方原始攻击距离≤此值时才加己方皮肤防御；>此值时不计算皮肤防御（默认30）</div>
                     </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveGameRulesConfig()">保存</button>
                 </div>
             </div>
             
@@ -1381,6 +1688,9 @@
                         <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">如 5 分钟 = 300</div>
                     </div>
                 </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveVirtualAgentConfig()">保存</button>
+                </div>
             </div>
             
             <!-- AI智能体功能开关配置区域 -->
@@ -1428,6 +1738,9 @@
                         <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">启用联网搜索时，每次对话在基础消耗上额外扣除该能量</div>
                     </div>
                 </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveAIAgentFeatureConfig()">保存</button>
+                </div>
             </div>
             
             <!-- 体力与能量配置 -->
@@ -1445,6 +1758,9 @@
                         <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">占据节点挖矿时每秒获得的能量</div>
                     </div>
                 </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveEnergyConfig()">保存</button>
+                </div>
             </div>
 
             <!-- 注册配置 -->
@@ -1454,6 +1770,9 @@
                     <input type="checkbox" data-key="require_activation_code" id="config-require_activation_code" style="width: 20px; height: 20px; cursor: pointer;">
                     <span>启用激活码注册（关闭后用户无需激活码即可注册）</span>
                 </label>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.saveRegisterConfig()">保存</button>
+                </div>
             </div>
             
             <!-- 原有游戏配置 -->
@@ -1467,6 +1786,9 @@
                     <input type="number" id="config-pk_timeout" data-key="pk_timeout" min="5" max="60" value="15">
                     <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">PK挑战发出后，双方设置参数的时限，默认15秒</div>
                 </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.savePKTimeoutConfig()">保存</button>
+                </div>
             </div>
 
             <div class="cyber-box" style="margin-bottom: 20px; border-color: var(--neon-purple);">
@@ -1475,6 +1797,9 @@
                     <label>平台能量池余额</label>
                     <input type="number" id="config-platform_pool" min="0" max="999999999" step="1" placeholder="请输入平台池余额">
                     <div style="color: #888; font-size: 0.75rem; margin-top: 5px;">范围：0 - 999999999，修改后将实时生效并广播给所有在线玩家</div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-gold" onclick="admin.savePlatformPoolConfig()">保存</button>
                 </div>
             </div>
             <div class="cyber-box treasure-config-box">
@@ -1549,6 +1874,11 @@
                 </div>
 
                 <div class="input-group">
+                    <label>CNAME 域名 <span style="color: #888; font-size: 0.7rem;">(自定义域名绑定)</span></label>
+                    <input type="text" id="config-oss_cname_domain" data-key="oss_cname_domain" placeholder="例如：https://boke.skym178.com">
+                </div>
+
+                <div class="input-group">
                     <label style="display: flex; align-items: center; gap: 10px;">
                         <input type="checkbox" id="config-oss_use_accelerate" data-key="oss_use_accelerate" style="width: auto;">
                         <span>启用传输加速</span>
@@ -1573,12 +1903,13 @@
                 </div>
 
                 <div style="margin-top: 15px;">
-                    <button class="btn" onclick="admin.testOssConfig()" style="background: linear-gradient(135deg, #4caf50, #2e7d32);">测试 OSS 配置</button>
+                    <button class="btn btn-gold" onclick="admin.saveOSSConfig()">保存配置</button>
+                    <button class="btn" onclick="admin.testOssConfig()" style="margin-left: 10px; background: linear-gradient(135deg, #4caf50, #2e7d32);">测试 OSS 配置</button>
                     <span id="oss-test-result" style="margin-left: 15px; color: #888;"></span>
                 </div>
             </div>
 
-            <button class="btn" onclick="admin.saveConfig()">保存配置</button>
+            <!-- 统一保存按钮已移除，各配置板块已添加独立保存按钮 -->
             <div id="config-message"></div>
         </div>
 
@@ -1723,6 +2054,10 @@
             <div class="input-group">
                 <label>体力 (0-100)</label>
                 <input type="number" id="edit-stamina" min="0" max="100" step="1">
+            </div>
+            <div class="input-group">
+                <label>网盘配额 (MB)</label>
+                <input type="number" id="edit-storage-quota" min="0" step="1" placeholder="默认1024MB">
             </div>
             <div id="edit-message"></div>
             <div class="modal-footer">
@@ -1968,8 +2303,9 @@
 
         // 获取当前token的函数，确保每次都读取最新值
         function getAuthToken() {
-            const token = AuthManager.getToken();
-            console.log('[Debug getAuthToken] token exists:', !!token, token ? 'length=' + token.length : 'null');
+            // 直接从 localStorage 读取 token，不依赖 AuthManager
+            const token = localStorage.getItem('authToken');
+            console.log('[Debug getAuthToken] 直接读取 token:', token ? 'exists length=' + token.length : 'null');
             return token;
         }
 
@@ -1977,13 +2313,17 @@
         window.addEventListener('storage', (e) => {
             if (e.key === 'authToken') {
                 const newToken = e.newValue;
+                // 只在新 token 有效且与当前不同时才刷新
                 if (newToken && newToken !== lastToken) {
-                    console.log('检测到登录状态变化，刷新页面...');
+                    console.log('检测到新的登录状态，刷新页面...');
                     lastToken = newToken;
-                    // 延迟刷新，确保 token 已保存
                     setTimeout(() => {
                         window.location.reload();
                     }, 500);
+                } else if (!newToken && lastToken) {
+                    // token 被清除，跳转到登录页
+                    console.log('登录状态已失效，跳转到登录页...');
+                    window.location.href = 'game.html';
                 }
             }
         });
@@ -2093,7 +2433,7 @@
             treasureConfigData: [],  // [{nodeId, amount}, ...]
             roomTreasures: [],  // 房间宝藏配置
             roomSelectedNodes: [],  // 选中的房间宝藏节点
-            currentPage: { users: 1, logs: 1, virtualAgents: 1, aiSkins: 1, gameCodes: 1, rooms: 1, chessRooms: 1, chessGames: 1, plazaPosts: 1, podcasts: 1, podcastEpisodes: 1, podcastComments: 1, novels: 1 },
+            currentPage: { users: 1, logs: 1, virtualAgents: 1, aiSkins: 1, gameCodes: 1, rooms: 1, chessRooms: 1, chessGames: 1, plazaPosts: 1, podcasts: 1, podcastEpisodes: 1, podcastComments: 1, novels: 1, adminFiles: 1, marketingProfiles: 1 },
             gameCodesSelectedIds: [],
             
             switchTab: function(tab) {
@@ -2130,9 +2470,14 @@
                 else if (tab === 'novels') this.loadNovels();
                 else if (tab === 'energy-trade') { this.loadEnergyTradeFeeRate(); this.loadEnergyTradeStats(); this.loadEnergyAds(); }
                 else if (tab === 'visitor') { this.loadVisitorOverview(); this.loadVisitorIPList(); }
+                else if (tab === 'file-manager') { this.loadAdminFiles(); }
+                else if (tab === 'business-cards') { this.loadBusinessCards(); }
+                else if (tab === 'marketing-profiles') { this.loadMarketingProfiles(); }
+                else if (tab === 'payment-merchants') { this.loadPaymentMerchants(); }
                 else if (tab === 'stats') this.loadStats();
                 else if (tab === 'config') this.loadConfig();
                 else if (tab === 'logs') this.loadLogs();
+                else if (tab === 'payment-merchants') { this.loadPaymentMerchants(); }
             },
             
             loadUsers: async function(page = 1) {
@@ -2349,7 +2694,10 @@
                             'virtual_agent_occupy_interval', 'virtual_agent_pk_interval', 'virtual_agent_pk_probability',
                             'virtual_agent_accept_pk_probability', 'virtual_agent_max_count',
                             'virtual_agent_challenge_user_when_real_below', 'virtual_agent_challenge_user_interval_min', 'virtual_agent_challenge_user_interval_max',
-                            'require_activation_code'];
+                            'require_activation_code',
+                            // 阿里云OSS配置（使用硬编码表单，不重复渲染）
+                            'oss_access_key_id', 'oss_access_key_secret', 'oss_region', 'oss_bucket',
+                            'oss_endpoint', 'oss_accelerate_domain', 'oss_bucket_domain', 'oss_use_accelerate', 'oss_cname_domain'];
                         const html = Object.entries(data.data)
                             .filter(([key]) => !excludeKeys.includes(key))
                             .map(([key, val]) => `
@@ -2387,10 +2735,32 @@
                         }
                         this.renderTreasureGrid();
                         this.renderTreasureList();
+
+                        // 加载OSS配置到硬编码表单
+                        this.loadOssConfig(data.data);
                     }
                 } catch (error) {
                     console.error('加载配置失败:', error);
                 }
+            },
+
+            // 加载OSS配置到表单
+            loadOssConfig: function(configData) {
+                const ossKeys = [
+                    'oss_access_key_id', 'oss_access_key_secret', 'oss_region', 'oss_bucket',
+                    'oss_endpoint', 'oss_accelerate_domain', 'oss_bucket_domain', 'oss_use_accelerate', 'oss_cname_domain'
+                ];
+                ossKeys.forEach(key => {
+                    const input = document.getElementById('config-' + key);
+                    if (input && configData[key]) {
+                        const value = configData[key].value;
+                        if (input.type === 'checkbox') {
+                            input.checked = value === 'true';
+                        } else {
+                            input.value = value || '';
+                        }
+                    }
+                });
             },
             renderTreasureGrid: function() {
                 const grid = document.getElementById('treasure-node-grid');
@@ -3002,10 +3372,161 @@
                         document.getElementById('config-message').innerHTML = errHtml;
                     }
                 } catch (error) {
-                    document.getElementById('config-message').innerHTML = 
+                    document.getElementById('config-message').innerHTML =
                         '<div class="error-msg">保存失败: ' + (error.message || '网络或解析错误') + '</div>';
                 }
 },
+
+            // 收集指定配置项的通用函数
+            collectConfigValues: function(keyArray) {
+                const configs = {};
+                keyArray.forEach(key => {
+                    const input = document.getElementById('config-' + key);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            configs[key] = input.checked ? 'true' : 'false';
+                        } else {
+                            configs[key] = input.value;
+                        }
+                    }
+                });
+                return configs;
+            },
+
+            // 发送配置保存请求的通用函数
+            saveConfigValues: async function(configs, messageId, successMsg) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/config`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${getAuthToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ configs })
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    const msgEl = document.getElementById(messageId);
+                    if (data.success) {
+                        msgEl.innerHTML = '<div class="success-msg">' + (successMsg || '保存成功') + '</div>';
+                    } else {
+                        msgEl.innerHTML = '<div class="error-msg">' + (data.error || '保存失败') + '</div>';
+                    }
+                } catch (error) {
+                    const msgEl = document.getElementById(messageId);
+                    msgEl.innerHTML = '<div class="error-msg">保存失败: ' + (error.message || '网络错误') + '</div>';
+                }
+            },
+
+            // 保存主题风格
+            saveThemeStyle: async function() {
+                const configs = this.collectConfigValues(['theme_style']);
+                await this.saveConfigValues(configs, 'theme-style-message', '主题风格保存成功');
+            },
+
+            // 保存AI服务提供商
+            saveAIProvider: async function() {
+                const configs = this.collectConfigValues(['ai_provider']);
+                await this.saveConfigValues(configs, 'ai-provider-message', 'AI服务提供商保存成功');
+            },
+
+            // 保存MiniMAX API配置
+            saveMinimaxConfig: async function() {
+                const keys = ['minimax_api_key', 'minimax_api_url', 'minimax_default_model', 'minimax_image_model',
+                    'minimax_video_model', 'minimax_i2v_model', 'minimax_t2a_model', 'minimax_max_retries',
+                    'minimax_retry_delay', 'ai_agent_energy_cost', 'agent_chat_energy_cost',
+                    'agent_chat_web_search_energy_cost', 'ai_agent_image_energy_cost',
+                    'minimax_temperature', 'minimax_max_tokens', 'minimax_top_p'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'minimax-test-result', 'MiniMAX API配置保存成功');
+            },
+
+            // 保存阿里云百炼API配置
+            saveBailianConfig: async function() {
+                const keys = ['bailian_api_key', 'bailian_base_url', 'bailian_default_model', 'bailian_image_model',
+                    'bailian_image_model_t2i', 'bailian_image_model_i2i', 'bailian_video_model', 'bailian_i2v_model',
+                    'bailian_speech_model', 'bailian_temperature', 'bailian_max_tokens', 'bailian_top_p'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'bailian-test-result', '百炼API配置保存成功');
+            },
+
+            // 保存游戏客户端配置
+            saveClientConfig: async function() {
+                const keys = ['client_api_base', 'client_socket_url', 'client_video_max_attempts',
+                    'client_video_poll_interval', 'client_max_reconnect_attempts', 'client_reconnect_delay'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'config-message', '游戏客户端配置保存成功');
+            },
+
+            // 保存游戏规则配置
+            saveGameRulesConfig: async function() {
+                const keys = ['game_rules_pk_min_value', 'game_rules_pk_max_value',
+                    'occupy_node_energy_cost', 'pk_skin_defense_distance_threshold'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'config-message', '游戏规则配置保存成功');
+            },
+
+            // 保存虚拟智能体配置
+            saveVirtualAgentConfig: async function() {
+                const keys = ['virtual_agent_occupy_interval', 'virtual_agent_pk_interval',
+                    'virtual_agent_pk_probability', 'virtual_agent_accept_pk_probability',
+                    'virtual_agent_max_count', 'virtual_agent_challenge_user_when_real_below',
+                    'virtual_agent_challenge_user_interval_min', 'virtual_agent_challenge_user_interval_max'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'config-message', '虚拟智能体配置保存成功');
+            },
+
+            // 保存AI智能体功能开关
+            saveAIAgentFeatureConfig: async function() {
+                const keys = ['ai_agent_image_enabled', 'ai_agent_video_enabled', 'ai_agent_voice_enabled',
+                    'ai_agent_web_search_enabled', 'ai_agent_web_search_studio_only',
+                    'ai_agent_web_search_energy_cost'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'config-message', 'AI智能体功能开关保存成功');
+            },
+
+            // 保存体力与能量配置
+            saveEnergyConfig: async function() {
+                const keys = ['stamina_recovery_rate', 'energy_per_second'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'config-message', '体力与能量配置保存成功');
+            },
+
+            // 保存注册配置
+            saveRegisterConfig: async function() {
+                const keys = ['require_activation_code'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'config-message', '注册配置保存成功');
+            },
+
+            // 保存PK超时配置
+            savePKTimeoutConfig: async function() {
+                const configs = this.collectConfigValues(['pk_timeout']);
+                await this.saveConfigValues(configs, 'config-message', 'PK超时配置保存成功');
+            },
+
+            // 保存平台池余额
+            savePlatformPoolConfig: async function() {
+                const platformPoolInput = document.getElementById('config-platform_pool');
+                if (!platformPoolInput) return;
+
+                const platformPoolValue = parseInt(platformPoolInput.value, 10);
+                if (isNaN(platformPoolValue) || platformPoolValue < 0 || platformPoolValue > 999999999) {
+                    alert('平台池余额必须在0-999999999之间');
+                    return;
+                }
+
+                const configs = { platform_pool: platformPoolValue };
+                await this.saveConfigValues(configs, 'config-message', '平台池余额保存成功');
+            },
+
+            // 保存OSS配置
+            saveOSSConfig: async function() {
+                const keys = ['oss_access_key_id', 'oss_access_key_secret', 'oss_region', 'oss_bucket',
+                    'oss_endpoint', 'oss_accelerate_domain', 'oss_bucket_domain',
+                    'oss_use_accelerate', 'oss_cname_domain'];
+                const configs = this.collectConfigValues(keys);
+                await this.saveConfigValues(configs, 'oss-test-result', 'OSS配置保存成功');
+            },
 
             // ==================== 帖子管理 ====================
             loadPlazaPosts: async function(page = 1) {
@@ -5365,6 +5886,277 @@
                 }
             },
 
+            // ============================================
+            // 支付商户管理
+            // ============================================
+            currentPaymentMerchantId: null,
+            paymentMerchantStats: {},
+
+            loadPaymentMerchants: async function(page = 1) {
+                const search = document.getElementById('payment-search')?.value || '';
+                const status = document.getElementById('payment-status')?.value || '';
+
+                try {
+                    const params = new URLSearchParams({ page, limit: 20 });
+                    if (search) params.append('search', search);
+                    if (status) params.append('status', status);
+
+                    const response = await fetch(`${API_BASE}/admin/payment/merchants?${params}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.renderPaymentMerchantsTable(data.data.list);
+                        this.renderPaymentMerchantsPagination(data.data.pagination);
+                    } else {
+                        alert(data.error || '加载失败');
+                    }
+                } catch (error) {
+                    console.error('加载商户列表失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            renderPaymentMerchantsTable: function(merchants) {
+                const tbody = document.getElementById('payment-merchants-tbody');
+                if (!tbody) return;
+
+                if (!merchants || merchants.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="padding: 40px; text-align: center; color: #888;">暂无商户数据</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = merchants.map(m => {
+                    const statusMap = { 'active': '<span style="color: #10b981;">正常</span>', 'inactive': '<span style="color: #f59e0b;">禁用</span>', 'banned': '<span style="color: #ef4444;">封禁</span>' };
+                    return `
+                        <tr style="border-bottom: 1px solid rgba(99,102,241,0.1);">
+                            <td style="padding: 12px;">${m.merchant_id}</td>
+                            <td style="padding: 12px;">${m.merchant_name || '未命名'}</td>
+                            <td style="padding: 12px;">${m.username}</td>
+                            <td style="padding: 12px;">${statusMap[m.status] || m.status}</td>
+                            <td style="padding: 12px; text-align: right;">${m.total_orders}</td>
+                            <td style="padding: 12px; text-align: right;">¥${parseFloat(m.total_amount).toFixed(2)}</td>
+                            <td style="padding: 12px;">${new Date(m.created_at).toLocaleString()}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button class="btn" style="padding: 5px 10px; font-size: 12px;" onclick="admin.viewPaymentMerchant(${m.merchant_id})">查看</button>
+                                <button class="btn" style="padding: 5px 10px; font-size: 12px; background: rgba(239,68,68,0.3);" onclick="admin.deletePaymentMerchant(${m.merchant_id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            },
+
+            renderPaymentMerchantsPagination: function(pagination) {
+                const container = document.getElementById('payment-merchants-pagination');
+                if (!container) return;
+                if (!pagination || pagination.total_pages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+                let html = '';
+                for (let i = 1; i <= pagination.total_pages; i++) {
+                    html += `<button class="btn" style="padding: 5px 10px; ${i === pagination.page ? 'background: rgba(99,102,241,0.5);' : 'background: rgba(30,30,40,0.8);'}" onclick="admin.loadPaymentMerchants(${i})">${i}</button>`;
+                }
+                container.innerHTML = html;
+            },
+
+            viewPaymentMerchant: async function(merchantId) {
+                this.currentPaymentMerchantId = merchantId;
+                document.getElementById('payment-merchant-list').style.display = 'none';
+                document.getElementById('payment-merchant-detail').style.display = 'block';
+
+                try {
+                    const response = await fetch(`${API_BASE}/admin/payment/merchants/${merchantId}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.renderPaymentMerchantInfo(data.data);
+                        this.loadPaymentMerchantStats(merchantId);
+                    }
+                } catch (error) {
+                    console.error('加载商户详情失败:', error);
+                }
+            },
+
+            renderPaymentMerchantInfo: function(merchant) {
+                document.getElementById('pm-id').textContent = merchant.merchant_id;
+                document.getElementById('pm-name').textContent = merchant.merchant_name || '未命名';
+                document.getElementById('pm-username').textContent = merchant.username;
+                document.getElementById('pm-status').textContent = merchant.status === 'active' ? '正常' : (merchant.status === 'inactive' ? '禁用' : '封禁');
+                document.getElementById('pm-api-key').textContent = merchant.api_key || '-';
+                document.getElementById('pm-created-at').textContent = new Date(merchant.created_at).toLocaleString();
+            },
+
+            showPaymentMerchantList: function() {
+                this.currentPaymentMerchantId = null;
+                document.getElementById('payment-merchant-list').style.display = 'block';
+                document.getElementById('payment-merchant-detail').style.display = 'none';
+            },
+
+            switchPaymentSubTab: function(tab) {
+                document.querySelectorAll('#payment-merchant-detail .sub-tab').forEach(t => {
+                    t.classList.remove('active');
+                    t.style.background = 'rgba(30,30,40,0.8)';
+                    t.style.color = '#888';
+                });
+                event.target.classList.add('active');
+                event.target.style.background = 'rgba(99,102,241,0.2)';
+                event.target.style.color = '#fff';
+
+                document.getElementById('payment-stats-content').style.display = 'none';
+                document.getElementById('payment-orders-content').style.display = 'none';
+                document.getElementById('payment-visits-content').style.display = 'none';
+
+                if (tab === 'stats') {
+                    document.getElementById('payment-stats-content').style.display = 'block';
+                } else if (tab === 'orders') {
+                    document.getElementById('payment-orders-content').style.display = 'block';
+                    this.loadPaymentMerchantOrders(this.currentPaymentMerchantId);
+                } else if (tab === 'visits') {
+                    document.getElementById('payment-visits-content').style.display = 'block';
+                    this.loadPaymentMerchantVisits(this.currentPaymentMerchantId);
+                }
+            },
+
+            loadPaymentMerchantStats: async function(merchantId) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/payment/merchants/${merchantId}/stats`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.paymentMerchantStats = data.data;
+                        this.renderPaymentMerchantStats(data.data);
+                    }
+                } catch (error) {
+                    console.error('加载商户统计失败:', error);
+                }
+            },
+
+            renderPaymentMerchantStats: function(stats) {
+                document.getElementById('pm-total-orders').textContent = stats.total_orders || 0;
+                document.getElementById('pm-total-amount').textContent = '¥' + parseFloat(stats.total_amount || 0).toFixed(2);
+                document.getElementById('pm-pending-orders').textContent = stats.pending_orders || 0;
+                document.getElementById('pm-today-orders').textContent = stats.today_orders || 0;
+
+                const method = stats.by_payment_method || {};
+                document.getElementById('pm-alipay-count').textContent = (method.alipay?.count || 0) + ' 笔';
+                document.getElementById('pm-alipay-amount').textContent = '¥' + parseFloat(method.alipay?.amount || 0).toFixed(2);
+                document.getElementById('pm-wechat-count').textContent = (method.wechat?.count || 0) + ' 笔';
+                document.getElementById('pm-wechat-amount').textContent = '¥' + parseFloat(method.wechat?.amount || 0).toFixed(2);
+                document.getElementById('pm-bank-count').textContent = (method.bank?.count || 0) + ' 笔';
+                document.getElementById('pm-bank-amount').textContent = '¥' + parseFloat(method.bank?.amount || 0).toFixed(2);
+            },
+
+            loadPaymentMerchantOrders: async function(merchantId, page = 1) {
+                if (!merchantId) merchantId = this.currentPaymentMerchantId;
+                const status = document.getElementById('payment-order-status')?.value || '';
+
+                try {
+                    const params = new URLSearchParams({ page, limit: 20 });
+                    if (status) params.append('status', status);
+
+                    const response = await fetch(`${API_BASE}/admin/payment/merchants/${merchantId}/orders?${params}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.renderPaymentMerchantOrders(data.data.list);
+                    }
+                } catch (error) {
+                    console.error('加载订单明细失败:', error);
+                }
+            },
+
+            renderPaymentMerchantOrders: function(orders) {
+                const tbody = document.getElementById('payment-orders-tbody');
+                if (!tbody) return;
+
+                if (!orders || orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: #888;">暂无订单数据</td></tr>';
+                    return;
+                }
+
+                const statusMap = {
+                    'pending': '<span style="color: #f59e0b;">待确认</span>',
+                    'paid': '<span style="color: #1677ff;">已付款</span>',
+                    'confirmed': '<span style="color: #10b981;">已确认</span>',
+                    'rejected': '<span style="color: #ef4444;">已拒绝</span>',
+                    'cancelled': '<span style="color: #888;">已取消</span>'
+                };
+
+                tbody.innerHTML = orders.map(o => `
+                    <tr style="border-bottom: 1px solid rgba(99,102,241,0.1);">
+                        <td style="padding: 12px; font-family: monospace;">${o.order_no}</td>
+                        <td style="padding: 12px;">${o.item_name}</td>
+                        <td style="padding: 12px; text-align: right;">¥${parseFloat(o.amount).toFixed(2)}</td>
+                        <td style="padding: 12px;">${o.payment_method === 'alipay' ? '支付宝' : (o.payment_method === 'wechat' ? '微信' : '银行卡')}</td>
+                        <td style="padding: 12px;">${statusMap[o.status] || o.status}</td>
+                        <td style="padding: 12px;">${new Date(o.created_at).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            },
+
+            loadPaymentMerchantVisits: async function(merchantId) {
+                if (!merchantId) merchantId = this.currentPaymentMerchantId;
+
+                try {
+                    const response = await fetch(`${API_BASE}/admin/payment/merchants/${merchantId}/visits`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.renderPaymentMerchantVisits(data.data);
+                    }
+                } catch (error) {
+                    console.error('加载访问统计失败:', error);
+                }
+            },
+
+            renderPaymentMerchantVisits: function(stats) {
+                document.getElementById('pm-total-visits').textContent = stats.total_visits || 0;
+                document.getElementById('pm-today-visits').textContent = stats.today_visits || 0;
+
+                const recent = stats.recent_visits || [];
+                const visitsEl = document.getElementById('pm-recent-visits');
+                if (!visitsEl) return;
+
+                if (recent.length === 0) {
+                    visitsEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">暂无访问记录</div>';
+                    return;
+                }
+
+                visitsEl.innerHTML = recent.map(v => `
+                    <div style="padding: 10px; border-bottom: 1px solid rgba(99,102,241,0.1); display: flex; justify-content: space-between;">
+                        <span style="color: #888;">IP: ${v.ip || '-'}</span>
+                        <span style="color: #888;">${v.created_at ? new Date(v.created_at).toLocaleString() : '-'}</span>
+                    </div>
+                `).join('');
+            },
+
+            deletePaymentMerchant: async function(merchantId) {
+                if (!confirm('确定要删除此商户吗？此操作将同时删除该商户的所有订单和名目数据。')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE}/admin/payment/merchants/${merchantId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('删除成功');
+                        this.loadPaymentMerchants();
+                    } else {
+                        alert(data.error || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除商户失败:', error);
+                    alert('网络错误');
+                }
+            },
+
             loadLogs: async function(page = 1) {
                 try {
                     const response = await fetch(`${API_BASE}/admin/logs?page=${page}&limit=50`, {
@@ -5430,10 +6222,805 @@
                 }
                 container.innerHTML = html;
             },
-            
+
+            // 网盘管理 - 加载文件列表
+            loadAdminFiles: async function(page = 1) {
+                const search = document.getElementById('file-search').value;
+                const userId = document.getElementById('file-user-search').value;
+                try {
+                    const params = new URLSearchParams({ page, limit: 20 });
+                    if (search) params.append('keyword', search);
+                    if (userId) params.append('user_id', userId);
+
+                    const response = await fetch(`${API_BASE}/file-manager/admin/files?${params}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.renderAdminFilesTable(data.data, data.stats);
+                        this.renderAdminFilesPagination(data.pagination);
+                        currentPage.adminFiles = page;
+
+                        // 显示顶部统计信息
+                        if (data.stats) {
+                            this.showFileStats(data.stats);
+                        }
+                    } else {
+                        alert(data.error || '加载失败');
+                    }
+                } catch (error) {
+                    console.error('加载网盘文件失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            // 显示文件统计信息
+            showFileStats: function(stats) {
+                const container = document.getElementById('file-stats-container');
+                container.style.display = 'block';
+                document.getElementById('file-total-size').textContent = (stats.total_size_mb || 0) + ' MB';
+                document.getElementById('file-total-count').textContent = stats.total_files || 0;
+            },
+
+            // ==================== 名片管理 ====================
+            loadBusinessCards: async function(page = 1) {
+                const search = document.getElementById('business-card-search').value;
+                const isPublished = document.getElementById('business-card-published-filter').value;
+
+                try {
+                    const params = new URLSearchParams({ page, limit: 20 });
+                    if (search) params.append('search', search);
+                    if (isPublished !== '') params.append('is_published', isPublished);
+
+                    const response = await fetch(`${API_BASE}/business-card/admin/list?${params}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.renderBusinessCardsTable(data.data);
+                        this.renderBusinessCardsPagination(data.pagination);
+                        currentPage.businessCards = page;
+                    } else {
+                        alert(data.error || '加载失败');
+                    }
+                } catch (error) {
+                    console.error('加载名片列表失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            renderBusinessCardsTable: function(cards) {
+                const container = document.getElementById('business-cards-table-container');
+                if (!cards || cards.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">暂无名片数据</div>';
+                    return;
+                }
+
+                let html = `
+                    <table class="data-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>名片名称</th>
+                                <th>状态</th>
+                                <th>访问量</th>
+                                <th>发布时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                cards.forEach(card => {
+                    const publishStatus = card.is_published ? '<span style="color: var(--neon-green);">已发布</span>' : '<span style="color: #888;">未发布</span>';
+                    const createdAt = card.created_at ? new Date(card.created_at).toLocaleString('zh-CN') : '-';
+
+                    html += `
+                        <tr>
+                            <td>${card.id}</td>
+                            <td>${card.username || card.user_id}</td>
+                            <td>${card.template_name || '-'}</td>
+                            <td>${publishStatus}</td>
+                            <td>${card.visit_count || 0}</td>
+                            <td>${createdAt}</td>
+                            <td>
+                                <button class="btn" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="admin.viewBusinessCard(${card.id})">查看</button>
+                                <button class="btn" style="padding: 5px 10px; font-size: 12px; margin-right: 5px; background: var(--neon-orange);" onclick="admin.toggleBusinessCardPublish(${card.id}, ${card.is_published})">${card.is_published ? '取消发布' : '发布'}</button>
+                                <button class="btn" style="padding: 5px 10px; font-size: 12px; background: #dc2626;" onclick="admin.deleteBusinessCard(${card.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            },
+
+            renderBusinessCardsPagination: function(pagination) {
+                const container = document.getElementById('business-cards-pagination');
+                if (!pagination || pagination.total_pages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let html = '<div class="pagination">';
+                for (let i = 1; i <= pagination.total_pages; i++) {
+                    if (i === pagination.page) {
+                        html += `<span class="active">${i}</span>`;
+                    } else {
+                        html += `<a href="javascript:admin.loadBusinessCards(${i})">${i}</a>`;
+                    }
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            },
+
+            viewBusinessCard: async function(id) {
+                try {
+                    const response = await fetch(`${API_BASE}/business-card/admin/${id}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.showBusinessCardDetail(data.data);
+                    } else {
+                        alert(data.error || '获取详情失败');
+                    }
+                } catch (error) {
+                    console.error('获取名片详情失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            showBusinessCardDetail: function(card) {
+                const content = document.getElementById('business-card-detail-content');
+                const publishStatus = card.is_published ? '<span style="color: var(--neon-green);">已发布</span>' : '<span style="color: #888;">未发布</span>';
+                const createdAt = card.created_at ? new Date(card.created_at).toLocaleString('zh-CN') : '-';
+                const updatedAt = card.updated_at ? new Date(card.updated_at).toLocaleString('zh-CN') : '-';
+                
+                // 从 MongoDB 获取的模板数据
+                const templateData = card.template_data || {};
+                const shopName = templateData.shop_name || card.template_name || '-';
+                const phone = templateData.phone || '-';
+                const email = templateData.email || '-';
+                const address = templateData.address || '-';
+
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="color: #888;">名片ID</label>
+                            <div style="font-size: 16px;">${card.id}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">用户ID</label>
+                            <div style="font-size: 16px;">${card.user_id}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">用户名</label>
+                            <div style="font-size: 16px;">${card.username || '-'}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">店铺名称</label>
+                            <div style="font-size: 16px;">${shopName}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">状态</label>
+                            <div style="font-size: 16px;">${publishStatus}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">访问量</label>
+                            <div style="font-size: 16px;">${card.visit_count || 0}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">联系电话</label>
+                            <div style="font-size: 14px;">${phone}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">联系邮箱</label>
+                            <div style="font-size: 14px;">${email}</div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #888;">店铺地址</label>
+                            <div style="font-size: 14px;">${address}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">创建时间</label>
+                            <div style="font-size: 14px;">${createdAt}</div>
+                        </div>
+                        <div>
+                            <label style="color: #888;">更新时间</label>
+                            <div style="font-size: 14px;">${updatedAt}</div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #888;">访问令牌</label>
+                            <div style="font-size: 14px; word-break: break-all;">${card.card_token || '-'}</div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #888;">公开链接</label>
+                            <div style="font-size: 14px;">
+                                ${card.is_published ? `<a href="/card/${card.card_token}" target="_blank" style="color: var(--neon-blue);">/card/${card.card_token}</a>` : '<span style="color: #888;">未发布</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('business-card-detail-modal').style.display = 'flex';
+            },
+
+            closeBusinessCardDetailModal: function() {
+                document.getElementById('business-card-detail-modal').style.display = 'none';
+            },
+
+            toggleBusinessCardPublish: async function(id, currentStatus) {
+                if (!confirm(currentStatus ? '确定取消发布该名片吗？' : '确定发布该名片吗？')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`${API_BASE}/business-card/admin/${id}/toggle-publish`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getAuthToken()}`
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert(currentStatus ? '已取消发布' : '发布成功');
+                        this.loadBusinessCards(currentPage.businessCards || 1);
+                    } else {
+                        alert(data.error || '操作失败');
+                    }
+                } catch (error) {
+                    console.error('切换发布状态失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            deleteBusinessCard: async function(id) {
+                if (!confirm('确定删除该名片吗？此操作不可恢复！')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`${API_BASE}/business-card/admin/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('删除成功');
+                        this.loadBusinessCards(currentPage.businessCards || 1);
+                    } else {
+                        alert(data.error || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除名片失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            // ========== 营销主页管理 ==========
+            currentPage: { marketingProfiles: 1 },
+
+            loadMarketingProfiles: async function(page = 1) {
+                currentPage.marketingProfiles = page;
+                const search = document.getElementById('marketing-profile-search').value;
+                const isPublic = document.getElementById('marketing-profile-public-filter').value;
+
+                try {
+                    const params = new URLSearchParams({ page, limit: 20 });
+                    if (search) params.append('search', search);
+                    if (isPublic !== '') params.append('is_public', isPublic);
+
+                    const response = await fetch(`${API_BASE}/marketing/admin/list?${params}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.renderMarketingProfilesTable(data.data.profiles);
+                        this.renderPagination('marketing-profiles', data.data.pagination, (p) => this.loadMarketingProfiles(p));
+                    } else {
+                        document.getElementById('marketing-profiles-table-container').innerHTML = `<div style="text-align: center; padding: 40px; color: #888;">${data.error || '加载失败'}</div>`;
+                    }
+                } catch (error) {
+                    console.error('加载营销主页列表失败:', error);
+                    document.getElementById('marketing-profiles-table-container').innerHTML = `<div style="text-align: center; padding: 40px; color: #888;">网络错误</div>`;
+                }
+            },
+
+            renderMarketingProfilesTable: function(profiles) {
+                const container = document.getElementById('marketing-profiles-table-container');
+                if (!profiles || profiles.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">暂无营销主页数据</div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户</th>
+                                <th>展示名称</th>
+                                <th>联系方式</th>
+                                <th>帖子</th>
+                                <th>播客</th>
+                                <th>访问量</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${profiles.map(p => `
+                                <tr>
+                                    <td>${p.id}</td>
+                                    <td>${this.escapeHtml(p.username || '-')}</td>
+                                    <td>${this.escapeHtml(p.display_name || '-')}</td>
+                                    <td>${this.escapeHtml(p.wechat_qq || '-')}<br>${this.escapeHtml(p.phone || '-')}</td>
+                                    <td>${p.posts_count || 0}</td>
+                                    <td>${p.podcasts_count || 0}</td>
+                                    <td>${p.visit_count || 0}</td>
+                                    <td><span style="color:${p.is_public ? 'var(--neon-green)' : '#f66'}">${p.is_public ? '已公开' : '已禁用'}</span></td>
+                                    <td>
+                                        <button class="btn" style="padding:4px 8px;font-size:12px;margin-right:4px;" onclick="admin.viewMarketingProfile(${p.id})">查看</button>
+                                        <button class="btn" style="padding:4px 8px;font-size:12px;margin-right:4px;" onclick="admin.editMarketingProfile(${p.id})">编辑</button>
+                                        <button class="btn" style="padding:4px 8px;font-size:12px;margin-right:4px;background:${p.is_public ? '#f66' : 'var(--neon-green)'}" onclick="admin.toggleMarketingProfile(${p.id}, ${p.is_public})">${p.is_public ? '禁用' : '启用'}</button>
+                                        <button class="btn" style="padding:4px 8px;font-size:12px;background:#f66;" onclick="admin.deleteMarketingProfile(${p.id})">删除</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            },
+
+            viewMarketingProfile: async function(id) {
+                try {
+                    const response = await fetch(`${API_BASE}/marketing/admin/${id}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.showMarketingProfileDetailModal(data.data);
+                    } else {
+                        alert(data.error || '获取详情失败');
+                    }
+                } catch (error) {
+                    console.error('获取营销主页详情失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            showMarketingProfileDetailModal: function(profile) {
+                const content = document.getElementById('marketing-profile-detail-content');
+
+                // 生成访问记录HTML
+                let visitsHtml = '<div id="marketing-profile-visits" style="margin-top: 20px;"><div style="text-align: center; padding: 20px; color: #888;">加载中...</div></div>';
+
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div><label style="color:#888;">用户ID</label><div>${profile.user_id}</div></div>
+                        <div><label style="color:#888;">用户名</label><div>${this.escapeHtml(profile.username)}</div></div>
+                        <div><label style="color:#888;">展示名称</label><div>${this.escapeHtml(profile.display_name || '-')}</div></div>
+                        <div><label style="color:#888;">状态</label><div style="color:${profile.is_public ? 'var(--neon-green)' : '#f66'}">${profile.is_public ? '已公开' : '已禁用'}</div></div>
+                        <div><label style="color:#888;">微信/QQ</label><div>${this.escapeHtml(profile.wechat_qq || '-')}</div></div>
+                        <div><label style="color:#888;">电话</label><div>${this.escapeHtml(profile.phone || '-')}</div></div>
+                        <div><label style="color:#888;">邮箱</label><div>${this.escapeHtml(profile.email || '-')}</div></div>
+                        <div><label style="color:#888;">访问量</label><div>${profile.visit_count || 0}</div></div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label style="color:#888;">个人简介</label>
+                        <div style="padding: 10px; background: #f5f5f5; border-radius: 5px; margin-top: 5px;">${this.escapeHtml(profile.bio || '暂无简介')}</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label style="color:#888;">头像</label>
+                        <div style="margin-top: 5px;">${profile.avatar_url ? `<img src="${profile.avatar_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;">` : '无'}</div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label style="color:#888;">营销链接</label>
+                        <div style="padding: 10px; background: #f5f5f5; border-radius: 5px; margin-top: 5px; word-break: break-all;">${window.location.origin}/m/${profile.referral_code || profile.user_id}</div>
+                    </div>
+                    <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <div style="font-weight: bold; margin-bottom: 10px;">访问记录</div>
+                        ${visitsHtml}
+                    </div>
+                `;
+
+                document.getElementById('marketing-profile-detail-modal').style.display = 'flex';
+
+                // 加载访问记录
+                this.loadMarketingProfileVisits(profile.id);
+            },
+
+            loadMarketingProfileVisits: async function(profileId) {
+                try {
+                    const response = await fetch(`${API_BASE}/marketing/admin/${profileId}/visits?page=1&limit=20`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+
+                    const container = document.getElementById('marketing-profile-visits');
+                    if (data.success && data.data.visits && data.data.visits.length > 0) {
+                        container.innerHTML = `
+                            <table style="font-size: 12px;">
+                                <thead>
+                                    <tr>
+                                        <th>IP</th>
+                                        <th>来源</th>
+                                        <th>时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.data.visits.map(v => `
+                                        <tr>
+                                            <td>${this.escapeHtml(v.visitor_ip || '-')}</td>
+                                            <td>${this.escapeHtml(v.referer || '-')}</td>
+                                            <td>${new Date(v.created_at).toLocaleString('zh-CN')}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                            <div style="margin-top: 10px; text-align: right; color: #888; font-size: 12px;">
+                                共 ${data.data.pagination.total} 条记录
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">暂无访问记录</div>';
+                    }
+                } catch (error) {
+                    document.getElementById('marketing-profile-visits').innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">加载失败</div>';
+                }
+            },
+
+            closeMarketingProfileDetailModal: function() {
+                document.getElementById('marketing-profile-detail-modal').style.display = 'none';
+            },
+
+            editMarketingProfile: async function(id) {
+                try {
+                    const response = await fetch(`${API_BASE}/marketing/admin/${id}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.showMarketingProfileEditForm(data.data);
+                    } else {
+                        alert(data.error || '获取详情失败');
+                    }
+                } catch (error) {
+                    console.error('获取营销主页详情失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            showMarketingProfileEditForm: function(profile) {
+                const form = document.getElementById('marketing-profile-edit-form');
+
+                form.innerHTML = `
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px; color: #888;">展示名称</label>
+                        <input type="text" id="edit-marketing-display-name" value="${this.escapeHtml(profile.display_name || '')}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px; color: #888;">个人简介</label>
+                        <textarea id="edit-marketing-bio" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-height: 80px;">${this.escapeHtml(profile.bio || '')}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px; color: #888;">微信/QQ</label>
+                        <input type="text" id="edit-marketing-wechat" value="${this.escapeHtml(profile.wechat_qq || '')}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px; color: #888;">联系电话</label>
+                        <input type="text" id="edit-marketing-phone" value="${this.escapeHtml(profile.phone || '')}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px; color: #888;">邮箱</label>
+                        <input type="email" id="edit-marketing-email" value="${this.escapeHtml(profile.email || '')}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="edit-marketing-is-public" ${profile.is_public ? 'checked' : ''}>
+                            <span>公开营销主页</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button class="btn" style="background: #666; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;" onclick="admin.closeMarketingProfileEditModal()">取消</button>
+                        <button class="btn" style="background: var(--neon-purple); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;" onclick="admin.saveMarketingProfile(${profile.id})">保存</button>
+                    </div>
+                `;
+
+                document.getElementById('marketing-profile-edit-modal').style.display = 'flex';
+            },
+
+            saveMarketingProfile: async function(id) {
+                const data = {
+                    display_name: document.getElementById('edit-marketing-display-name').value,
+                    bio: document.getElementById('edit-marketing-bio').value,
+                    wechat_qq: document.getElementById('edit-marketing-wechat').value,
+                    phone: document.getElementById('edit-marketing-phone').value,
+                    email: document.getElementById('edit-marketing-email').value,
+                    is_public: document.getElementById('edit-marketing-is-public').checked
+                };
+
+                try {
+                    const response = await fetch(`${API_BASE}/marketing/admin/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getAuthToken()}`
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('保存成功');
+                        this.closeMarketingProfileEditModal();
+                        this.loadMarketingProfiles(currentPage.marketingProfiles || 1);
+                    } else {
+                        alert(result.error || '保存失败');
+                    }
+                } catch (error) {
+                    console.error('保存营销主页失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            closeMarketingProfileEditModal: function() {
+                document.getElementById('marketing-profile-edit-modal').style.display = 'none';
+            },
+
+            toggleMarketingProfile: async function(id, currentStatus) {
+                if (!confirm(currentStatus ? '确定禁用该营销主页吗？' : '确定启用该营销主页吗？')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`${API_BASE}/marketing/admin/${id}/toggle`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert(currentStatus ? '已禁用' : '已启用');
+                        this.loadMarketingProfiles(currentPage.marketingProfiles || 1);
+                    } else {
+                        alert(data.error || '操作失败');
+                    }
+                } catch (error) {
+                    console.error('切换状态失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            deleteMarketingProfile: async function(id) {
+                if (!confirm('确定删除该营销主页吗？此操作不可恢复！')) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`${API_BASE}/marketing/admin/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('删除成功');
+                        this.loadMarketingProfiles(currentPage.marketingProfiles || 1);
+                    } else {
+                        alert(data.error || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除营销主页失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            renderAdminFilesTable: function(files, stats) {
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>文件名</th>
+                                <th>大小</th>
+                                <th>类型</th>
+                                <th>浏览</th>
+                                <th>下载</th>
+                                <th>分享</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${files.length === 0 ? '<tr><td colspan="10" style="text-align:center;color:#888;">暂无文件</td></tr>' : files.map(f => `
+                                <tr>
+                                    <td>${f.id}</td>
+                                    <td>${f.username || f.user_id}</td>
+                                    <td>${this.escapeHtml(f.file_name)}</td>
+                                    <td>${this.formatFileSize(f.file_size)}</td>
+                                    <td>${f.file_type || '-'}</td>
+                                    <td><span style="color:${f.view_count > 0 ? 'var(--neon-cyan)' : '#666'}">${f.view_count || 0}</span></td>
+                                    <td><span style="color:${f.download_count > 0 ? 'var(--neon-green)' : '#666'}">${f.download_count || 0}</span></td>
+                                    <td><span style="color:${f.is_shared ? 'var(--neon-gold)' : '#666'}">${f.is_shared ? '是' : '否'}</span></td>
+                                    <td>${new Date(f.created_at).toLocaleString()}</td>
+                                    <td>
+                                        <button class="btn" style="padding:4px 8px;font-size:12px;margin-right:4px;" onclick="admin.previewAdminFile(${f.id})">查看</button>
+                                        <button class="btn-danger" style="padding:4px 8px;font-size:12px;" onclick="admin.deleteAdminFile(${f.id})">删除</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById('admin-files-table-container').innerHTML = html;
+            },
+
+            renderAdminFilesPagination: function(pagination) {
+                const container = document.getElementById('admin-files-pagination');
+                if (!pagination || pagination.total_pages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+                let html = '';
+                if (pagination.page > 1) {
+                    html += `<button onclick="admin.loadAdminFiles(${pagination.page - 1})">上一页</button>`;
+                }
+                for (let i = 1; i <= pagination.total_pages; i++) {
+                    if (i === 1 || i === pagination.total_pages || (i >= pagination.page - 2 && i <= pagination.page + 2)) {
+                        html += `<button class="${i === pagination.page ? 'active' : ''}" onclick="admin.loadAdminFiles(${i})">${i}</button>`;
+                    } else if (i === pagination.page - 3 || i === pagination.page + 3) {
+                        html += `<span>...</span>`;
+                    }
+                }
+                if (pagination.page < pagination.total_pages) {
+                    html += `<button onclick="admin.loadAdminFiles(${pagination.page + 1})">下一页</button>`;
+                }
+                container.innerHTML = html;
+            },
+
+            deleteAdminFile: async function(fileId) {
+                if (!confirm('确定要删除这个文件吗？')) return;
+                try {
+                    const response = await fetch(`${API_BASE}/file-manager/admin/files/${fileId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('删除成功');
+                        this.loadAdminFiles();
+                    } else {
+                        alert(data.error || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除文件失败:', error);
+                    alert('删除失败');
+                }
+            },
+
+            // 查看文件详情
+            previewAdminFile: async function(fileId) {
+                try {
+                    // 先获取文件信息
+                    const filesRes = await fetch(`${API_BASE}/file-manager/admin/files?page=1&limit=1&keyword=${fileId}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const filesData = await filesRes.json();
+
+                    if (!filesData.success || !filesData.data.length) {
+                        alert('文件不存在');
+                        return;
+                    }
+
+                    const file = filesData.data[0];
+
+                    // 生成访问URL
+                    const urlRes = await fetch(`${API_BASE}/file-manager/admin/files/${fileId}/url`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const urlData = await urlRes.json();
+
+                    const fileUrl = urlData.success ? urlData.data.url : '';
+
+                    // 显示预览弹窗
+                    const modal = document.createElement('div');
+                    modal.id = 'file-preview-modal';
+                    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+                    modal.innerHTML = `
+                        <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                                <h3 style="margin:0;color:var(--neon-blue);">文件详情</h3>
+                                <button onclick="document.getElementById('file-preview-modal').remove()" style="background:none;border:none;color:#888;font-size:24px;cursor:pointer;">&times;</button>
+                            </div>
+                            <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;">
+                                <div style="color:#888;">文件名</div>
+                                <div style="color:#fff;word-break:break-all;">${this.escapeHtml(file.file_name)}</div>
+
+                                <div style="color:#888;">大小</div>
+                                <div style="color:#fff;">${this.formatFileSize(file.file_size)}</div>
+
+                                <div style="color:#888;">类型</div>
+                                <div style="color:#fff;">${file.file_type || '-'}</div>
+
+                                <div style="color:#888;">浏览次数</div>
+                                <div style="color:var(--neon-cyan);">${file.view_count || 0}</div>
+
+                                <div style="color:#888;">下载次数</div>
+                                <div style="color:var(--neon-green);">${file.download_count || 0}</div>
+
+                                <div style="color:#888;">分享状态</div>
+                                <div style="color:${file.is_shared ? 'var(--neon-gold)' : '#666'};">${file.is_shared ? '已分享' : '未分享'}</div>
+
+                                <div style="color:#888;">上传时间</div>
+                                <div style="color:#fff;">${new Date(file.created_at).toLocaleString()}</div>
+
+                                <div style="color:#888;">文件ID</div>
+                                <div style="color:#888;">${file.id}</div>
+
+                                <div style="color:#888;">用户ID</div>
+                                <div style="color:#888;">${file.user_id}</div>
+                            </div>
+                            ${fileUrl ? `
+                            <div style="margin-top:20px;display:flex;gap:10px;">
+                                <a href="${fileUrl}" target="_blank" class="btn" style="flex:1;text-align:center;text-decoration:none;display:block;padding:12px;background:var(--neon-blue);color:#000;border-radius:8px;">在新窗口打开</a>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                } catch (error) {
+                    console.error('获取文件详情失败:', error);
+                    alert('获取文件详情失败');
+                }
+            },
+
+            loadFileStats: async function() {
+                const container = document.getElementById('file-stats-container');
+                container.style.display = 'block';
+                try {
+                    const response = await fetch(`${API_BASE}/file-manager/admin/stats`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('file-total-size').textContent = (data.data.total_size_mb || 0).toFixed(2) + ' MB';
+                        document.getElementById('file-total-count').textContent = data.data.total_files || 0;
+                        const userStats = data.data.user_stats || [];
+                        let html = '<table style="width:100%;border-collapse:collapse;"><tr style="color:var(--neon-blue);"><th style="padding:8px;text-align:left;">用户</th><th style="padding:8px;text-align:right;">文件数</th><th style="padding:8px;text-align:right;">存储</th></tr>';
+                        userStats.forEach(u => {
+                            html += `<tr style="border-bottom:1px solid #333;">
+                                <td style="padding:8px;">${u.username}</td>
+                                <td style="padding:8px;text-align:right;">${u.file_count}</td>
+                                <td style="padding:8px;text-align:right;">${u.total_size_mb.toFixed(2)} MB</td>
+                            </tr>`;
+                        });
+                        html += '</table>';
+                        document.getElementById('file-user-stats').innerHTML = html;
+                    }
+                } catch (error) {
+                    console.error('加载存储统计失败:', error);
+                }
+            },
+
+            formatFileSize: function(bytes) {
+                if (!bytes || bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            },
+
+            escapeHtml: function(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
             logout: function() {
                 localStorage.removeItem('authToken');
-                window.location.href = 'admin-login.html';
+                window.location.href = 'game.html';
             },
 
             // 访客统计 - 加载概览
@@ -6204,14 +7791,29 @@
                 }
             },
 
-            editUser: function(userId, username, energy, stamina) {
+            editUser: async function(userId, username, energy, stamina) {
                 // 打开编辑弹窗
                 this.currentEditUserId = userId;
                 document.getElementById('edit-username').value = username;
                 document.getElementById('edit-password').value = '';
                 document.getElementById('edit-energy').value = energy;
                 document.getElementById('edit-stamina').value = stamina;
+                document.getElementById('edit-storage-quota').value = '';
                 document.getElementById('edit-message').innerHTML = '';
+
+                // 获取用户存储配额
+                try {
+                    const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success && data.data.storage_quota) {
+                        document.getElementById('edit-storage-quota').value = Math.round(data.data.storage_quota / 1024 / 1024);
+                    }
+                } catch (err) {
+                    console.error('获取用户存储配额失败:', err);
+                }
+
                 document.getElementById('edit-user-modal').classList.add('active');
             },
 
@@ -6219,6 +7821,7 @@
                 document.getElementById('edit-user-modal').classList.remove('active');
                 this.currentEditUserId = null;
                 document.getElementById('edit-password').value = '';
+                document.getElementById('edit-storage-quota').value = '';
             },
 
             saveUserStats: async function() {
@@ -6227,6 +7830,7 @@
                 const password = document.getElementById('edit-password').value;
                 const energy = document.getElementById('edit-energy').value;
                 const stamina = document.getElementById('edit-stamina').value;
+                const storageQuota = document.getElementById('edit-storage-quota').value;
                 const messageEl = document.getElementById('edit-message');
 
                 // 验证密码（如果填写了）
@@ -6283,6 +7887,26 @@
 
                     const data = await response.json();
                     if (data.success) {
+                        // 如果填写了网盘配额，单独保存
+                        if (storageQuota !== '') {
+                            const quotaNum = parseInt(storageQuota, 10);
+                            if (!isNaN(quotaNum) && quotaNum >= 0) {
+                                const quotaResponse = await fetch(`${API_BASE}/file-manager/admin/user/${this.currentEditUserId}/quota`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Authorization': `Bearer ${getAuthToken()}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ storage_quota: quotaNum })
+                                });
+                                const quotaData = await quotaResponse.json();
+                                if (!quotaData.success) {
+                                    messageEl.innerHTML = `<div class="error-msg">保存用户数据成功，但网盘配额保存失败: ${quotaData.error}</div>`;
+                                    return;
+                                }
+                            }
+                        }
+
                         const successMsg = password ? '密码和用户数据保存成功' : '保存成功';
                         messageEl.innerHTML = '<div class="success-msg">' + successMsg + '</div>';
                         // 延迟关闭弹窗并刷新列表
@@ -7563,6 +9187,325 @@
                 }
             },
 
+            // 切换象棋子标签
+            switchChessSubTab: function(tab) {
+                const pvpSection = document.getElementById('chess-pvp-section');
+                const aiSection = document.getElementById('chess-ai-section');
+                const pvpBtn = document.getElementById('chess-pvp-tab-btn');
+                const aiBtn = document.getElementById('chess-ai-tab-btn');
+
+                if (tab === 'pvp') {
+                    pvpSection.style.display = 'block';
+                    aiSection.style.display = 'none';
+                    pvpBtn.style.background = 'var(--neon-green)';
+                    pvpBtn.style.color = '#000';
+                    aiBtn.style.background = '#333';
+                    aiBtn.style.color = '#aaa';
+                } else {
+                    pvpSection.style.display = 'none';
+                    aiSection.style.display = 'block';
+                    aiBtn.style.background = '#9c27b0';
+                    aiBtn.style.color = '#fff';
+                    pvpBtn.style.background = '#333';
+                    pvpBtn.style.color = '#aaa';
+                    this.loadAIChallengeRooms();
+                }
+            },
+
+            // 加载AI挑战房间列表
+            loadAIChallengeRooms: async function() {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/chess/ai-rooms`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.renderAIChallengeRooms(data.data || []);
+                    }
+                } catch (error) {
+                    console.error('加载AI挑战房间失败:', error);
+                    document.getElementById('ai-challenge-rooms-table-container').innerHTML =
+                        '<p style="text-align: center; color: #888;">加载失败</p>';
+                }
+            },
+
+            // 渲染AI挑战房间表格
+            renderAIChallengeRooms: function(rooms) {
+                const container = document.getElementById('ai-challenge-rooms-table-container');
+
+                if (!rooms || rooms.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #888;">暂无AI挑战房间</p>';
+                    return;
+                }
+
+                const difficultyText = { tyro: '新手', normal: '普通', super: '大师' };
+                const statusText = { waiting: '等待中', active: '进行中', completed: '已完成' };
+
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>房间名</th>
+                                <th>难度</th>
+                                <th>奖励</th>
+                                <th>惩罚</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rooms.map(room => `
+                                <tr>
+                                    <td>${room.id.substring(0, 8)}...</td>
+                                    <td>${room.room_name || '-'}</td>
+                                    <td><span style="color: ${room.ai_difficulty === 'super' ? '#f44336' : room.ai_difficulty === 'normal' ? '#ff9800' : '#4caf50'}">${difficultyText[room.ai_difficulty] || '普通'}</span></td>
+                                    <td style="color: #2e7d32; font-weight: bold;">+${room.energy_reward}</td>
+                                    <td style="color: #c62828; font-weight: bold;">-${room.energy_penalty}</td>
+                                    <td><span class="status-badge ${room.challenge_status === 'active' ? 'status-active' : room.challenge_status === 'completed' ? 'status-inactive' : 'status-pending'}">${statusText[room.challenge_status] || '等待中'}</span></td>
+                                    <td>${room.created_at ? new Date(room.created_at).toLocaleString() : '-'}</td>
+                                    <td>
+                                        <button class="btn-mini" style="background: #ff9800;" onclick="admin.editAIChallengeRoom('${room.id}')">编辑</button>
+                                        <button class="btn-mini btn-red" onclick="admin.deleteAIChallengeRoom('${room.id}')">删除</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+            },
+
+            // 显示创建AI挑战弹窗
+            showCreateAIChallengeModal: function() {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="width: 500px;">
+                        <div class="modal-header">
+                            <h3>创建AI挑战</h3>
+                            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #aaa;">挑战名称 *</label>
+                                <input type="text" id="ai-challenge-name" placeholder="请输入挑战名称"
+                                    style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #aaa;">AI难度</label>
+                                <select id="ai-challenge-difficulty" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                    <option value="tyro">新手</option>
+                                    <option value="normal" selected>普通</option>
+                                    <option value="super">大师</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #aaa;">胜利奖励能量 (1-100)</label>
+                                <input type="number" id="ai-challenge-reward" value="10" min="1" max="100"
+                                    style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #aaa;">失败扣除能量 (1-50)</label>
+                                <input type="number" id="ai-challenge-penalty" value="5" min="1" max="50"
+                                    style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; color: #aaa;">游戏时长（秒）</label>
+                                <select id="ai-challenge-time" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                    <option value="300">5分钟</option>
+                                    <option value="600" selected>10分钟</option>
+                                    <option value="900">15分钟</option>
+                                    <option value="1200">20分钟</option>
+                                </select>
+                            </div>
+                            <div style="text-align: right; margin-top: 20px;">
+                                <button class="btn" style="background: #333;" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                                <button class="btn" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);" onclick="admin.createAIChallenge()">创建</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            },
+
+            // 创建AI挑战
+            createAIChallenge: async function() {
+                const roomName = document.getElementById('ai-challenge-name')?.value?.trim();
+                const difficulty = document.getElementById('ai-challenge-difficulty')?.value;
+                const reward = document.getElementById('ai-challenge-reward')?.value;
+                const penalty = document.getElementById('ai-challenge-penalty')?.value;
+                const gameTime = document.getElementById('ai-challenge-time')?.value;
+
+                if (!roomName) {
+                    alert('请输入挑战名称');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE}/admin/chess/ai-rooms`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getAuthToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            room_name: roomName,
+                            ai_difficulty: difficulty || 'normal',
+                            energy_reward: parseInt(reward) || 10,
+                            energy_penalty: parseInt(penalty) || 5,
+                            game_time: parseInt(gameTime) || 600
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('AI挑战创建成功');
+                        const modal = document.querySelector('.modal-overlay');
+                        if (modal) modal.remove();
+                        this.loadAIChallengeRooms();
+                    } else {
+                        alert(data.error || '创建失败');
+                    }
+                } catch (error) {
+                    console.error('创建AI挑战失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            // 编辑AI挑战房间
+            editAIChallengeRoom: async function(roomId) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/chess/ai-rooms/${roomId}`, {
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (!data.success || !data.data) {
+                        alert('获取房间信息失败');
+                        return;
+                    }
+
+                    const room = data.data;
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-content" style="width: 500px;">
+                            <div class="modal-header">
+                                <h3>编辑AI挑战</h3>
+                                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #aaa;">挑战名称 *</label>
+                                    <input type="text" id="edit-ai-challenge-name" value="${room.room_name || ''}" placeholder="请输入挑战名称"
+                                        style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #aaa;">AI难度</label>
+                                    <select id="edit-ai-challenge-difficulty" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                        <option value="tyro" ${room.ai_difficulty === 'tyro' ? 'selected' : ''}>新手</option>
+                                        <option value="normal" ${room.ai_difficulty === 'normal' ? 'selected' : ''}>普通</option>
+                                        <option value="super" ${room.ai_difficulty === 'super' ? 'selected' : ''}>大师</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #aaa;">胜利奖励能量 (1-100)</label>
+                                    <input type="number" id="edit-ai-challenge-reward" value="${room.energy_reward || 10}" min="1" max="100"
+                                        style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #aaa;">失败扣除能量 (1-50)</label>
+                                    <input type="number" id="edit-ai-challenge-penalty" value="${room.energy_penalty || 5}" min="1" max="50"
+                                        style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; color: #aaa;">状态</label>
+                                    <select id="edit-ai-challenge-status" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #9c27b0;">
+                                        <option value="waiting" ${room.challenge_status === 'waiting' ? 'selected' : ''}>等待中</option>
+                                        <option value="active" ${room.challenge_status === 'active' ? 'selected' : ''}>进行中</option>
+                                        <option value="completed" ${room.challenge_status === 'completed' ? 'selected' : ''}>已完成</option>
+                                    </select>
+                                </div>
+                                <div style="text-align: right; margin-top: 20px;">
+                                    <button class="btn" style="background: #333;" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                                    <button class="btn" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);" onclick="admin.updateAIChallengeRoom('${roomId}')">保存</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                } catch (error) {
+                    console.error('获取房间信息失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            // 更新AI挑战
+            updateAIChallengeRoom: async function(roomId) {
+                const roomName = document.getElementById('edit-ai-challenge-name')?.value?.trim();
+                const difficulty = document.getElementById('edit-ai-challenge-difficulty')?.value;
+                const reward = document.getElementById('edit-ai-challenge-reward')?.value;
+                const penalty = document.getElementById('edit-ai-challenge-penalty')?.value;
+                const status = document.getElementById('edit-ai-challenge-status')?.value;
+
+                if (!roomName) {
+                    alert('请输入挑战名称');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE}/admin/chess/ai-rooms/${roomId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${getAuthToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            room_name: roomName,
+                            ai_difficulty: difficulty,
+                            energy_reward: parseInt(reward),
+                            energy_penalty: parseInt(penalty),
+                            challenge_status: status
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('更新成功');
+                        const modal = document.querySelector('.modal-overlay');
+                        if (modal) modal.remove();
+                        this.loadAIChallengeRooms();
+                    } else {
+                        alert(data.error || '更新失败');
+                    }
+                } catch (error) {
+                    console.error('更新AI挑战失败:', error);
+                    alert('网络错误');
+                }
+            },
+
+            // 删除AI挑战
+            deleteAIChallengeRoom: async function(roomId) {
+                if (!confirm('确定要删除这个AI挑战吗？')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE}/admin/chess/ai-rooms/${roomId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('删除成功');
+                        this.loadAIChallengeRooms();
+                    } else {
+                        alert(data.error || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除AI挑战失败:', error);
+                    alert('网络错误');
+                }
+            },
+
             renderChessRoomsPagination: function(pagination) {
                 if (!pagination || pagination.totalPages <= 1) return;
                 let html = '';
@@ -8120,7 +10063,7 @@
             
             if (!currentToken) {
                 alert('请先登录');
-                window.location.href = 'admin-login.html';
+                window.location.href = 'game.html';
                 return;
             }
 
@@ -8142,7 +10085,7 @@
                     } else {
                         alert('验证失败：服务返回异常，请检查网络或联系管理员');
                     }
-                    window.location.href = 'admin-login.html';
+                    window.location.href = 'game.html';
                     return;
                 }
                 
@@ -8151,12 +10094,12 @@
                     data = await response.json();
                 } catch (_) {
                     alert('验证失败：服务返回异常，请检查网络或联系管理员');
-                    window.location.href = 'admin-login.html';
+                    window.location.href = 'game.html';
                     return;
                 }
                 if (!data.success || !data.user || !data.user.is_admin) {
                     alert(data.error || '需要管理员权限');
-                    window.location.href = 'admin-login.html';
+                    window.location.href = 'game.html';
                     return;
                 }
                 
@@ -8164,7 +10107,7 @@
             } catch (error) {
                 console.error('管理员验证请求异常:', error);
                 alert('验证失败：网络异常或服务不可用');
-                window.location.href = 'admin-login.html';
+                window.location.href = 'game.html';
             }
         });
         
@@ -8187,7 +10130,5 @@
             <p id="model-info-description"></p>
         </div>
     </div>
-    <script src="/js/auth-manager.js"></script>
-    <script src="/js/visitor-tracker.js"></script>
 </body>
 </html>

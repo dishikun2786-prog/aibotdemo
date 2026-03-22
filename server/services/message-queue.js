@@ -23,7 +23,10 @@ const STREAMS = {
   AGENT_CHAT_STATUS: 'agent:chat:status',        // 状态变更通知
   AGENT_CHAT_OFFLINE: 'agent:chat:offline',     // 离线消息队列
   // 播客任务队列
-  PODCAST_TASKS: 'podcast:tasks'         // 播客异步任务
+  PODCAST_TASKS: 'podcast:tasks',         // 播客异步任务
+  // 支付商户任务队列
+  PAYMENT_ORDER: 'payment:orders',        // 支付订单任务
+  PAYMENT_NOTIFY: 'payment:notify'         // 支付通知任务
 };
 
 // 任务类型
@@ -44,7 +47,15 @@ const TASK_TYPES = {
   PODCAST_PLAY: 'podcast_play',          // 播放记录
   PODCAST_STATS_UPDATE: 'podcast_stats_update',  // 统计更新
   PODCAST_LIKE: 'podcast_like',         // 点赞处理
-  PODCAST_SUBSCRIBE: 'podcast_subscribe'  // 订阅处理
+  PODCAST_SUBSCRIBE: 'podcast_subscribe',  // 订阅处理
+  // 支付商户任务
+  PAYMENT_CREATE_ORDER: 'payment_create_order',        // 创建订单
+  PAYMENT_ORDER_PAID: 'payment_order_paid',           // 订单已付款
+  PAYMENT_ORDER_CONFIRMED: 'payment_order_confirmed', // 订单已确认
+  PAYMENT_ORDER_CANCELLED: 'payment_order_cancelled', // 订单已取消
+  PAYMENT_SEND_MERCHANT_NOTIFY: 'payment_send_merchant_notify',   // 通知商户
+  PAYMENT_SEND_PAYER_NOTIFY: 'payment_send_payer_notify',         // 通知付款人
+  PAYMENT_UPDATE_STATS: 'payment_update_stats'        // 更新统计缓存
 };
 
 /**
@@ -578,8 +589,9 @@ async function startWorker() {
   workerRunning = true;
 
   // 初始化每个Stream的起始位置
+  // 使用 '$' 符号只读取新消息，不读取历史消息，避免启动时日志刷屏
   for (const key of Object.values(STREAMS)) {
-    lastIds[key] = '0';
+    lastIds[key] = '$';
   }
 
   // 持续监听

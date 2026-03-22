@@ -460,6 +460,48 @@ router.get('/podcasts/:podcastId', async (req, res) => {
       published_at: ep.published_at
     }));
 
+    // 获取绑定的AI分身信息
+    // 如果未绑定，自动选择作者的的第一个分身
+    let boundAvatar = null;
+    let actualBoundAvatarId = podcast.bound_avatar_id;
+
+    if (!actualBoundAvatarId && podcast.author_id) {
+      // 未绑定时自动查询作者的第一个分身
+      try {
+        const [firstAvatar] = await db.query(
+          'SELECT avatar_id, name, avatar_url FROM ai_agent_avatars WHERE user_id = ? AND status = 1 ORDER BY created_at ASC LIMIT 1',
+          [podcast.author_id]
+        );
+        if (firstAvatar) {
+          actualBoundAvatarId = firstAvatar.avatar_id;
+          boundAvatar = {
+            avatar_id: firstAvatar.avatar_id,
+            name: firstAvatar.name,
+            avatar_url: firstAvatar.avatar_url || ''
+          };
+        }
+      } catch (err) {
+        console.error('自动获取分身信息失败:', err);
+      }
+    } else if (actualBoundAvatarId) {
+      // 已绑定时查询绑定的分身信息
+      try {
+        const [avatar] = await db.query(
+          'SELECT avatar_id, name, avatar_url FROM ai_agent_avatars WHERE avatar_id = ?',
+          [actualBoundAvatarId]
+        );
+        if (avatar) {
+          boundAvatar = {
+            avatar_id: avatar.avatar_id,
+            name: avatar.name,
+            avatar_url: avatar.avatar_url || ''
+          };
+        }
+      } catch (err) {
+        console.error('获取绑定分身信息失败:', err);
+      }
+    }
+
     res.json({
       success: true,
       data: {
@@ -480,6 +522,9 @@ router.get('/podcasts/:podcastId', async (req, res) => {
           likes_count: podcast.likes_count || 0,
           is_subscribed: isSubscribed,
           is_liked: isLiked,
+          bound_avatar_id: podcast.bound_avatar_id || null,
+          bound_avatar: boundAvatar,  // 直接返回绑定的分身信息（无论ai_chat_enabled是否为true）
+          ai_chat_enabled: podcast.ai_chat_enabled || false,
           created_at: podcast.created_at,
           updated_at: podcast.updated_at
         },
@@ -498,7 +543,7 @@ router.get('/podcasts/:podcastId', async (req, res) => {
  */
 router.post('/podcasts', authenticateToken, async (req, res) => {
   try {
-    const { title, description, cover_image, category, tags } = req.body;
+    const { title, description, cover_image, category, tags, bound_avatar_id, ai_chat_enabled } = req.body;
 
     // 移除验证码保护（用户已登录）
 
@@ -514,6 +559,27 @@ router.post('/podcasts', authenticateToken, async (req, res) => {
 
     if (!category || !PODCAST_CATEGORIES.includes(category)) {
       return res.status(400).json({ error: '请选择有效的分类' });
+    }
+
+    // 验证绑定的AI分身（如果提供了）
+    let boundAvatar = null;
+    if (bound_avatar_id) {
+      try {
+        const [avatar] = await db.query(
+          'SELECT avatar_id, name FROM ai_agent_avatars WHERE avatar_id = ? AND user_id = ?',
+          [bound_avatar_id, req.user.id]
+        );
+        if (avatar) {
+          boundAvatar = {
+            avatar_id: avatar.avatar_id,
+            name: avatar.name
+          };
+        } else {
+          return res.status(400).json({ error: '绑定的AI分身不存在或不属于您' });
+        }
+      } catch (err) {
+        console.error('验证分身失败:', err);
+      }
     }
 
     // 获取用户信息（带降级处理）
@@ -555,6 +621,8 @@ router.post('/podcasts', authenticateToken, async (req, res) => {
       subscriber_count: 0,
       total_plays: 0,
       likes_count: 0,
+      bound_avatar_id: bound_avatar_id || null,
+      ai_chat_enabled: ai_chat_enabled === true,
       is_public: true,
       status: 'published',
       created_at: new Date(),
@@ -595,7 +663,7 @@ router.post('/podcasts', authenticateToken, async (req, res) => {
 router.put('/podcasts/:podcastId', authenticateToken, async (req, res) => {
   try {
     const { podcastId } = req.params;
-    const { title, description, cover_image, category, tags } = req.body;
+    const { title, description, cover_image, category, tags, bound_avatar_id, ai_chat_enabled } = req.body;
 
     const coll = await mongo.getPodcastPodcastsCollection();
     const podcast = await coll.findOne({ podcast_id: podcastId });
@@ -606,6 +674,19 @@ router.put('/podcasts/:podcastId', authenticateToken, async (req, res) => {
 
     if (podcast.author_id !== req.user.id) {
       return res.status(403).json({ error: '无权限修改此播客' });
+    }
+
+    // 验证绑定的AI分身（如果提供了）
+    if (bound_avatar_id !== undefined) {
+      if (bound_avatar_id) {
+        const [avatar] = await db.query(
+          'SELECT avatar_id FROM ai_agent_avatars WHERE avatar_id = ? AND user_id = ?',
+          [bound_avatar_id, req.user.id]
+        );
+        if (!avatar) {
+          return res.status(400).json({ error: '绑定的AI分身不存在或不属于您' });
+        }
+      }
     }
 
     const updateFields = {
@@ -622,6 +703,8 @@ router.put('/podcasts/:podcastId', authenticateToken, async (req, res) => {
       updateFields.category = category;
     }
     if (tags) updateFields.tags = tags;
+    if (bound_avatar_id !== undefined) updateFields.bound_avatar_id = bound_avatar_id || null;
+    if (ai_chat_enabled !== undefined) updateFields.ai_chat_enabled = ai_chat_enabled === true;
 
     await coll.updateOne(
       { podcast_id: podcastId },
@@ -744,6 +827,8 @@ router.get('/my-podcasts', authenticateToken, async (req, res) => {
           subscriber_count: p.subscriber_count || 0,
           total_plays: p.total_plays || 0,
           likes_count: p.likes_count || 0,
+          bound_avatar_id: p.bound_avatar_id || null,
+          ai_chat_enabled: p.ai_chat_enabled || false,
           status: p.status,
           created_at: p.created_at
         })),
@@ -1372,7 +1457,7 @@ router.get('/comments', async (req, res) => {
           target_id: c.target_id,
           target_type: c.target_type,
           user_id: c.user_id,
-          user_name: users[c.user_id]?.username || '未知用户',
+          username: users[c.user_id]?.username || '未知用户',
           avatar: '',
           content: c.content,
           created_at: c.created_at
@@ -1890,6 +1975,9 @@ router.get('/get-sts-token', authenticateToken, async (req, res) => {
     const token = await oss.getSTSToken();
     // 添加自定义域名（用于前端直接播放音频）
     token.customDomain = 'https://boke.skym178.com';
+    // 添加传输加速域名配置
+    token.accelerateDomain = token.accelerateDomain || 'oss-accelerate.aliyuncs.com';
+    token.useAccelerate = token.useAccelerate === true;
     res.json({
       success: true,
       data: token
@@ -2292,7 +2380,7 @@ router.get('/admin/podcasts/:podcastId', authenticateToken, requireAdmin, async 
 router.put('/admin/podcasts/:podcastId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { podcastId } = req.params;
-    const { title, description, cover_image, category, tags, status, is_public } = req.body;
+    const { title, description, cover_image, category, tags, status, is_public, bound_avatar_id, ai_chat_enabled } = req.body;
 
     const coll = await mongo.getPodcastPodcastsCollection();
     const podcast = await coll.findOne({ podcast_id: podcastId });
@@ -2317,6 +2405,8 @@ router.put('/admin/podcasts/:podcastId', authenticateToken, requireAdmin, async 
     if (tags !== undefined) updateFields.tags = tags;
     if (status !== undefined) updateFields.status = status;
     if (is_public !== undefined) updateFields.is_public = is_public;
+    if (bound_avatar_id !== undefined) updateFields.bound_avatar_id = bound_avatar_id || null;
+    if (ai_chat_enabled !== undefined) updateFields.ai_chat_enabled = ai_chat_enabled === true;
 
     await coll.updateOne(
       { podcast_id: podcastId },
@@ -3046,6 +3136,66 @@ router.get('/audio-proxy/*', async (req, res) => {
   } catch (err) {
     console.error('[audio-proxy] 代理失败:', err);
     res.status(500).json({ error: '获取音频失败: ' + err.message });
+  }
+});
+
+/**
+ * 验证AI分身所属权
+ * GET /api/podcast/validate-avatar/:avatarId
+ */
+router.get('/validate-avatar/:avatarId', authenticateToken, async (req, res) => {
+  try {
+    const { avatarId } = req.params;
+
+    const [avatar] = await db.query(
+      'SELECT avatar_id, name, avatar_url FROM ai_agent_avatars WHERE avatar_id = ? AND user_id = ?',
+      [avatarId, req.user.id]
+    );
+
+    if (!avatar) {
+      return res.status(404).json({ success: false, error: 'AI分身不存在或不属于您' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        avatar_id: avatar.avatar_id,
+        name: avatar.name,
+        avatar_url: avatar.avatar_url || ''
+      }
+    });
+  } catch (err) {
+    console.error('验证AI分身失败:', err);
+    res.status(500).json({ error: '服务器内部错误' });
+  }
+});
+
+/**
+ * 获取用户的AI分身列表（用于播客绑定）
+ * GET /api/podcast/my-avatars
+ */
+router.get('/my-avatars', authenticateToken, async (req, res) => {
+  try {
+    const rows = await db.query(
+      `SELECT avatar_id, name, description, avatar_url, status, created_at
+       FROM ai_agent_avatars WHERE user_id = ? AND status = 1 ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+
+    res.json({
+      success: true,
+      data: rows.map(row => ({
+        avatar_id: row.avatar_id,
+        name: row.name,
+        description: row.description,
+        avatar_url: row.avatar_url || '',
+        status: row.status,
+        created_at: row.created_at
+      }))
+    });
+  } catch (err) {
+    console.error('获取AI分身列表失败:', err);
+    res.status(500).json({ error: '服务器内部错误' });
   }
 });
 

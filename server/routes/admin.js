@@ -21,7 +21,7 @@ router.get('/users', async (req, res) => {
     const { page = 1, limit = 20, search = '', status = '' } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT id, username, email, energy, stamina, total_energy, wins, losses, draws, created_at, last_login, status, referral_count FROM users WHERE 1=1';
+    let query = 'SELECT id, username, email, energy, stamina, total_energy, wins, losses, draws, created_at, last_login, status, referral_count, storage_quota FROM users WHERE 1=1';
     const params = [];
 
     if (search) {
@@ -66,6 +66,30 @@ router.get('/users', async (req, res) => {
   } catch (error) {
     console.error('获取用户列表失败:', error);
     res.status(500).json({ error: '获取用户列表失败' });
+  }
+});
+
+// 获取单个用户详情
+router.get('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [user] = await db.query(
+      'SELECT id, username, email, energy, stamina, total_energy, wins, losses, draws, created_at, last_login, status, referral_count, storage_quota FROM users WHERE id = ?',
+      [id]
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('获取用户详情失败:', error);
+    res.status(500).json({ error: '获取用户详情失败' });
   }
 });
 
@@ -1283,4 +1307,419 @@ router.get('/rooms/:id/invite-link', authenticateToken, requireAdmin, async (req
 });
 
 // 获取当前房间已被占据的节点列表
+
+// ============================================
+// 支付商户管理接口
+// ============================================
+
+// 获取商户列表
+router.get('/payment/merchants', async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search = '', status = '' } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        pm.id as merchant_id,
+        pm.merchant_name,
+        pm.user_id,
+        pm.status,
+        pm.created_at,
+        pm.updated_at,
+        u.username,
+        COUNT(po.id) as total_orders,
+        COALESCE(SUM(po.amount), 0) as total_amount
+      FROM payment_merchants pm
+      LEFT JOIN users u ON pm.user_id = u.id
+      LEFT JOIN payment_orders po ON pm.id = po.merchant_id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (search) {
+      query += ' AND (pm.merchant_name LIKE ? OR u.username LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (status) {
+      query += ' AND pm.status = ?';
+      params.push(status);
+    }
+
+    // 获取总数
+    const countQuery = query.replace(/SELECT .* FROM/, 'SELECT COUNT(DISTINCT pm.id) as total FROM');
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult.total || 0;
+
+    // 获取分页数据
+    query += ' GROUP BY pm.id ORDER BY pm.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), offset);
+
+    const merchants = await db.query(query, params);
+
+    res.json({
+      success: true,
+      data: {
+        list: merchants.map(m => ({
+          merchant_id: m.merchant_id,
+          merchant_name: m.merchant_name || '未命名商户',
+          user_id: m.user_id,
+          username: m.username || '未知用户',
+          status: m.status,
+          total_orders: parseInt(m.total_orders) || 0,
+          total_amount: parseFloat(m.total_amount) || 0,
+          created_at: m.created_at,
+          updated_at: m.updated_at
+        })),
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: total,
+          total_pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('获取商户列表失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取商户详情
+router.get('/payment/merchants/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [merchant] = await db.query(`
+      SELECT 
+        pm.*,
+        u.username
+      FROM payment_merchants pm
+      LEFT JOIN users u ON pm.user_id = u.id
+      WHERE pm.id = ?
+    `, [id]);
+
+    if (!merchant) {
+      return res.status(404).json({ success: false, error: '商户不存在' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        merchant_id: merchant.id,
+        merchant_name: merchant.merchant_name || '未命名商户',
+        user_id: merchant.user_id,
+        username: merchant.username,
+        alipay_qrcode: merchant.alipay_qrcode || '',
+        wechat_qrcode: merchant.wechat_qrcode || '',
+        bank_account: merchant.bank_account || '',
+        bank_name: merchant.bank_name || '',
+        bank_username: merchant.bank_username || '',
+        api_key: merchant.api_key,
+        status: merchant.status,
+        created_at: merchant.created_at,
+        updated_at: merchant.updated_at
+      }
+    });
+  } catch (error) {
+    console.error('获取商户详情失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 更新商户信息
+router.put('/payment/merchants/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { merchant_name, status } = req.body;
+
+    // 检查商户是否存在
+    const [merchant] = await db.query('SELECT * FROM payment_merchants WHERE id = ?', [id]);
+    if (!merchant) {
+      return res.status(404).json({ success: false, error: '商户不存在' });
+    }
+
+    // 更新商户信息
+    const updates = [];
+    const params = [];
+
+    if (merchant_name !== undefined) {
+      updates.push('merchant_name = ?');
+      params.push(merchant_name);
+    }
+
+    if (status !== undefined) {
+      if (!['active', 'inactive', 'banned'].includes(status)) {
+        return res.status(400).json({ success: false, error: '无效的状态' });
+      }
+      updates.push('status = ?');
+      params.push(status);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, error: '没有需要更新的字段' });
+    }
+
+    params.push(id);
+    await db.query(`UPDATE payment_merchants SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    // 记录管理员操作
+    await logAdminAction(req.user.id, 'update_payment_merchant', id, { merchant_name, status });
+
+    res.json({ success: true, message: '更新成功' });
+  } catch (error) {
+    console.error('更新商户失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 更新商户状态
+router.put('/payment/merchants/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['active', 'inactive', 'banned'].includes(status)) {
+      return res.status(400).json({ success: false, error: '无效的状态' });
+    }
+
+    const [merchant] = await db.query('SELECT * FROM payment_merchants WHERE id = ?', [id]);
+    if (!merchant) {
+      return res.status(404).json({ success: false, error: '商户不存在' });
+    }
+
+    await db.query('UPDATE payment_merchants SET status = ? WHERE id = ?', [status, id]);
+
+    // 记录管理员操作
+    await logAdminAction(req.user.id, 'update_payment_merchant_status', id, { status });
+
+    res.json({ success: true, message: '状态更新成功' });
+  } catch (error) {
+    console.error('更新商户状态失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 删除商户
+router.delete('/payment/merchants/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [merchant] = await db.query('SELECT * FROM payment_merchants WHERE id = ?', [id]);
+    if (!merchant) {
+      return res.status(404).json({ success: false, error: '商户不存在' });
+    }
+
+    // 删除商户相关的订单、名目
+    await db.transaction(async (conn) => {
+      // 删除订单
+      await conn.execute('DELETE FROM payment_orders WHERE merchant_id = ?', [id]);
+      // 删除名目
+      await conn.execute('DELETE FROM payment_items WHERE merchant_id = ?', [id]);
+      // 删除商户
+      await conn.execute('DELETE FROM payment_merchants WHERE id = ?', [id]);
+    });
+
+    // 记录管理员操作
+    await logAdminAction(req.user.id, 'delete_payment_merchant', id, { merchant_name: merchant.merchant_name });
+
+    res.json({ success: true, message: '删除成功' });
+  } catch (error) {
+    console.error('删除商户失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取商户交易统计
+router.get('/payment/merchants/:id/stats', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [merchant] = await db.query('SELECT * FROM payment_merchants WHERE id = ?', [id]);
+    if (!merchant) {
+      return res.status(404).json({ success: false, error: '商户不存在' });
+    }
+
+    // 基础统计
+    const [stats] = await db.query(`
+      SELECT 
+        COUNT(*) as total_orders,
+        COALESCE(SUM(amount), 0) as total_amount,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
+        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_orders,
+        SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) as confirmed_orders,
+        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_orders,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders
+      FROM payment_orders 
+      WHERE merchant_id = ?
+    `, [id]);
+
+    // 今日统计
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [todayStats] = await db.query(`
+      SELECT 
+        COUNT(*) as today_orders,
+        COALESCE(SUM(amount), 0) as today_amount
+      FROM payment_orders 
+      WHERE merchant_id = ? AND created_at >= ?
+    `, [id, today]);
+
+    // 按支付方式统计
+    const [methodStats] = await db.query(`
+      SELECT 
+        payment_method,
+        COUNT(*) as count,
+        COALESCE(SUM(amount), 0) as amount
+      FROM payment_orders 
+      WHERE merchant_id = ?
+      GROUP BY payment_method
+    `, [id]);
+
+    const byPaymentMethod = {
+      alipay: { count: 0, amount: 0 },
+      wechat: { count: 0, amount: 0 },
+      bank: { count: 0, amount: 0 }
+    };
+
+    for (const m of methodStats) {
+      if (byPaymentMethod[m.payment_method] !== undefined) {
+        byPaymentMethod[m.payment_method] = {
+          count: parseInt(m.count) || 0,
+          amount: parseFloat(m.amount) || 0
+        };
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        merchant_id: merchant.id,
+        merchant_name: merchant.merchant_name || '未命名商户',
+        total_orders: parseInt(stats.total_orders) || 0,
+        total_amount: parseFloat(stats.total_amount) || 0,
+        pending_orders: parseInt(stats.pending_orders) || 0,
+        paid_orders: parseInt(stats.paid_orders) || 0,
+        confirmed_orders: parseInt(stats.confirmed_orders) || 0,
+        rejected_orders: parseInt(stats.rejected_orders) || 0,
+        cancelled_orders: parseInt(stats.cancelled_orders) || 0,
+        today_orders: parseInt(todayStats.today_orders) || 0,
+        today_amount: parseFloat(todayStats.today_amount) || 0,
+        by_payment_method: byPaymentMethod
+      }
+    });
+  } catch (error) {
+    console.error('获取商户统计失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取商户订单明细
+router.get('/payment/merchants/:id/orders', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 20, status = '', payment_method = '' } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        po.*,
+        pi.name as item_name
+      FROM payment_orders po
+      LEFT JOIN payment_items pi ON po.item_id = pi.id
+      WHERE po.merchant_id = ?
+    `;
+    const params = [id];
+
+    if (status) {
+      query += ' AND po.status = ?';
+      params.push(status);
+    }
+
+    if (payment_method) {
+      query += ' AND po.payment_method = ?';
+      params.push(payment_method);
+    }
+
+    // 获取总数
+    const countQuery = query.replace(/SELECT .* FROM/, 'SELECT COUNT(*) as total FROM');
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult.total || 0;
+
+    // 获取分页数据
+    query += ' ORDER BY po.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), offset);
+
+    const orders = await db.query(query, params);
+
+    res.json({
+      success: true,
+      data: {
+        list: orders.map(o => ({
+          order_id: o.id,
+          order_no: o.order_no,
+          item_id: o.item_id,
+          item_name: o.item_name || '未知名目',
+          user_id: o.user_id,
+          amount: parseFloat(o.amount) || 0,
+          payment_method: o.payment_method,
+          remark_code: o.remark_code,
+          status: o.status,
+          payment_screenshot: o.payment_screenshot || '',
+          created_at: o.created_at,
+          paid_at: o.paid_at,
+          confirmed_at: o.confirmed_at
+        })),
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: total,
+          total_pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('获取订单明细失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取商户访问统计
+router.get('/payment/merchants/:id/visits', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [merchant] = await db.query('SELECT * FROM payment_merchants WHERE id = ?', [id]);
+    if (!merchant) {
+      return res.status(404).json({ success: false, error: '商户不存在' });
+    }
+
+    // 从MongoDB获取访问统计
+    const paymentMongo = require('../utils/payment-mongo');
+    const stats = await paymentMongo.getVisitStats(parseInt(id));
+
+    res.json({
+      success: true,
+      data: {
+        merchant_id: merchant.id,
+        merchant_name: merchant.merchant_name || '未命名商户',
+        ...stats
+      }
+    });
+  } catch (error) {
+    console.error('获取访问统计失败:', error);
+    // 如果MongoDB出错，返回默认值
+    res.json({
+      success: true,
+      data: {
+        merchant_id: parseInt(id),
+        total_visits: 0,
+        today_visits: 0,
+        weekly_visits: [],
+        recent_visits: []
+      }
+    });
+  }
+});
+
 module.exports = router;

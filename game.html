@@ -4,6 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>能量山：零号协议 | PROJECT: ZERO</title>
+
+    <!-- 预验证：使用本地缓存直接进入游戏页面，后台验证token有效性 -->
+    <script>
+    (function() {
+        var savedToken = localStorage.getItem('authToken');
+        if (savedToken) {
+            // 直接切换到游戏页面（乐观渲染，假设用户已登录）
+            var loginScreen = document.getElementById('login-screen');
+            var gameScreen = document.getElementById('game-screen');
+            if (loginScreen && gameScreen) {
+                loginScreen.classList.remove('active');
+                gameScreen.classList.add('active');
+            }
+
+            // 保存token到全局变量
+            window.__preVerifiedToken = savedToken;
+
+            // 后台验证token有效性
+            fetch('/api/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + savedToken }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    // 验证成功：保存用户信息
+                    window.__preVerifiedUser = data.user;
+                    window.__tokenValid = true;
+                } else {
+                    // 验证失败：token无效，清除缓存并跳转到登录
+                    localStorage.removeItem('authToken');
+                    if (loginScreen && gameScreen) {
+                        loginScreen.classList.add('active');
+                        gameScreen.classList.remove('active');
+                    }
+                }
+            })
+            .catch(function() {
+                // 网络错误：保持游戏页面显示，后续会再次验证
+            });
+        }
+    })();
+    </script>
+
+    <!-- PWA Web应用清单 -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json" type="application/manifest+json">
+
+    <!-- iOS主屏幕图标 -->
+    <link rel="apple-touch-icon" href="/icons/icon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon.svg">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon.svg">
+
+    <!-- iOS主屏幕全屏配置 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="能量山">
+
+    <!-- Android主题色 -->
+    <meta name="theme-color" content="#7C5CFF">
+    <meta name="background_color" content="#F8F6FF">
+
+    <!-- PWA安装提示 -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="standalone">
+
+    <!-- 明确的PNG图标（Android PWA必须） -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+
     <link rel="preload" href="bg/1.jpg" as="image">
     <link rel="preload" href="bg/2.jpg" as="image">
     <link rel="preload" href="bg/3.jpg" as="image">
@@ -2277,9 +2346,9 @@
             <div class="hud-row">
                 <div class="hud-buttons hud-game-code-row">
                     <button class="btn" style="padding: 8px 12px; font-size: 0.65rem;" onclick="window.location.href='aiwork.html'">🛠️ AI工作室</button>
-                    <button class="btn" style="padding: 8px 12px; font-size: 0.65rem;" onclick="window.location.href='chess-plaza.html'">🎯 象棋</button>
                     <button class="btn" style="padding: 8px 12px; font-size: 0.65rem;" onclick="window.location.href='plaza.html'">🏠 玩家广场</button>
                     <button class="btn" style="padding: 8px 12px; font-size: 0.65rem;" onclick="window.location.href='podcast.html'">🎙️ 播客</button>
+                    <button class="btn" style="padding: 8px 12px; font-size: 0.65rem; border-color: var(--neon-green); color: var(--neon-green);" onclick="window.location.href='energy-market.html'">💰 担保交易</button>
                     <input type="text" id="game-code-inline-input" class="login-input" placeholder="能量/体力激活码">
                     <button class="btn" style="padding: 8px 12px; font-size: 0.65rem;" onclick="game.redeemGameCodeInline()">兑换</button>
                     <button class="btn" style="padding: 8px 12px; font-size: 0.65rem; border-color: var(--neon-blue); color: var(--neon-blue);" onclick="game.openEnergyRoom()">🪫 能量室</button>
@@ -6667,15 +6736,15 @@
                     }
                     return;
                 }
-                
+
                 // 从服务器端玩家列表获取敌人（排除自己）
                 const enemies = this.displayState.players.filter(p => p.id !== this.displayState.userId);
-                
+
                 if (!socket || !socket.connected) {
                     this.log("❌ 网络未连接");
                     return;
                 }
-                
+
                 if (enemies.length === 0) {
                     // 无其他真人时，请求自动匹配其他在线对手（虚拟智能体等）
                     this.log("正在匹配其他在线对手…");
@@ -6743,6 +6812,44 @@
                 updateRange('val-assassin', a);
                 document.querySelectorAll('.range-gold')[0].value = k;
                 updateRange('val-king', k);
+            },
+
+            // 打开营销主页
+            openMarketingProfile: function() {
+                // 获取当前用户的推荐码，跳转到营销页面
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    alert('请先登录');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // 尝试获取当前用户的营销页面信息
+                fetch(API_BASE + '/api/marketing/profile', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        // 跳转到营销页面
+                        const referralCode = data.data.referral_code;
+                        const userId = data.data.user_id;
+                        if (referralCode) {
+                            window.location.href = '/m/' + referralCode;
+                        } else {
+                            window.location.href = '/marketing/' + userId;
+                        }
+                    } else {
+                        // 没有营销资料，跳转到创建页面
+                        if (confirm('您还没有创建营销主页，是否现在创建？')) {
+                            window.location.href = '/marketing.html';
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('获取营销主页信息失败:', err);
+                    window.location.href = '/marketing.html';
+                });
             },
 
             resolveCombat: function() {
@@ -7811,8 +7918,30 @@
             // 初始化注册配置状态
             auth.loadRegisterConfig();
 
-            // 检查是否有保存的token
-            const savedToken = AuthManager.getToken();
+            // 优先检查是否有预验证结果（来自<head>中的预验证脚本）
+            // 如果已经有验证通过的用户信息，直接进入游戏
+            if (window.__preVerifiedToken && window.__preVerifiedUser) {
+                authToken = window.__preVerifiedToken;
+                if (isAuthMode) {
+                    // 弹窗模式：跳转到redirect页面
+                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+                    if (window.opener) {
+                        window.opener.postMessage({ type: 'auth_login_success', token: window.__preVerifiedToken }, '*');
+                    }
+                    if (redirectUrl) {
+                        window.location.href = redirectUrl;
+                    } else {
+                        window.location.href = 'chess-plaza.html';
+                    }
+                } else {
+                    // 直接进入游戏
+                    game.init(window.__preVerifiedUser);
+                }
+                return;
+            }
+
+            // 如果只有token没有user（验证中或验证失败），再次尝试验证
+            const savedToken = window.__preVerifiedToken || AuthManager.getToken();
             if (savedToken) {
                 authToken = savedToken;
                 // 验证token并获取用户信息

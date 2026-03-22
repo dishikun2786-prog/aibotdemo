@@ -1158,6 +1158,187 @@ async function generateConversationWithCallback(messages, options = {}, callback
   }
 }
 
+/**
+ * 使用百炼网页抓取工具提取网页内容
+ * @param {string} url - 要抓取的URL
+ * @param {string} prompt - 提取提示词
+ * @returns {Promise<string>} 提取的内容
+ */
+async function extractWebContent(url, prompt) {
+  const apiKey = await validateApiKey();
+
+  // 使用兼容模式的Responses API
+  const baseUrl = 'https://dashscope.aliyuncs.com/api/v2/apps/protocols/compatible-mode/v1';
+
+  console.log('[bailian] extractWebContent 开始抓取:', url);
+
+  const response = await axiosInstance.post(baseUrl + '/responses', {
+    model: 'qwen3.5-flash',
+    input: `${prompt}\n\nURL：${url}`,
+    tools: [
+      { type: 'web_search' },
+      { type: 'web_extractor' }
+    ]
+  }, {
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  // 打印完整响应用于调试
+  console.log('[bailian] 完整响应状态:', response.status);
+  console.log('[bailian] 响应结构:', JSON.stringify(response.data).substring(0, 1000));
+
+  // 尝试多种响应格式解析
+  let result = '';
+  const data = response.data;
+
+  if (!data) {
+    console.error('[bailian] 响应数据为空');
+    return '';
+  }
+
+  // 格式1: output.text
+  if (data.output?.text) {
+    result = data.output.text;
+  }
+  // 格式2: output[0].content[0].text (数组格式)
+  else if (data.output && Array.isArray(data.output)) {
+    result = data.output.map(item => {
+      if (item.content && Array.isArray(item.content)) {
+        return item.content.map(c => c.text || '').join('');
+      }
+      return item.text || '';
+    }).join('');
+  }
+  // 格式3: output_text
+  else if (data.output_text) {
+    result = data.output_text;
+  }
+  // 格式4: choices[0].message.content
+  else if (data.choices && data.choices[0]?.message?.content) {
+    result = data.choices[0].message.content;
+  }
+  // 格式5: content[0].text
+  else if (data.content && Array.isArray(data.content)) {
+    result = data.content.map(c => c.text || '').join('');
+  }
+
+  console.log('[bailian] extractWebContent 完成, 长度:', result.length, '内容预览:', result.substring(0, 200));
+  return result;
+}
+
+/**
+ * 提取微信公众号文章内容
+ * @param {string} url - 微信文章链接
+ * @returns {Promise<Object>} 提取的结果
+ */
+async function extractWechatArticle(url) {
+  const prompt = `请提取以下微信公众号文章的详细信息，返回JSON格式：
+{
+  "title": "文章标题",
+  "author": "作者名称",
+  "summary": "文章摘要（100字以内）",
+  "content_blocks": [
+    {"type": "text", "content": "第一段文本内容"},
+    {"type": "image", "url": "图片URL1", "alt": "可选描述"},
+    {"type": "text", "content": "第二段文本内容"},
+    {"type": "image", "url": "图片URL2", "alt": "可选描述"}
+  ]
+}
+
+重要说明：
+- content_blocks 是有序数组，交替出现文本和图片块
+- 图片必须使用 {"type": "image", "url": "图片URL"} 格式，不能使用 markdown 格式
+- 每个图片都需要在 content_blocks 中独立的元素
+- 请严格按照文章中图片出现的顺序排列 content_blocks
+- 只返回JSON，不要其他内容。`;
+
+  console.log('[bailian] extractWechatArticle 开始提取:', url);
+
+  const result = await extractWebContent(url, prompt);
+
+  try {
+    // 处理AI返回的markdown格式JSON（带```json和```）
+    let jsonStr = result.trim();
+
+    // 移除 markdown 代码块标记
+    if (jsonStr.startsWith('```json')) {
+      jsonStr = jsonStr.slice(7);
+    } else if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.slice(3);
+    }
+
+    if (jsonStr.endsWith('```')) {
+      jsonStr = jsonStr.slice(0, -3);
+    }
+
+    jsonStr = jsonStr.trim();
+
+    // 尝试解析JSON
+    const data = JSON.parse(jsonStr);
+    console.log('[bailian] extractWechatArticle 解析成功, 标题:', data.title);
+
+    // 提取 content_blocks 数组
+    const contentBlocks = data.content_blocks || [];
+    console.log('[bailian] content_blocks 数量:', contentBlocks.length);
+
+    // 从 content_blocks 中提取所有图片 URL
+    const images = [];
+    for (const block of contentBlocks) {
+      if (block.type === 'image' && block.url) {
+        images.push(block.url);
+      }
+    }
+
+    // 构建纯文本内容（用于兼容）
+    const content = contentBlocks
+      .filter(block => block.type === 'text')
+      .map(block => block.content)
+      .join('\n\n');
+
+    console.log('[bailian] 提取到的图片数量:', images.length, '图片列表:', images);
+    console.log('[bailian] content_blocks 结构:', JSON.stringify(contentBlocks).substring(0, 500));
+
+    return {
+      title: data.title || '',
+      author: data.author || '',
+      content: content,
+      summary: data.summary || '',
+      images: images,
+      content_blocks: contentBlocks
+    };
+  } catch (e) {
+    // 解析失败，记录错误并返回原始内容
+    console.error('[bailian] extractWechatArticle JSON解析失败:', e.message, '原始内容:', result.substring(0, 500));
+
+    // 尝试从原始内容中提取标题（查找第一个换行前的文本作为标题）
+    let title = '';
+    const firstLine = result.split('\n')[0];
+    if (firstLine && firstLine.length < 100) {
+      title = firstLine.trim();
+    }
+
+    // 如果原始内容包含图片，提取图片 URL
+    let images = [];
+    const imgRegex = /!\[.*?\]\((.*?)\)/g;
+    let match;
+    while ((match = imgRegex.exec(result)) !== null) {
+      if (match[1]) images.push(match[1]);
+    }
+
+    return {
+      title: title,
+      author: '',
+      content: result,
+      summary: '',
+      images: images,
+      content_blocks: []
+    };
+  }
+}
+
 module.exports = {
   generateConversation,
   generateConversationStream,
@@ -1169,5 +1350,7 @@ module.exports = {
   queryVideoTask,
   generateSpeech,
   clearConfigCache,
-  getConfig
+  getConfig,
+  extractWebContent,
+  extractWechatArticle
 };

@@ -28,6 +28,7 @@ const agentChatAdminRoutes = require('./routes/agent-chat-admin');
 const agentChatSocketRoutes = require('./routes/agent-chat-socket');
 const leaderboardRoutes = require('./routes/leaderboard');
 const plazaRoutes = require('./routes/plaza');
+const wechatArticleRoutes = require('./routes/wechat-article');
 const podcastRoutes = require('./routes/podcast');
 const chessRoutes = require('./routes/chess');
 const userAvatarRoutes = require('./routes/user-avatar');
@@ -37,6 +38,10 @@ const energyTradeRoutes = require('./routes/energy-trade');
 const skinCodesRoutes = require('./routes/skin-codes');
 const visitorRoutes = require('./routes/visitor');
 const visitorAdminRoutes = require('./routes/visitor-admin');
+const fileManagerRoutes = require('./routes/file-manager');
+const businessCardRoutes = require('./routes/business-card');
+const marketingRoutes = require('./routes/marketing');
+const paymentMerchantRoutes = require('./routes/payment-merchant');
 const db = require('./utils/db');
 const socketServer = require('./socket');
 
@@ -80,6 +85,38 @@ app.get('/favicon.ico', (req, res) => {
   res.status(204).end();
 });
 
+// 二维码生成API
+const QRCode = require('qrcode');
+
+app.get('/api/qrcode', async (req, res) => {
+  const { text, size = 200 } = req.query;
+
+  if (!text) {
+    return res.status(400).json({ error: '缺少text参数' });
+  }
+
+  try {
+    const qrCodeDataUrl = await QRCode.toDataURL(text, {
+      width: parseInt(size),
+      margin: 2,
+      color: {
+        dark: '#5A4E7D',
+        light: '#FFFFFF'
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        qrcode: qrCodeDataUrl
+      }
+    });
+  } catch (error) {
+    console.error('生成二维码失败:', error);
+    res.status(500).json({ error: '生成二维码失败' });
+  }
+});
+
 // API路由（必须在静态文件服务之前）
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/public', adminPublicRoutes); // 公开接口，无需认证
@@ -99,6 +136,7 @@ app.use('/api/agent-chat-admin', agentChatAdminRoutes);
 app.use('/api/agent-chat-socket', agentChatSocketRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/plaza', plazaRoutes);
+app.use('/api/plaza', wechatArticleRoutes);
 app.use('/api/podcast', podcastRoutes);
 app.use('/api/chess', chessRoutes);
 app.use('/api/user', userAvatarRoutes);
@@ -108,6 +146,10 @@ app.use('/api/energy-trade', energyTradeRoutes);
 app.use('/api/skin-codes', skinCodesRoutes);
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/admin/visitor', visitorAdminRoutes);
+app.use('/api/file-manager', fileManagerRoutes);
+app.use('/api/business-card', businessCardRoutes);
+app.use('/api/marketing', marketingRoutes);
+app.use('/api/payment', paymentMerchantRoutes);
 
 // 初始化小说模块（确保默认小说存在）
 const novel = require('./utils/novel');
@@ -148,7 +190,7 @@ app.get('/', (req, res) => {
 });
 
 // HTML 文件路由（安全地提供 HTML 文件）
-const allowedHtmlFiles = ['game.html','admin-login.html','pdf2text.html','app.apk', 'landing.html','baixing.html', 'promotion.html', 'admin.html', 'index.html', 'supply-chain.html', 'aiwork.html', 'agent-chat.html', 'knowledge-manage.html', 'agent-chat-admin.html', 'leaderboard.html', 'plaza.html', 'chess-plaza.html', 'chess-room.html', 'login.html', 'register.html', 'energy-market.html', 'energy-my-ads.html', 'energy-my-trades.html', 'energy-trade-chat.html'];
+const allowedHtmlFiles = ['game.html','admin-login.html','pdf2text.html','app.apk', 'landing.html','baixing.html', 'promotion.html', 'admin.html', 'index.html', 'supply-chain.html', 'aiwork.html', 'agent-chat.html', 'knowledge-manage.html', 'agent-chat-admin.html', 'leaderboard.html', 'plaza.html', 'chess-plaza.html', 'chess-room.html', 'chess-challenge.html', 'login.html', 'register.html', 'energy-market.html', 'energy-my-ads.html', 'energy-my-trades.html', 'energy-trade-chat.html', 'marketing.html'];
 allowedHtmlFiles.forEach(file => {
   app.get(`/${file}`, (req, res) => {
     let filePath = path.resolve(__dirname, '..', file);
@@ -180,16 +222,47 @@ podcastFiles.forEach(file => {
 // 静态文件服务（用于 public 目录，如果存在）
 app.use(express.static('public'));
 
+// 名片访问页面路由（需要在静态文件服务之后）
+app.get('/card/:token', (req, res) => {
+  const filePath = path.resolve(__dirname, '..', 'public', 'card-view.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: '名片页面不存在' });
+  }
+});
+
+// 营销页面路由 - 通过推荐码访问 /m/:code
+app.get('/m/:code', (req, res) => {
+  const filePath = path.resolve(__dirname, '..', 'public', 'marketing.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: '营销页面不存在' });
+  }
+});
+
+// 营销页面路由 - 通过用户ID访问 /marketing/:userId
+app.get('/marketing/:userId', (req, res) => {
+  const filePath = path.resolve(__dirname, '..', 'public', 'marketing.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: '营销页面不存在' });
+  }
+});
+
+// xiangqi 象棋游戏静态文件服务
+app.use('/xiangqi', express.static(path.resolve(__dirname, '..', 'xiangqi')));
+
 // 404处理
 app.use((req, res) => {
   res.status(404).json({ error: '接口不存在' });
 });
 
-// 错误处理
-app.use((err, req, res, next) => {
-  console.error('服务器错误:', err);
-  res.status(500).json({ error: '服务器内部错误' });
-});
+// 统一错误处理中间件（必须在所有路由之后）
+const { errorHandler } = require('./middleware/error-handler');
+app.use(errorHandler);
 
 // 启动服务器
 const PORT = config.server.port;
@@ -221,6 +294,27 @@ server.listen(PORT, () => {
       console.error('[能量交易超时] 检查超时交易失败:', err);
     }
   }, 30 * 1000);
+
+  // 定期处理视频观看次数队列（每分钟检查一次）
+  // 移除队列功能，直接处理
+  // setInterval(async () => {
+  //   try {
+  //     const cache = require('./utils/cache');
+  //     await cache.processVideoViewsQueue();
+  //   } catch (err) {
+  //     console.error('[视频观看队列] 处理失败:', err);
+  //   }
+  // }, 60 * 1000);
+
+  // 定期处理上传任务队列（每5秒检查一次）
+  setInterval(async () => {
+    try {
+      const cache = require('./utils/cache');
+      await cache.processUploadQueue();
+    } catch (err) {
+      console.error('[上传队列] 处理失败:', err.message);
+    }
+  }, 5000);
 });
 
 // 处理端口占用错误

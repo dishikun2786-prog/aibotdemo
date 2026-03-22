@@ -314,8 +314,12 @@
 
                 if (data.success) {
                     console.log('[Debug] 登录成功，返回数据:', data);
+                    console.log('[Debug] token值:', data.token ? data.token.substring(0, 30) + '...' : 'null');
+                    console.log('[Debug] user.is_admin:', data.user ? data.user.is_admin : 'undefined');
+                    
                     // 登录成功，保存token
                     localStorage.setItem('authToken', data.token);
+                    console.log('[Debug] 已保存authToken到localStorage');
 
                     // 检查是否为管理员
                     if (data.user && data.user.is_admin) {

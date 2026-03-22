@@ -1,0 +1,3307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人营销页面 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
+    <style>
+        :root {
+            --marketing-bg: #f5f7fa;
+            --marketing-card-bg: rgba(255, 255, 255, 0.95);
+            --marketing-primary: #4F46E5;
+            --marketing-primary-dark: #4338ca;
+            --marketing-accent: #10B981;
+            --marketing-text: #1f2937;
+            --marketing-text-secondary: #6b7280;
+            --marketing-text-light: #9ca3af;
+            --marketing-border: rgba(0, 0, 0, 0.08);
+            --marketing-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --marketing-radius: 16px;
+            --marketing-radius-sm: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--marketing-bg);
+            color: var(--marketing-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* 封面区域 */
+        .cover-section {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a18cd1 100%);
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.3;
+        }
+
+        .cover-default {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* 个人资料头部 */
+        .profile-header {
+            position: relative;
+            padding: 0 20px;
+            margin-top: -60px;
+            z-index: 10;
+        }
+
+        .profile-card {
+            background: var(--marketing-card-bg);
+            border-radius: var(--marketing-radius);
+            padding: 24px;
+            box-shadow: var(--marketing-shadow);
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: var(--marketing-primary);
+        }
+
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 600;
+            color: white;
+            background: var(--marketing-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .display-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--marketing-text);
+            margin-bottom: 4px;
+        }
+
+        .username {
+            font-size: 14px;
+            color: var(--marketing-text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .bio {
+            font-size: 14px;
+            color: var(--marketing-text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--marketing-radius-sm);
+            background: var(--marketing-primary);
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: var(--marketing-primary-dark);
+        }
+
+        /* 统计数据 */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px 0;
+            margin-top: 16px;
+            border-top: 1px solid var(--marketing-border);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--marketing-text);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--marketing-text-light);
+            margin-top: 2px;
+        }
+
+        /* 联系方式 */
+        .contact-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background: var(--marketing-card-bg);
+            margin-top: 12px;
+            border-radius: var(--marketing-radius);
+            box-shadow: var(--marketing-shadow);
+        }
+
+        .contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .contact-btn.wechat {
+            background: #07c160;
+            color: white;
+        }
+
+        .contact-btn.phone {
+            background: #1890ff;
+            color: white;
+        }
+
+        .contact-btn.chat {
+            background: var(--marketing-primary);
+            color: white;
+        }
+
+        .contact-btn.link {
+            background: #722ed1;
+            color: white;
+        }
+
+        .contact-btn.hidden {
+            display: none;
+        }
+
+        /* 通用隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 标签页 */
+        .tabs-container {
+            background: var(--marketing-card-bg);
+            margin-top: 12px;
+            border-radius: var(--marketing-radius);
+            box-shadow: var(--marketing-shadow);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--marketing-border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 14px 16px;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--marketing-text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--marketing-primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--marketing-primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 16px;
+            min-height: 200px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 帖子网格 */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .posts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .post-card {
+            background: white;
+            border-radius: var(--marketing-radius-sm);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .post-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .post-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .post-image-placeholder {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #bbb;
+            font-size: 40px;
+        }
+
+        .post-info {
+            padding: 12px;
+        }
+
+        .post-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--marketing-text);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--marketing-text-light);
+        }
+
+        /* 播客列表 */
+        .podcast-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .podcast-card {
+            display: flex;
+            gap: 12px;
+            background: white;
+            border-radius: var(--marketing-radius-sm);
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .podcast-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .podcast-cover {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #f0f0f0;
+        }
+
+        .podcast-cover-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--marketing-primary) 0%, var(--marketing-accent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            flex-shrink: 0;
+        }
+
+        .podcast-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .podcast-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--marketing-text);
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .podcast-desc {
+            font-size: 13px;
+            color: var(--marketing-text-secondary);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .podcast-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--marketing-text-light);
+        }
+
+        /* 媒体网格 */
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+
+        /* 媒体展示区域 */
+        .media-section {
+            background: var(--marketing-card-bg);
+            margin-top: 12px;
+            border-radius: var(--marketing-radius);
+            box-shadow: var(--marketing-shadow);
+            overflow: hidden;
+        }
+
+        /* 视频展示区 - YouTube风格 */
+        .video-section {
+            background: var(--marketing-card-bg);
+            margin-top: 12px;
+            border-radius: var(--marketing-radius);
+            box-shadow: var(--marketing-shadow);
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--marketing-border);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .add-video-btn {
+            padding: 6px 14px;
+            background: var(--marketing-primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-video-btn:hover {
+            background: var(--marketing-primary-dark);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: var(--marketing-radius-sm);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .video-cover {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+
+        .video-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-cover-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .video-info {
+            padding: 10px;
+        }
+
+        .video-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--marketing-text);
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            font-size: 12px;
+            color: var(--marketing-text-light);
+        }
+
+        .video-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .video-action-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .video-action-btn.edit {
+            background: var(--marketing-primary);
+            color: white;
+        }
+
+        .video-action-btn.edit:hover {
+            background: #e64a3f;
+        }
+
+        .video-action-btn.delete {
+            background: #ff4d4f;
+            color: white;
+        }
+
+        .video-action-btn.delete:hover {
+            background: #d9363e;
+        }
+
+        .media-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--marketing-border);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .media-count {
+            background: var(--marketing-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .media-section .media-grid {
+            padding: 8px;
+        }
+
+        .media-item {
+            aspect-ratio: 1;
+            overflow: hidden;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .media-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .media-item:hover img {
+            transform: scale(1.1);
+        }
+
+        /* 视频样式 */
+        .media-item.media-video {
+            background: #000;
+        }
+
+        .media-item.media-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #333;
+            opacity: 0.9;
+            transition: all 0.2s;
+        }
+
+        .media-item.media-video:hover .media-play-icon {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+            background: #fff;
+        }
+
+        .media-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4px 6px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--marketing-text-light);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 14px;
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--marketing-text-light);
+            font-size: 13px;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .footer-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--marketing-primary);
+            color: white;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .footer-link:hover {
+            background: var(--marketing-primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* 海报样式 */
+        .poster-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .poster-content {
+            width: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            overflow: visible;
+            position: relative;
+        }
+
+        .poster-cover {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .poster-cover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.3));
+        }
+
+        .poster-profile {
+            padding: 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 5;
+        }
+
+        .poster-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin: -50px auto 15px;
+            border: 4px solid white;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+        }
+
+        .poster-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .poster-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .poster-bio {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .poster-qrcode {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .poster-qrcode img {
+            width: 120px;
+            height: 120px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .poster-tip {
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            padding-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .poster-actions {
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 图片预览样式 */
+        .image-preview-container {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            font-size: 32px;
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .preview-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 40px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            cursor: pointer;
+            padding: 20px 15px;
+            border-radius: 5px;
+            z-index: 1001;
+        }
+
+        .preview-nav.prev {
+            left: -80px;
+        }
+
+        .preview-nav.next {
+            right: -80px;
+        }
+
+        .preview-nav:hover {
+            background: rgba(0,0,0,0.7);
+        }
+
+        .preview-image-wrapper {
+            max-width: 80vw;
+            max-height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-image-wrapper img {
+            max-width: 100%;
+            max-height: 75vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .preview-counter {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 16px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .preview-actions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 视频预览弹窗样式 */
+        .video-preview-container {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .video-preview-container video {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: #000;
+        }
+
+        .video-preview-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .video-preview-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .video-preview-title {
+            margin-top: 16px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            max-width: 80vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--marketing-radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--marketing-border);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--marketing-text-secondary);
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--marketing-text);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--marketing-border);
+            border-radius: var(--marketing-radius-sm);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--marketing-primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--marketing-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--marketing-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--marketing-radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--marketing-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--marketing-primary-dark);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--marketing-text);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* 自定义链接 */
+        .custom-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .custom-link-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .custom-link-item input {
+            flex: 1;
+        }
+
+        .custom-link-remove {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #fee;
+            color: #f66;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-link-btn {
+            padding: 8px 16px;
+            border: 1px dashed var(--marketing-border);
+            border-radius: var(--marketing-radius-sm);
+            background: none;
+            color: var(--marketing-text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .add-link-btn:hover {
+            border-color: var(--marketing-primary);
+            color: var(--marketing-primary);
+        }
+
+        /* 自定义链接卡片 */
+        .custom-link-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: white;
+            border-radius: var(--marketing-radius-sm);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .custom-link-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #f8f9fa;
+        }
+
+        .custom-link-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--marketing-primary) 0%, var(--marketing-accent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .custom-link-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .custom-link-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--marketing-text);
+            margin-bottom: 2px;
+        }
+
+        .custom-link-url {
+            font-size: 12px;
+            color: var(--marketing-text-light);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .custom-link-arrow {
+            color: var(--marketing-text-light);
+            font-size: 18px;
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--marketing-text-light);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--marketing-border);
+            border-top-color: var(--marketing-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 头像上传 */
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .avatar-upload .avatar-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--marketing-primary);
+        }
+
+        .avatar-upload-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--marketing-border);
+            border-radius: var(--marketing-radius-sm);
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .avatar-upload-btn:hover {
+            border-color: var(--marketing-primary);
+        }
+
+        /* 媒体上传样式 */
+        .media-upload-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .media-upload-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .media-upload-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-upload-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-video-preview {
+            margin-top: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f5;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-video-placeholder {
+            padding: 40px;
+            text-align: center;
+            color: #999;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .media-video-preview video {
+            width: 100%;
+            max-height: 200px;
+        }
+
+        /* 隐藏文件输入 */
+        .hidden-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 封面区域 -->
+        <div class="cover-section">
+            <div class="cover-default" id="coverDefault"></div>
+            <img class="cover-image" id="coverImage" style="display: none;" />
+        </div>
+
+        <!-- 个人资料头部 -->
+        <div class="profile-header">
+            <div class="profile-card">
+                <div class="profile-top">
+                    <div class="avatar-wrapper">
+                        <img class="avatar" id="avatarImg" style="display: none;" />
+                        <div class="avatar-placeholder" id="avatarPlaceholder"></div>
+                    </div>
+                    <div class="profile-info">
+                        <h1 class="display-name" id="displayName">加载中...</h1>
+                        <p class="username" id="username">@...</p>
+                        <p class="bio" id="bio">暂无简介</p>
+                    </div>
+                    <button class="edit-btn" id="editBtn" style="display: none;" onclick="openEditModal()">编辑资料</button>
+                </div>
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-value" id="postsCount">-</div>
+                        <div class="stat-label">帖子</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="podcastsCount">-</div>
+                        <div class="stat-label">播客</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="visitCount">-</div>
+                        <div class="stat-label">访问</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- 联系方式 -->
+        <div class="contact-section">
+            <a class="contact-btn wechat hidden" id="wechatBtn" href="javascript:void(0)">
+                <span>微信</span>
+            </a>
+            <a class="contact-btn phone hidden" id="phoneBtn" href="#">
+                <span>电话</span>
+            </a>
+            <button class="contact-btn chat hidden" id="chatBtn" onclick="openAIChat()">
+                <span>智能客服</span>
+            </button>
+            <button class="contact-btn link hidden" id="customLinksBtn" onclick="openCustomLinks()">
+                <span>了解更多</span>
+            </button>
+        </div>
+
+        <!-- 视频展示区（YouTube风格） -->
+        <div class="video-section" id="videoSection" style="display: none;">
+            <div class="section-header">
+                <span>视频</span>
+                <button class="add-video-btn" id="addVideoBtn" style="display: none;" onclick="openVideoModal()">+ 发布视频</button>
+            </div>
+            <div class="video-grid" id="videoGrid">
+                <div class="loading"><div class="spinner"></div>加载中...</div>
+            </div>
+        </div>
+
+        <!-- 内容标签页 -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" data-tab="posts" onclick="switchTab('posts')">帖子</button>
+                <button class="tab" data-tab="videos" onclick="switchTab('videos')">视频</button>
+                <button class="tab" data-tab="podcasts" onclick="switchTab('podcasts')">播客</button>
+                <!--<button class="tab" data-tab="media" onclick="switchTab('media')">相册</button>-->
+            </div>
+
+            <div class="tab-content active" id="postsTab">
+                <div class="posts-grid" id="postsGrid">
+                    <div class="loading"><div class="spinner"></div>加载中...</div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="videosTab">
+                <div class="video-grid" id="videosGrid">
+                    <div class="loading"><div class="spinner"></div>加载中...</div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="podcastsTab">
+                <div class="podcast-list" id="podcastList">
+                    <div class="loading"><div class="spinner"></div>加载中...</div>
+                </div>
+            </div>
+                <!--
+            <div class="tab-content" id="mediaTab">
+                <div class="media-grid" id="mediaGridTab">
+                    <div class="loading"><div class="spinner"></div>加载中...</div>
+                </div>
+            </div>-->
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>Powered by 能量山</p>
+            <div class="footer-actions">
+                <button class="footer-link" onclick="generatePoster()">
+                    生成海报
+                </button>
+                <button class="footer-link" onclick="copyMarketingLink()">
+                    复制链接
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 海报弹窗 -->
+    <div class="modal-overlay" id="posterModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">分享海报</h3>
+                <button class="modal-close" onclick="closePosterModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="poster-container" id="posterContainer">
+                    <div class="poster-content" id="posterContent">
+                        <div class="poster-cover" id="posterCover"></div>
+                        <div class="poster-profile">
+                            <div class="poster-avatar" id="posterAvatar"></div>
+                            <div class="poster-name" id="posterName"></div>
+                            <div class="poster-bio" id="posterBio"></div>
+                        </div>
+                        <div class="poster-qrcode" id="posterQrcode"></div>
+                        <div class="poster-tip">扫码了解更多</div>
+                    </div>
+                </div>
+                <div class="poster-actions">
+                    <button class="btn btn-primary" onclick="downloadPoster()">下载海报</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片预览弹窗 -->
+    <div class="modal-overlay" id="imagePreviewModal">
+        <div class="image-preview-container">
+            <button class="preview-close" onclick="closeImagePreview()">&times;</button>
+            <button class="preview-nav prev" onclick="prevImage()">&#10094;</button>
+            <div class="preview-image-wrapper">
+                <img id="previewImage" src="" alt="预览图片" />
+            </div>
+            <button class="preview-nav next" onclick="nextImage()">&#10095;</button>
+            <div class="preview-counter">
+                <span id="previewCounter">1 / 1</span>
+            </div>
+            <div class="preview-actions">
+                <button class="btn btn-secondary" onclick="downloadCurrentImage()">下载图片</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频预览弹窗 -->
+    <div class="modal-overlay" id="videoPreviewModal" onclick="closeVideoPreview(event)">
+        <div class="video-preview-container">
+            <button class="video-preview-close" onclick="closeVideoPreview()">&times;</button>
+            <video id="previewVideo" controls playsinline></video>
+            <div class="video-preview-title" id="videoPreviewTitle"></div>
+        </div>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑营销资料</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">头像</label>
+                    <div class="avatar-upload">
+                        <img class="avatar-preview" id="editAvatarPreview" style="width:60px;height:60px;border-radius:50%;object-fit:cover;" />
+                        <label class="avatar-upload-btn">
+                            选择图片
+                            <input type="file" class="hidden-input" id="avatarInput" accept="image/*" onchange="previewAvatar(this)" />
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">封面图片</label>
+                    <div class="avatar-upload">
+                        <img class="avatar-preview" id="editCoverPreview" style="width:120px;height:60px;border-radius:8px;object-fit:cover;" />
+                        <label class="avatar-upload-btn">
+                            选择图片
+                            <input type="file" class="hidden-input" id="coverInput" accept="image/*" onchange="previewCover(this)" />
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">展示名称</label>
+                    <input type="text" class="form-input" id="editDisplayName" placeholder="别人看到的昵称" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">个人简介</label>
+                    <textarea class="form-input form-textarea" id="editBio" placeholder="介绍一下你自己..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">微信/QQ</label>
+                    <input type="text" class="form-input" id="editWechat" placeholder="微信号或QQ号" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="tel" class="form-input" id="editPhone" placeholder="手机号" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" id="editEmail" placeholder="your@email.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">自定义链接</label>
+                    <div class="custom-links" id="customLinksEdit"></div>
+                    <button class="add-link-btn" onclick="addCustomLink()">+ 添加链接</button>
+                </div>
+                <div class="form-group">
+                    <div class="form-switch">
+                        <label class="switch">
+                            <input type="checkbox" id="editIsPublic" checked />
+                            <span class="slider"></span>
+                        </label>
+                        <span>公开营销页面（允许他人访问）</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">客服链接（在线客服功能）</label>
+                    <input type="url" class="form-input" id="editCustomServiceLink" placeholder="请输入客服链接地址，留空则不显示客服按钮" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">自定义菜单</label>
+                    <div id="customMenuContainer" style="margin-bottom: 8px;"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addCustomMenuItem()" style="font-size: 12px; padding: 4px 12px;">+ 添加菜单项</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveProfile()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义链接展示弹窗 -->
+    <div class="modal-overlay" id="customLinksModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">了解更多</h3>
+                <button class="modal-close" onclick="closeCustomLinksModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="customLinksModalBody">
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频发布弹窗 -->
+    <div class="modal-overlay" id="videoModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">发布视频</h3>
+                <button class="modal-close" onclick="closeVideoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">视频标题 <span style="color: #ff4d4f;">*</span></label>
+                    <input type="text" class="form-input" id="videoTitle" placeholder="请输入视频标题" maxlength="200" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频封面 (640x340px)</label>
+                    <div class="avatar-upload">
+                        <img id="videoCoverPreview" style="width:160px;height:90px;border-radius:8px;object-fit:cover;display:none;" />
+                        <label class="avatar-upload-btn">
+                            选择图片
+                            <input type="file" class="hidden-input" id="videoCoverInput" accept="image/*" onchange="previewVideoCover(this)" />
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频文件 <span style="color: #ff4d4f;">*</span></label>
+                    <div class="media-video-preview" id="videoFilePreview" style="min-height:120px;">
+                        <div class="media-video-placeholder" id="videoFilePlaceholder" onclick="document.getElementById('videoFileInput').click()">点击选择视频文件</div>
+                        <video id="videoPreviewPlayer" style="display:none;width:100%;max-height:200px;" controls></video>
+                    </div>
+                    <input type="file" class="hidden-input" id="videoFileInput" accept="video/*" onchange="handleVideoFileSelect(this)" />
+                    <div id="videoUploadStatus" class="upload-status" style="display:none;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频简介</label>
+                    <textarea class="form-input form-textarea" id="videoDescription" placeholder="请输入视频简介..." rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频时长（秒）</label>
+                    <input type="number" class="form-input" id="videoDuration" placeholder="如：120" min="0" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">自定义菜单（视频下方按钮）</label>
+                    <div id="videoMenuContainer" style="margin-bottom: 8px;"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addVideoMenuItem()" style="font-size: 12px; padding: 4px 12px;">+ 添加菜单项</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeVideoModal()">取消</button>
+                <button class="btn btn-primary" id="videoSubmitBtn" onclick="submitVideo()">发布</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑视频弹窗 -->
+    <div class="modal-overlay" id="editVideoModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑视频</h3>
+                <button class="modal-close" onclick="closeEditVideoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editVideoId" />
+                <div class="form-group">
+                    <label class="form-label">视频标题 <span style="color: #ff4d4f;">*</span></label>
+                    <input type="text" class="form-input" id="editVideoTitle" placeholder="请输入视频标题" maxlength="200" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频封面 (640x340px)</label>
+                    <div class="avatar-upload">
+                        <img id="editVideoCoverPreview" style="width:160px;height:90px;border-radius:8px;object-fit:cover;display:none;" />
+                        <label class="avatar-upload-btn">
+                            选择图片
+                            <input type="file" class="hidden-input" id="editVideoCoverInput" accept="image/*" onchange="previewEditVideoCover(this)" />
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频简介</label>
+                    <textarea class="form-input form-textarea" id="editVideoDescription" placeholder="请输入视频简介..." rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">视频时长（秒）</label>
+                    <input type="number" class="form-input" id="editVideoDuration" placeholder="如：120" min="0" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">自定义菜单（视频下方按钮）</label>
+                    <div id="editVideoMenuContainer" style="margin-bottom: 8px;"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addEditVideoMenuItem()" style="font-size: 12px; padding: 4px 12px;">+ 添加菜单项</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditVideoModal()">取消</button>
+                <button class="btn btn-primary" id="editVideoSubmitBtn" onclick="submitEditVideo()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        const API_BASE = '';
+        let profileData = null;
+        let currentUserId = null;
+        let isOwner = false;
+        let editAvatarFile = null;
+        let editCoverFile = null;
+
+        // 工具函数：HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 使用阿里云OSS SDK上传文件
+        async function ossUploadFile(file, type, onProgress) {
+            if (typeof OSS === 'undefined') {
+                throw new Error('OSS SDK未加载');
+            }
+
+            // 获取STS临时凭证
+            const token = localStorage.getItem('authToken');
+            const stsRes = await fetch(API_BASE + '/api/marketing/get-sts-token', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const stsData = await stsRes.json();
+            if (!stsData.success) {
+                throw new Error(stsData.error || '获取STS凭证失败');
+            }
+            const sts = stsData.data;
+
+            // 获取自定义域名
+            const customDomain = sts.customDomain || 'https://boke.skym178.com';
+
+            // 生成OSS存储路径
+            const ext = file.name.substring(file.name.lastIndexOf('.'));
+            const dir = type === 'video' ? 'marketing/media-videos' : 'marketing/media-images';
+            const objectName = `${dir}/${Date.now()}_${Math.random().toString(36).substr(2, 9)}${ext}`;
+
+            // 初始化OSS客户端，使用传输加速域名
+            const clientOptions = {
+                region: 'oss-cn-shenzhen',
+                bucket: sts.bucket,
+                accessKeyId: sts.accessKeyId,
+                accessKeySecret: sts.accessKeySecret,
+                // 使用传输加速域名
+                endpoint: 'https://oss-accelerate.aliyuncs.com'
+            };
+            // 只有当有有效的stsToken时才传递
+            if (sts.stsToken) {
+                clientOptions.stsToken = sts.stsToken;
+            }
+            const client = new OSS(clientOptions);
+
+            // 上传文件
+            let progress = 0;
+            const result = await client.multipartUpload(objectName, file, {
+                progress: (p) => {
+                    progress = Math.round(p * 100);
+                    if (onProgress) onProgress(progress);
+                },
+                partSize: 5 * 1024 * 1024, // 5MB
+                parallel: 4
+            });
+
+            // 返回文件URL，替换为自定义域名 https://boke.skym178.com
+            return 'https://boke.skym178.com/' + objectName;
+        }
+
+        // 获取URL参数
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 获取路径中的用户ID或推荐码
+        function getPathUserId() {
+            const path = window.location.pathname;
+            // /m/:code 或 /marketing/:userId
+            const match = path.match(/\/(m|marketing)\/([^/]+)/);
+            if (match) {
+                return match[2];
+            }
+            return null;
+        }
+
+        // 初始化页面
+        async function init() {
+            const token = localStorage.getItem('authToken');
+            let targetUserId = getPathUserId() || getUrlParam('userId');
+            let targetReferralCode = getPathUserId() || getUrlParam('code');
+
+            // 如果是访问自己的营销页面
+            if (!targetUserId && !targetReferralCode && token) {
+                try {
+                    const meRes = await fetch(API_BASE + '/api/marketing/profile', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const meData = await meRes.json();
+                    if (meData.success && meData.data) {
+                        isOwner = true;
+                        currentUserId = meData.data.user_id;
+                        profileData = meData.data;
+                        renderProfile();
+                        loadContent();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('获取当前用户资料失败:', e);
+                }
+            }
+
+            // 如果有token，检查是否是自己
+            if (token && targetUserId) {
+                try {
+                    const meRes = await fetch(API_BASE + '/api/marketing/profile', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const meData = await meRes.json();
+                    if (meData.success && meData.data && meData.data.user_id == targetUserId) {
+                        isOwner = true;
+                        currentUserId = meData.data.user_id;
+                    }
+                } catch (e) {}
+            }
+
+            // 获取目标用户资料
+            await loadProfile(targetUserId || targetReferralCode);
+        }
+
+        // 加载用户资料
+        async function loadProfile(identifier) {
+            try {
+                let url = API_BASE + '/api/marketing/profile/';
+                if (/^\d+$/.test(identifier)) {
+                    url += identifier;
+                } else {
+                    // 通过推荐码查询 - 需要先查询用户ID
+                    const usersRes = await fetch(API_BASE + '/api/auth/check-referrer?code=' + identifier);
+                    const usersData = await usersRes.json();
+                    if (usersData.success && usersData.data && usersData.data.exists) {
+                        url += usersData.data.user_id;
+                    } else {
+                        showError('用户不存在');
+                        return;
+                    }
+                }
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.success) {
+                    profileData = data.data;
+                    renderProfile();
+                    loadContent();
+                } else {
+                    showError(data.error || '用户不存在');
+                }
+            } catch (err) {
+                console.error('加载资料失败:', err);
+                showError('加载失败，请稍后重试');
+            }
+        }
+
+        // 渲染个人资料
+        function renderProfile() {
+            if (!profileData) return;
+
+            // 名称
+            document.getElementById('displayName').textContent = profileData.display_name || profileData.username;
+            document.getElementById('username').textContent = '@' + profileData.username;
+
+            // 简介
+            document.getElementById('bio').textContent = profileData.bio || '暂无简介';
+
+            // 头像
+            const avatarImg = document.getElementById('avatarImg');
+            const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+            if (profileData.avatar_url) {
+                avatarImg.src = profileData.avatar_url;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                avatarPlaceholder.style.display = 'flex';
+                avatarPlaceholder.textContent = (profileData.display_name || profileData.username || '?').charAt(0).toUpperCase();
+                avatarPlaceholder.style.background = profileData.avatar_color || '#4F46E5';
+            }
+
+            // 封面
+            const coverImg = document.getElementById('coverImage');
+            const coverDefault = document.getElementById('coverDefault');
+            if (profileData.cover_image) {
+                coverImg.src = profileData.cover_image;
+                coverImg.style.display = 'block';
+                coverDefault.style.display = 'none';
+            } else {
+                coverImg.style.display = 'none';
+                coverDefault.style.display = 'block';
+            }
+
+            // 统计数据
+            document.getElementById('postsCount').textContent = profileData.posts_count || 0;
+            document.getElementById('podcastsCount').textContent = profileData.podcasts_count || 0;
+            document.getElementById('visitCount').textContent = profileData.visit_count || 0;
+
+            // 联系方式
+            const wechatBtn = document.getElementById('wechatBtn');
+            if (profileData.wechat_qq) {
+                wechatBtn.href = 'javascript:void(0)';
+                wechatBtn.onclick = function() { copyWechat(profileData.wechat_qq); };
+                wechatBtn.classList.remove('hidden');
+            }
+            if (profileData.phone) {
+                document.getElementById('phoneBtn').href = 'tel:' + profileData.phone;
+                document.getElementById('phoneBtn').classList.remove('hidden');
+            }
+            // 联系方式 - 客服按钮根据客服链接是否为空来显示
+            if (profileData.custom_service_link) {
+                document.getElementById('chatBtn').classList.remove('hidden');
+            }
+            if (profileData.custom_links && profileData.custom_links.length > 0) {
+                document.getElementById('customLinksBtn').classList.remove('hidden');
+            }
+
+            // 编辑按钮
+            if (isOwner) {
+                document.getElementById('editBtn').style.display = 'block';
+            }
+        }
+
+        // 复制微信号
+        function copyWechat(id) {
+            navigator.clipboard.writeText(id).then(() => {
+                alert('已复制微信号: ' + id + '\n\n请打开微信搜索添加好友');
+            }).catch(() => {
+                prompt('请复制微信号:', id);
+            });
+        }
+
+        // 加载内容
+        async function loadContent() {
+            if (!profileData) return;
+
+            await Promise.all([
+                loadPosts(),
+                loadPodcasts(),
+                loadVideos()
+            ]);
+        }
+
+        // 加载帖子
+        async function loadPosts() {
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/posts/' + profileData.user_id);
+                const data = await res.json();
+
+                const grid = document.getElementById('postsGrid');
+                if (data.success && data.data.posts && data.data.posts.length > 0) {
+                    grid.innerHTML = data.data.posts.map(post => `
+                        <div class="post-card" onclick="viewPost('${post.post_id}')">
+                            ${post.cover_image
+                                ? `<img class="post-image" src="${post.cover_image}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="post-image-placeholder" style="display:none">📝</div>`
+                                : `<div class="post-image-placeholder">📝</div>`
+                            }
+                            <div class="post-info">
+                                <div class="post-title">${post.title || '无标题'}</div>
+                                <div class="post-stats">
+                                    <span>👍 ${post.likes_count || 0}</span>
+                                    <span>💬 ${post.comments_count || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">暂无帖子</div></div>';
+                }
+            } catch (err) {
+                console.error('加载帖子失败:', err);
+                document.getElementById('postsGrid').innerHTML = '<div class="empty-state">加载失败</div>';
+            }
+        }
+
+        // 加载播客
+        async function loadPodcasts() {
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/podcasts/' + profileData.user_id);
+                const data = await res.json();
+
+                const list = document.getElementById('podcastList');
+                if (data.success && data.data.podcasts && data.data.podcasts.length > 0) {
+                    list.innerHTML = data.data.podcasts.map(podcast => `
+                        <div class="podcast-card" onclick="viewPodcast('${podcast.podcast_id}')">
+                            ${podcast.cover_url
+                                ? `<img class="podcast-cover" src="${podcast.cover_url}" />`
+                                : `<div class="podcast-cover-placeholder">🎙️</div>`
+                            }
+                            <div class="podcast-info">
+                                <div class="podcast-title">${podcast.title}</div>
+                                <div class="podcast-desc">${podcast.description || ''}</div>
+                                <div class="podcast-meta">
+                                    <span>📻 ${podcast.episode_count}集</span>
+                                    <span>▶️ ${podcast.total_plays || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎙️</div><div class="empty-text">暂无播客</div></div>';
+                }
+            } catch (err) {
+                console.error('加载播客失败:', err);
+                document.getElementById('podcastList').innerHTML = '<div class="empty-state">加载失败</div>';
+            }
+        }
+
+        // 加载媒体（由于相册功能已移除，此函数不再显示内容）
+        async function loadMedia() {
+            // 媒体展示区域已移除，不再加载媒体内容
+            // 如需恢复，请重新添加HTML结构
+        }
+
+        // 加载视频
+        async function loadVideos() {
+            try {
+                const videoSection = document.getElementById('videoSection');
+                const grid = document.getElementById('videoGrid');
+                const videosGridTab = document.getElementById('videosGrid');
+
+                // 如果是所有者，显示发布视频按钮，并获取自己的视频列表
+                if (isOwner) {
+                    document.getElementById('addVideoBtn').style.display = 'block';
+                    var res = await fetch(API_BASE + '/api/marketing/videos', {
+                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                    });
+                } else {
+                    // 公开的视频列表
+                    var res = await fetch(API_BASE + '/api/marketing/videos/user/' + profileData.user_id);
+                }
+
+                const data = await res.json();
+
+                if (data.success && data.data && data.data.length > 0) {
+                    videoSection.style.display = 'block';
+
+                    const renderVideoCard = (video) => {
+                        const coverHtml = video.cover_image
+                            ? `<img src="${video.cover_image}" alt="${video.title}" />`
+                            : `<div class="video-cover-placeholder">▶</div>`;
+
+                        const duration = video.duration ? formatDuration(video.duration) : '';
+                        const date = new Date(video.created_at).toLocaleDateString('zh-CN');
+
+                        const ownerButtons = isOwner ? `
+                            <div class="video-card-actions">
+                                <button class="video-action-btn edit" onclick="event.stopPropagation(); editVideo('${video.video_id}')">编辑</button>
+                                <button class="video-action-btn delete" onclick="event.stopPropagation(); deleteVideo('${video.video_id}')">删除</button>
+                            </div>
+                        ` : '';
+
+                        return `
+                            <div class="video-card" onclick="viewVideo('${video.video_id}')">
+                                <div class="video-cover">
+                                    ${coverHtml}
+                                    ${duration ? `<span class="video-duration">${duration}</span>` : ''}
+                                </div>
+                                <div class="video-info">
+                                    <div class="video-title">${video.title}</div>
+                                    <div class="video-meta">${video.views_count || 0}次观看 · ${date}</div>
+                                    ${ownerButtons}
+                                </div>
+                            </div>
+                        `;
+                    };
+
+                    const videoHtml = data.data.map(renderVideoCard).join('');
+                    grid.innerHTML = videoHtml;
+                    videosGridTab.innerHTML = videoHtml;
+                } else {
+                    // 即使没有视频，如果是所有者也显示发布按钮区域
+                    if (isOwner) {
+                        videoSection.style.display = 'block';
+                        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-text">还没有视频，点击发布第一个视频</div></div>';
+                        videosGridTab.innerHTML = '<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-text">还没有视频，点击发布第一个视频</div></div>';
+                    } else {
+                        videoSection.style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                console.error('加载视频失败:', err);
+                if (isOwner) {
+                    document.getElementById('videoSection').style.display = 'block';
+                    document.getElementById('videoGrid').innerHTML = '<div class="empty-state">加载失败</div>';
+                    document.getElementById('videosGrid').innerHTML = '<div class="empty-state">加载失败</div>';
+                }
+            }
+        }
+
+        // 格式化视频时长
+        function formatDuration(seconds) {
+            if (!seconds || seconds <= 0) return '';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 查看视频详情
+        function viewVideo(videoId) {
+            window.location.href = '/video-detail.html?id=' + videoId;
+        }
+
+        // 预览图片
+        let currentImageIndex = 0;
+        let previewImages = [];
+
+        function previewImage(url, index) {
+            // 收集所有图片
+            const grid = document.getElementById('mediaGrid');
+            const items = grid.querySelectorAll('.media-item:not(.media-video) img');
+            previewImages = Array.from(items).map(function(img) { return img.src; });
+            currentImageIndex = index || 0;
+
+            if (previewImages.length === 0) {
+                previewImages = [url];
+                currentImageIndex = 0;
+            }
+
+            updatePreviewImage();
+            document.getElementById('imagePreviewModal').classList.add('active');
+        }
+
+        function updatePreviewImage() {
+            document.getElementById('previewImage').src = previewImages[currentImageIndex];
+            document.getElementById('previewCounter').textContent = (currentImageIndex + 1) + ' / ' + previewImages.length;
+        }
+
+        function closeImagePreview() {
+            document.getElementById('imagePreviewModal').classList.remove('active');
+        }
+
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + previewImages.length) % previewImages.length;
+            updatePreviewImage();
+        }
+
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % previewImages.length;
+            updatePreviewImage();
+        }
+
+        function downloadCurrentImage() {
+            const url = previewImages[currentImageIndex];
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'image-' + (currentImageIndex + 1) + '.jpg';
+            link.click();
+        }
+
+        // 键盘事件支持
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('imagePreviewModal');
+            if (!modal.classList.contains('active')) return;
+
+            if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'Escape') closeImagePreview();
+        });
+
+        // 点击背景关闭
+        document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+            if (e.target.id === 'imagePreviewModal') {
+                closeImagePreview();
+            }
+        });
+
+        // 播放视频
+        function playVideo(url, title) {
+            const modal = document.getElementById('videoPreviewModal');
+            const video = document.getElementById('previewVideo');
+            const titleEl = document.getElementById('videoPreviewTitle');
+
+            video.src = url;
+            titleEl.textContent = title || '宣传视频';
+            modal.classList.add('active');
+
+            // 自动播放
+            video.play().catch(() => {});
+        }
+
+        // 关闭视频预览
+        function closeVideoPreview(event) {
+            // 如果点击了关闭按钮或有 event 但点击的是容器本身
+            if (event && event.target.id !== 'videoPreviewModal') return;
+
+            const modal = document.getElementById('videoPreviewModal');
+            const video = document.getElementById('previewVideo');
+
+            video.pause();
+            video.src = '';
+            modal.classList.remove('active');
+        }
+
+        // 切换标签页
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        // 查看帖子
+        function viewPost(postId) {
+            window.location.href = '/plaza.html?post=' + postId;
+        }
+
+        // 查看播客
+        function viewPodcast(podcastId) {
+            window.location.href = '/podcast-detail.html?id=' + podcastId;
+        }
+
+        // 打开AI客服（现在直接跳转到客服链接）
+        function openAIChat() {
+            const link = profileData.custom_service_link;
+            if (!link) {
+                alert('该用户暂未设置客服');
+                return;
+            }
+            window.location.href = link;
+        }
+
+        // 打开自定义链接
+        function openCustomLinks() {
+            if (!profileData.custom_links || profileData.custom_links.length === 0) return;
+
+            const modalBody = document.getElementById('customLinksModalBody');
+            modalBody.innerHTML = profileData.custom_links.map(link => {
+                const icon = getLinkIcon(link.url);
+                return `
+                    <div class="custom-link-card" onclick="window.open('${link.url}', '_blank')">
+                        <div class="custom-link-icon">${icon}</div>
+                        <div class="custom-link-content">
+                            <div class="custom-link-title">${link.title}</div>
+                            <div class="custom-link-url">${link.url}</div>
+                        </div>
+                        <div class="custom-link-arrow">></div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('customLinksModal').classList.add('active');
+        }
+
+        // 关闭自定义链接弹窗
+        function closeCustomLinksModal() {
+            document.getElementById('customLinksModal').classList.remove('active');
+        }
+
+        // 自定义菜单相关函数
+        let customMenuItems = [];
+
+        // 加载自定义菜单到编辑表单
+        function loadCustomMenuForEdit() {
+            const container = document.getElementById('customMenuContainer');
+            customMenuItems = [];
+
+            if (profileData.custom_menu) {
+                try {
+                    customMenuItems = typeof profileData.custom_menu === 'string'
+                        ? JSON.parse(profileData.custom_menu)
+                        : profileData.custom_menu;
+                } catch (e) {
+                    customMenuItems = [];
+                }
+            }
+
+            renderCustomMenuItems();
+        }
+
+        // 渲染自定义菜单项
+        function renderCustomMenuItems() {
+            const container = document.getElementById('customMenuContainer');
+            container.innerHTML = customMenuItems.map((item, index) => `
+                <div class="custom-menu-item" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+                    <input type="text" class="form-input" placeholder="标题" value="${escapeHtml(item.title || '')}" onchange="updateCustomMenuItem(${index}, 'title', this.value)" style="flex:1;" />
+                    <input type="text" class="form-input" placeholder="图标(emoji)" value="${escapeHtml(item.icon || '')}" onchange="updateCustomMenuItem(${index}, 'icon', this.value)" style="width:80px;" />
+                    <input type="url" class="form-input" placeholder="链接URL" value="${escapeHtml(item.url || '')}" onchange="updateCustomMenuItem(${index}, 'url', this.value)" style="flex:2;" />
+                    <button type="button" onclick="removeCustomMenuItem(${index})" style="padding:4px 8px;background:#ff4d4f;border:none;border-radius:4px;color:white;cursor:pointer;">×</button>
+                </div>
+            `).join('');
+        }
+
+        // 添加自定义菜单项
+        function addCustomMenuItem() {
+            customMenuItems.push({ title: '', icon: '', url: '' });
+            renderCustomMenuItems();
+        }
+
+        // 更新自定义菜单项
+        function updateCustomMenuItem(index, field, value) {
+            if (customMenuItems[index]) {
+                customMenuItems[index][field] = value;
+            }
+        }
+
+        // 删除自定义菜单项
+        function removeCustomMenuItem(index) {
+            customMenuItems.splice(index, 1);
+            renderCustomMenuItems();
+        }
+
+        // 从表单获取自定义菜单
+        function getCustomMenuFromForm() {
+            // 先从表单DOM获取最新值
+            const container = document.getElementById('customMenuContainer');
+            const items = container.querySelectorAll('.custom-menu-item');
+            const menu = [];
+            items.forEach((item, index) => {
+                const inputs = item.querySelectorAll('input');
+                const title = inputs[0].value.trim();
+                const icon = inputs[1].value.trim();
+                const url = inputs[2].value.trim();
+                if (title && url) {
+                    menu.push({ title, icon, url });
+                }
+            });
+            return menu;
+        }
+
+        // 视频发布相关变量
+        let videoCoverFile = null;
+        let videoFile = null;
+        let videoUploadUrl = null;
+        let videoMenuItems = [];
+
+        // 打开视频发布弹窗
+        function openVideoModal() {
+            if (!isOwner) return;
+            document.getElementById('videoModal').classList.add('active');
+            // 清空表单
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('videoDescription').value = '';
+            document.getElementById('videoDuration').value = '';
+            document.getElementById('videoCoverPreview').style.display = 'none';
+            document.getElementById('videoFilePlaceholder').style.display = 'flex';
+            document.getElementById('videoPreviewPlayer').style.display = 'none';
+            document.getElementById('videoUploadStatus').style.display = 'none';
+            videoCoverFile = null;
+            videoFile = null;
+            videoUploadUrl = null;
+            videoMenuItems = [];
+            renderVideoMenuItems();
+        }
+
+        // 渲染视频自定义菜单项
+        function renderVideoMenuItems() {
+            const container = document.getElementById('videoMenuContainer');
+            container.innerHTML = videoMenuItems.map((item, index) => `
+                <div class="custom-menu-item" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+                    <input type="text" class="form-input" placeholder="标题" value="${escapeHtml(item.title || '')}" onchange="updateVideoMenuItem(${index}, 'title', this.value)" style="flex:1;" />
+                    <input type="text" class="form-input" placeholder="图标(emoji)" value="${escapeHtml(item.icon || '')}" onchange="updateVideoMenuItem(${index}, 'icon', this.value)" style="width:80px;" />
+                    <input type="url" class="form-input" placeholder="链接URL" value="${escapeHtml(item.url || '')}" onchange="updateVideoMenuItem(${index}, 'url', this.value)" style="flex:2;" />
+                    <button type="button" onclick="removeVideoMenuItem(${index})" style="padding:4px 8px;background:#ff4d4f;border:none;border-radius:4px;color:white;cursor:pointer;">x</button>
+                </div>
+            `).join('');
+        }
+
+        // 添加视频菜单项
+        function addVideoMenuItem() {
+            videoMenuItems.push({ title: '', icon: '', url: '' });
+            renderVideoMenuItems();
+        }
+
+        // 更新视频菜单项
+        function updateVideoMenuItem(index, field, value) {
+            if (videoMenuItems[index]) {
+                videoMenuItems[index][field] = value;
+            }
+        }
+
+        // 删除视频菜单项
+        function removeVideoMenuItem(index) {
+            videoMenuItems.splice(index, 1);
+            renderVideoMenuItems();
+        }
+
+        // 从表单获取视频菜单
+        function getVideoMenuFromForm() {
+            const container = document.getElementById('videoMenuContainer');
+            const items = container.querySelectorAll('.custom-menu-item');
+            const menu = [];
+            items.forEach((item) => {
+                const inputs = item.querySelectorAll('input');
+                const title = inputs[0].value.trim();
+                const icon = inputs[1].value.trim();
+                const url = inputs[2].value.trim();
+                if (title && url) {
+                    menu.push({ title, icon, url });
+                }
+            });
+            return menu;
+        }
+
+        // 关闭视频发布弹窗
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.remove('active');
+        }
+
+        // 编辑视频相关变量
+        let editVideoCoverFile = null;
+        let editVideoMenuItems = [];
+        let currentEditVideo = null;
+
+        // 打开编辑视频弹窗
+        async function editVideo(videoId) {
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoId, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                const data = await res.json();
+
+                if (!data.success || !data.data) {
+                    alert('获取视频信息失败');
+                    return;
+                }
+
+                const video = data.data;
+                currentEditVideo = video;
+
+                document.getElementById('editVideoId').value = video.video_id;
+                document.getElementById('editVideoTitle').value = video.title || '';
+                document.getElementById('editVideoDescription').value = video.description || '';
+                document.getElementById('editVideoDuration').value = video.duration || '';
+
+                // 封面预览
+                if (video.cover_image) {
+                    document.getElementById('editVideoCoverPreview').src = video.cover_image;
+                    document.getElementById('editVideoCoverPreview').style.display = 'block';
+                } else {
+                    document.getElementById('editVideoCoverPreview').style.display = 'none';
+                }
+
+                // 加载自定义菜单
+                editVideoMenuItems = [];
+                if (video.custom_menu) {
+                    try {
+                        editVideoMenuItems = typeof video.custom_menu === 'string'
+                            ? JSON.parse(video.custom_menu)
+                            : video.custom_menu;
+                    } catch (e) {
+                        editVideoMenuItems = [];
+                    }
+                }
+                renderEditVideoMenuItems();
+
+                document.getElementById('editVideoModal').classList.add('active');
+            } catch (err) {
+                console.error('获取视频信息失败:', err);
+                alert('获取视频信息失败');
+            }
+        }
+
+        // 关闭编辑视频弹窗
+        function closeEditVideoModal() {
+            document.getElementById('editVideoModal').classList.remove('active');
+            editVideoCoverFile = null;
+            currentEditVideo = null;
+        }
+
+        // 预览编辑视频封面
+        function previewEditVideoCover(input) {
+            if (input.files && input.files[0]) {
+                editVideoCoverFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editVideoCoverPreview').src = e.target.result;
+                    document.getElementById('editVideoCoverPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(editVideoCoverFile);
+            }
+        }
+
+        // 渲染编辑视频自定义菜单
+        function renderEditVideoMenuItems() {
+            const container = document.getElementById('editVideoMenuContainer');
+            container.innerHTML = editVideoMenuItems.map((item, index) => `
+                <div class="custom-menu-item" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+                    <input type="text" class="form-input" placeholder="标题" value="${escapeHtml(item.title || '')}" onchange="updateEditVideoMenuItem(${index}, 'title', this.value)" style="flex:1;" />
+                    <input type="text" class="form-input" placeholder="图标(emoji)" value="${escapeHtml(item.icon || '')}" onchange="updateEditVideoMenuItem(${index}, 'icon', this.value)" style="width:80px;" />
+                    <input type="url" class="form-input" placeholder="链接URL" value="${escapeHtml(item.url || '')}" onchange="updateEditVideoMenuItem(${index}, 'url', this.value)" style="flex:2;" />
+                    <button type="button" onclick="removeEditVideoMenuItem(${index})" style="padding:4px 8px;background:#ff4d4f;border:none;border-radius:4px;color:white;cursor:pointer;">x</button>
+                </div>
+            `).join('');
+        }
+
+        // 添加编辑视频菜单项
+        function addEditVideoMenuItem() {
+            editVideoMenuItems.push({ title: '', icon: '', url: '' });
+            renderEditVideoMenuItems();
+        }
+
+        // 更新编辑视频菜单项
+        function updateEditVideoMenuItem(index, field, value) {
+            if (editVideoMenuItems[index]) {
+                editVideoMenuItems[index][field] = value;
+            }
+        }
+
+        // 删除编辑视频菜单项
+        function removeEditVideoMenuItem(index) {
+            editVideoMenuItems.splice(index, 1);
+            renderEditVideoMenuItems();
+        }
+
+        // 获取编辑视频菜单
+        function getEditVideoMenuFromForm() {
+            const container = document.getElementById('editVideoMenuContainer');
+            const items = container.querySelectorAll('.custom-menu-item');
+            const menu = [];
+            items.forEach((item) => {
+                const inputs = item.querySelectorAll('input');
+                const title = inputs[0].value.trim();
+                const icon = inputs[1].value.trim();
+                const url = inputs[2].value.trim();
+                if (title && url) {
+                    menu.push({ title, icon, url });
+                }
+            });
+            return menu;
+        }
+
+        // 提交编辑视频
+        async function submitEditVideo() {
+            const videoId = document.getElementById('editVideoId').value;
+            const title = document.getElementById('editVideoTitle').value.trim();
+            const description = document.getElementById('editVideoDescription').value.trim();
+            const duration = parseInt(document.getElementById('editVideoDuration').value) || 0;
+
+            if (!title) {
+                alert('请输入视频标题');
+                return;
+            }
+
+            const submitBtn = document.getElementById('editVideoSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '上传中...';
+
+            try {
+                // 如果选择了新封面上传 - 使用OSS直传
+                let coverUrl = currentEditVideo.cover_image || '';
+                if (editVideoCoverFile) {
+                    coverUrl = await ossUploadFile(editVideoCoverFile, 'image', (progress) => {
+                        submitBtn.textContent = '上传封面中...' + progress + '%';
+                    });
+                }
+
+                submitBtn.textContent = '保存中...';
+
+                // 获取自定义菜单
+                const customMenu = getEditVideoMenuFromForm();
+
+                // 更新视频
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoId, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        cover_image: coverUrl,
+                        duration,
+                        custom_menu: JSON.stringify(customMenu)
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('视频更新成功！');
+                    closeEditVideoModal();
+                    loadVideos(); // 刷新视频列表
+                } else {
+                    alert(data.error || '更新失败');
+                }
+            } catch (err) {
+                console.error('更新视频失败:', err);
+                alert('更新视频失败');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '保存';
+            }
+        }
+
+        // 删除视频
+        async function deleteVideo(videoId) {
+            if (!confirm('确定要删除这个视频吗？此操作不可恢复。')) {
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('视频已删除');
+                    loadVideos(); // 刷新视频列表
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            } catch (err) {
+                console.error('删除视频失败:', err);
+                alert('删除视频失败');
+            }
+        }
+
+        // 预览视频封面
+        function previewVideoCover(input) {
+            if (input.files && input.files[0]) {
+                videoCoverFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('videoCoverPreview').src = e.target.result;
+                    document.getElementById('videoCoverPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(videoCoverFile);
+            }
+        }
+
+        // 选择视频文件
+        function handleVideoFileSelect(input) {
+            if (input.files && input.files[0]) {
+                videoFile = input.files[0];
+                const player = document.getElementById('videoPreviewPlayer');
+                const placeholder = document.getElementById('videoFilePlaceholder');
+                const url = URL.createObjectURL(videoFile);
+                player.src = url;
+                player.style.display = 'block';
+                placeholder.style.display = 'none';
+
+                // 获取视频时长
+                player.onloadedmetadata = function() {
+                    document.getElementById('videoDuration').value = Math.floor(player.duration) || '';
+                };
+            }
+        }
+
+        // 提交视频
+        async function submitVideo() {
+            const title = document.getElementById('videoTitle').value.trim();
+            const description = document.getElementById('videoDescription').value.trim();
+            const duration = parseInt(document.getElementById('videoDuration').value) || 0;
+
+            if (!title) {
+                alert('请输入视频标题');
+                return;
+            }
+
+            if (!videoUploadUrl && !videoFile) {
+                alert('请选择视频文件');
+                return;
+            }
+
+            const submitBtn = document.getElementById('videoSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '上传中...';
+
+            try {
+                // 1. 先上传视频文件（如果选择了新文件）- 使用OSS直传
+                let videoUrl = videoUploadUrl;
+                if (videoFile && !videoUploadUrl) {
+                    // 使用OSS SDK直传
+                    videoUrl = await ossUploadFile(videoFile, 'video', (progress) => {
+                        submitBtn.textContent = '上传视频中...' + progress + '%';
+                    });
+                }
+
+                // 2. 上传封面图片（如果选择了新文件）- 使用OSS直传
+                let coverUrl = '';
+                if (videoCoverFile) {
+                    coverUrl = await ossUploadFile(videoCoverFile, 'image', (progress) => {
+                        submitBtn.textContent = '上传封面中...' + progress + '%';
+                    });
+                }
+
+                submitBtn.textContent = '保存中...';
+
+                // 3. 获取自定义菜单
+                const videoMenu = getVideoMenuFromForm();
+
+                // 4. 创建视频记录
+                const res = await fetch(API_BASE + '/api/marketing/videos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        cover_image: coverUrl,
+                        video_url: videoUrl,
+                        duration,
+                        custom_menu: JSON.stringify(videoMenu)
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('视频发布成功！');
+                    closeVideoModal();
+                    loadVideos(); // 刷新视频列表
+                } else {
+                    alert(data.error || '发布失败');
+                }
+            } catch (err) {
+                console.error('发布视频失败:', err);
+                alert('发布失败，请重试');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布';
+            }
+        }
+
+        // 获取链接图标
+        function getLinkIcon(url) {
+            if (!url) return '🔗';
+            const lowerUrl = url.toLowerCase();
+            if (lowerUrl.includes('weibo')) return '🌐';
+            if (lowerUrl.includes('douyin') || lowerUrl.includes('tiktok')) return '🎵';
+            if (lowerUrl.includes('zhihu')) return '💬';
+            if (lowerUrl.includes('bilibili')) return '📺';
+            if (lowerUrl.includes('xiaohongshu') || lowerUrl.includes('red')) return '📕';
+            if (lowerUrl.includes('taobao') || lowerUrl.includes('tmall')) return '🛒';
+            if (lowerUrl.includes('jd.com')) return '🛍️';
+            if (lowerUrl.includes('github')) return '💻';
+            if (lowerUrl.includes('juejin')) return '📝';
+            if (lowerUrl.includes('blog') || lowerUrl.includes('cnblogs')) return '📝';
+            if (lowerUrl.includes('qq.com')) return '💬';
+            if (lowerUrl.includes('mail')) return '📧';
+            return '🔗';
+        }
+
+        // 复制营销链接
+        function copyMarketingLink() {
+            let link = '';
+            if (profileData.referral_code) {
+                link = window.location.origin + '/m/' + profileData.referral_code;
+            } else {
+                link = window.location.origin + '/marketing/' + profileData.user_id;
+            }
+
+            navigator.clipboard.writeText(link).then(() => {
+                alert('营销链接已复制到剪贴板！\n\n' + link);
+            }).catch(() => {
+                prompt('请复制以下链接:', link);
+            });
+        }
+
+        // 生成海报
+        async function generatePoster() {
+            if (!profileData) return;
+
+            const modal = document.getElementById('posterModal');
+            const posterCover = document.getElementById('posterCover');
+            const posterAvatar = document.getElementById('posterAvatar');
+            const posterName = document.getElementById('posterName');
+            const posterBio = document.getElementById('posterBio');
+            const posterQrcode = document.getElementById('posterQrcode');
+
+            // 显示加载状态
+            posterName.textContent = '加载中...';
+
+            try {
+                // 从后端API获取海报数据（包含Base64图片）
+                const res = await fetch(API_BASE + '/api/marketing/poster/' + profileData.user_id);
+                const result = await res.json();
+
+                if (result.success && result.data) {
+                    const data = result.data;
+
+                    // 设置封面（使用Base64图片）
+                    if (data.cover) {
+                        posterCover.style.backgroundImage = `url(${data.cover})`;
+                    } else {
+                        posterCover.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    }
+
+                    // 设置头像
+                    posterAvatar.innerHTML = '';
+                    if (data.avatar) {
+                        const img = document.createElement('img');
+                        img.src = data.avatar;
+                        img.onerror = () => {
+                            posterAvatar.textContent = (data.display_name || profileData.username || '?').charAt(0).toUpperCase();
+                        };
+                        posterAvatar.appendChild(img);
+                    } else {
+                        posterAvatar.textContent = (data.display_name || profileData.username || '?').charAt(0).toUpperCase();
+                    }
+
+                    // 设置名称和简介
+                    posterName.textContent = data.display_name || profileData.username || '用户';
+                    posterBio.textContent = data.bio || '欢迎访问我的主页';
+
+                    // 使用 QRServer API 生成二维码
+                    posterQrcode.innerHTML = `<img src="${data.qrcode}" alt="二维码" />`;
+                } else {
+                    // API失败，使用旧方式
+                    console.error('获取海报数据失败，使用旧方式');
+                    setupPosterOldWay();
+                }
+            } catch (err) {
+                console.error('获取海报数据失败:', err);
+                // 降级到旧方式
+                setupPosterOldWay();
+            }
+
+            modal.classList.add('active');
+
+            // 旧方式设置海报（兼容）
+            function setupPosterOldWay() {
+                if (profileData.cover_image) {
+                    posterCover.style.backgroundImage = `url(${profileData.cover_image})`;
+                } else {
+                    posterCover.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }
+
+                posterAvatar.innerHTML = '';
+                if (profileData.avatar_url) {
+                    const img = document.createElement('img');
+                    img.src = profileData.avatar_url;
+                    img.onerror = () => {
+                        posterAvatar.textContent = (profileData.display_name || profileData.username || '?').charAt(0).toUpperCase();
+                    };
+                    posterAvatar.appendChild(img);
+                } else {
+                    posterAvatar.textContent = (profileData.display_name || profileData.username || '?').charAt(0).toUpperCase();
+                }
+
+                posterName.textContent = profileData.display_name || profileData.username || '用户';
+                posterBio.textContent = profileData.bio || '欢迎访问我的主页';
+
+                let link = '';
+                if (profileData.referral_code) {
+                    link = window.location.origin + '/m/' + profileData.referral_code;
+                } else {
+                    link = window.location.origin + '/marketing/' + profileData.user_id;
+                }
+                posterQrcode.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(link)}" alt="二维码" />`;
+            }
+        }
+
+        // 关闭海报弹窗
+        function closePosterModal() {
+            document.getElementById('posterModal').classList.remove('active');
+        }
+
+        // 下载海报 - 使用Canvas绘制避免跨域问题
+        async function downloadPoster() {
+            const posterContent = document.getElementById('posterContent');
+
+            // 获取海报数据
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/poster/' + profileData.user_id);
+                const result = await res.json();
+
+                if (!result.success || !result.data) {
+                    alert('获取海报数据失败');
+                    return;
+                }
+
+                const data = result.data;
+
+                // 创建Canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // 设置海报尺寸
+                canvas.width = 400;
+                canvas.height = 600;
+
+                // 1. 首先绘制整个海报的背景渐变色
+                const bgGradient = ctx.createLinearGradient(0, 0, 400, 600);
+                bgGradient.addColorStop(0, '#667eea');
+                bgGradient.addColorStop(1, '#764ba2');
+                ctx.fillStyle = bgGradient;
+                ctx.fillRect(0, 0, 400, 600);
+
+                // 2. 绘制封面图片（如果有）
+                if (data.cover) {
+                    try {
+                        const coverImg = await loadImage(data.cover);
+                        // 绘制封面图片（拉伸填充顶部区域）
+                        ctx.drawImage(coverImg, 0, 0, 400, 200);
+                    } catch (e) {
+                        // 封面加载失败，保持渐变背景
+                    }
+                }
+
+                // 绘制头像背景
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(200, 170, 50, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 绘制头像
+                if (data.avatar) {
+                    try {
+                        const avatarImg = await loadImage(data.avatar);
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(200, 170, 45, 0, Math.PI * 2);
+                        ctx.clip();
+                        ctx.drawImage(avatarImg, 155, 125, 90, 90);
+                        ctx.restore();
+                    } catch (e) {
+                        // 头像加载失败，绘制首字母
+                        ctx.fillStyle = '#4F46E5';
+                        ctx.font = 'bold 40px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText((data.display_name || '?').charAt(0).toUpperCase(), 200, 170);
+                    }
+                } else {
+                    ctx.fillStyle = '#4F46E5';
+                    ctx.font = 'bold 40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText((data.display_name || '?').charAt(0).toUpperCase(), 200, 170);
+                }
+
+                // 绘制名称
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(data.display_name || '用户', 200, 250);
+
+                // 绘制简介
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.font = '14px Arial';
+                const bio = data.bio || '欢迎访问我的主页';
+                // 合理换行：每行约20个中文字符宽度
+                const maxWidth = 340;
+                const lineHeight = 22;
+                const x = 30;
+                let y = 280;
+                
+                // 将文字按行分割
+                let line = '';
+                for (let i = 0; i < bio.length; i++) {
+                    const char = bio[i];
+                    // 粗略估算中文字符宽度约14px，英文约8px
+                    const charWidth = /[\u4e00-\u9fa5]/.test(char) ? 14 : 8;
+                    
+                    if (x + ctx.measureText(line).width + charWidth > maxWidth + 30 || char === '\n') {
+                        // 换行
+                        ctx.fillText(line, 200, y);
+                        y += lineHeight;
+                        line = char === '\n' ? '' : char;
+                    } else {
+                        line += char;
+                    }
+                }
+                // 绘制最后一行
+                if (line) {
+                    ctx.fillText(line, 200, y);
+                }
+
+                // 绘制二维码背景（二维码区域是浅色背景）
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.roundRect(125, 350, 150, 170, 10);
+                ctx.fill();
+
+                // 绘制二维码
+                try {
+                    const qrImg = await loadImage(data.qrcode);
+                    ctx.drawImage(qrImg, 150, 360, 100, 100);
+                } catch (e) {
+                    console.error('二维码加载失败:', e);
+                }
+
+                // 绘制提示（在二维码下方，白色背景内用深色文字）
+                ctx.fillStyle = '#666666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('扫码了解更多', 200, 490);
+
+                // 绘制底部文字
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.font = '10px Arial';
+                ctx.fillText('Powered by 能量山', 200, 560);
+
+                // 下载图片
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = `marketing-poster-${profileData.user_id}.png`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+
+            } catch (err) {
+                console.error('生成海报失败:', err);
+                alert('生成海报失败，请重试');
+            }
+        }
+
+        // 辅助函数：加载图片返回Promise
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+
+        // 打开编辑弹窗
+        async function openEditModal() {
+            if (!isOwner) return;
+
+            // 填充表单
+            document.getElementById('editDisplayName').value = profileData.display_name || '';
+            document.getElementById('editBio').value = profileData.bio || '';
+            document.getElementById('editWechat').value = profileData.wechat_qq || '';
+            document.getElementById('editPhone').value = profileData.phone || '';
+            document.getElementById('editEmail').value = profileData.email || '';
+            document.getElementById('editIsPublic').checked = profileData.is_public !== false;
+            document.getElementById('editCustomServiceLink').value = profileData.custom_service_link || '';
+
+            // 加载自定义菜单
+            loadCustomMenuForEdit();
+
+            // 头像预览
+            const avatarPreview = document.getElementById('editAvatarPreview');
+            if (profileData.avatar_url) {
+                avatarPreview.src = profileData.avatar_url;
+                avatarPreview.style.background = '';
+                avatarPreview.innerHTML = '';
+            } else {
+                avatarPreview.style.background = profileData.avatar_color || '#4F46E5';
+                avatarPreview.innerHTML = (profileData.display_name || profileData.username || '?').charAt(0).toUpperCase();
+                avatarPreview.style.display = 'flex';
+                avatarPreview.style.alignItems = 'center';
+                avatarPreview.style.justifyContent = 'center';
+                avatarPreview.style.color = 'white';
+                avatarPreview.style.fontSize = '24px';
+            }
+
+            // 封面预览
+            const coverPreview = document.getElementById('editCoverPreview');
+            if (profileData.cover_image) {
+                coverPreview.src = profileData.cover_image;
+                coverPreview.style.background = '';
+            } else {
+                coverPreview.src = '';
+                coverPreview.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+
+            // 自定义链接
+            const linksContainer = document.getElementById('customLinksEdit');
+            linksContainer.innerHTML = '';
+            (profileData.custom_links || []).forEach(link => {
+                addCustomLink(link.title, link.url);
+            });
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        // 关闭编辑弹窗
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editAvatarFile = null;
+            editCoverFile = null;
+        }
+
+        // 预览头像
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                editAvatarFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editAvatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(editAvatarFile);
+            }
+        }
+
+        // 预览封面
+        function previewCover(input) {
+            if (input.files && input.files[0]) {
+                editCoverFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editCoverPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(editCoverFile);
+            }
+        }
+
+        // 添加自定义链接
+        function addCustomLink(title = '', url = '') {
+            const container = document.getElementById('customLinksEdit');
+            const div = document.createElement('div');
+            div.className = 'custom-link-item';
+            div.innerHTML = `
+                <input type="text" class="form-input" placeholder="标题" value="${title}" />
+                <input type="url" class="form-input" placeholder="URL" value="${url}" />
+                <button type="button" class="custom-link-remove" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // 保存资料
+        async function saveProfile() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('请先登录');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // 收集自定义链接
+            const customLinks = [];
+            document.querySelectorAll('.custom-link-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                if (inputs[0].value && inputs[1].value) {
+                    customLinks.push({ title: inputs[0].value, url: inputs[1].value });
+                }
+            });
+
+            // 处理客服链接
+            const customServiceLink = document.getElementById('editCustomServiceLink').value.trim();
+
+            // 处理自定义菜单
+            const customMenu = getCustomMenuFromForm();
+
+            const data = {
+                display_name: document.getElementById('editDisplayName').value,
+                bio: document.getElementById('editBio').value,
+                wechat_qq: document.getElementById('editWechat').value,
+                phone: document.getElementById('editPhone').value,
+                email: document.getElementById('editEmail').value,
+                is_public: document.getElementById('editIsPublic').checked,
+                custom_service_link: customServiceLink,
+                custom_links: JSON.stringify(customLinks),
+                custom_menu: JSON.stringify(customMenu)
+            };
+
+            // 显示保存中状态
+            const saveBtn = document.querySelector('#editModal .btn-primary');
+            const originalBtnText = saveBtn ? saveBtn.textContent : '保存';
+            if (saveBtn) {
+                saveBtn.textContent = '保存中...';
+                saveBtn.disabled = true;
+            }
+
+            try {
+                // 上传头像
+                if (editAvatarFile) {
+                    const formData = new FormData();
+                    formData.append('avatar', editAvatarFile);
+                    if (saveBtn) saveBtn.textContent = '上传头像中...';
+                    const uploadRes = await fetch(API_BASE + '/api/marketing/avatar-upload', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (uploadData.success && uploadData.data.avatar_url) {
+                        data.avatar_url = uploadData.data.avatar_url;
+                    }
+                }
+
+                // 上传封面
+                if (editCoverFile) {
+                    const formData = new FormData();
+                    formData.append('cover', editCoverFile);
+                    if (saveBtn) saveBtn.textContent = '上传封面中...';
+                    const uploadRes = await fetch(API_BASE + '/api/marketing/cover-upload', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (uploadData.success && uploadData.data.cover_image) {
+                        data.cover_image = uploadData.data.cover_image;
+                    }
+                }
+
+                // 保存资料
+                if (saveBtn) saveBtn.textContent = '保存中...';
+                const res = await fetch(API_BASE + '/api/marketing/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    alert('保存成功！');
+                    profileData = result.data;
+                    renderProfile();
+                    closeEditModal();
+                } else {
+                    alert(result.error || '保存失败');
+                }
+            } catch (err) {
+                console.error('保存失败:', err);
+                alert('保存失败，请重试');
+            } finally {
+                // 恢复按钮状态
+                if (saveBtn) {
+                    saveBtn.textContent = originalBtnText;
+                    saveBtn.disabled = false;
+                }
+            }
+        }
+
+        // 显示错误
+        function showError(message) {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="empty-state" style="padding: 100px 20px;">
+                    <div class="empty-icon">😢</div>
+                    <div class="empty-text">${message}</div>
+                </div>
+            `;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

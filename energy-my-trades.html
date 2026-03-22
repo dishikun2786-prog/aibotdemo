@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>我的交易 | 能量山：零号协议</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="/js/auth-manager.js"></script>
     <style>
         :root {
             --trade-bg: #f0f2f5;
@@ -274,6 +275,8 @@
         <div class="pagination" id="pagination"></div>
     </div>
 
+
+    <script src="/js/visitor-tracker.js"></script>
     <script>
         const API_BASE = window.location.origin;
         let token = AuthManager.getToken();
@@ -449,7 +452,5 @@
 
         init();
     </script>
-    <script src="/js/auth-manager.js"></script>
-    <script src="/js/visitor-tracker.js"></script>
 </body>
 </html>

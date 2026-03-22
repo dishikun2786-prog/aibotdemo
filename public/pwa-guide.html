@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>添加到桌面 | 能量山：零号协议</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7C5CFF;
+            --primary-dark: #6B4AE2;
+            --primary-light: #9D8AFF;
+            --secondary: #FF6B9D;
+            --accent: #FFD93D;
+            --success: #6BCB77;
+            --warning: #FFB347;
+            --danger: #FF6B6B;
+            --bg: #F8F6FF;
+            --card-bg: #FFFFFF;
+            --text: #5A4E7D;
+            --text-light: #9B8EC2;
+            --shadow: 0 8px 25px rgba(124, 92, 255, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 40px 20px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--accent) 0%, #FF9D00 100%);
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            font-size: 40px;
+        }
+
+        .app-name {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-desc {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        /* 主内容 */
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 检测结果卡片 */
+        .detect-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .detect-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .detect-icon.ios {
+            background: linear-gradient(135deg, #333 0%, #666 100%);
+        }
+
+        .detect-icon.android {
+            background: linear-gradient(135deg, #3DDC84 0%, #4285F4 100%);
+        }
+
+        .detect-icon.wechat {
+            background: linear-gradient(135deg, #07C160 0%, #06AD56 100%);
+        }
+
+        .detect-icon.browser {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .detect-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .detect-info p {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* 引导卡片 */
+        .guide-section {
+            margin-bottom: 20px;
+        }
+
+        .guide-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .guide-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .guide-header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .guide-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .guide-content {
+            padding: 20px;
+        }
+
+        /* 步骤 */
+        .step {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* 微信提示 */
+        .wechat-tip {
+            background: #FFF7E6;
+            border: 1px solid #FFE4B3;
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .wechat-tip-title {
+            color: #D48806;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wechat-tip p {
+            font-size: 13px;
+            color: #B7791F;
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 92, 255, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        /* 二维码区域 */
+        .qrcode-section {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .qrcode-container {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            display: inline-block;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+        }
+
+        .qrcode-container img {
+            display: block;
+            width: 200px;
+            height: 200px;
+        }
+
+        .qrcode-tip {
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .qrcode-url {
+            font-size: 12px;
+            color: var(--text-light);
+            word-break: break-all;
+            max-width: 280px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.03);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .qrcode-loading {
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: var(--radius-sm);
+        }
+
+        .qrcode-loading::after {
+            content: '加载中...';
+            color: var(--text-light);
+        }
+
+        /* 复制成功提示 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 15px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 所有场景卡片容器 */
+        .all-guides {
+            display: none;
+        }
+
+        .all-guides.show {
+            display: block;
+        }
+
+        /* 图标说明 */
+        .icon-note {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .icon-note h4 {
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .icon-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent) 0%, #FF9D00 100%);
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .icon-preview span {
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <header class="header">
+        <div class="header-content">
+            <div class="app-icon">&#9889;</div>
+            <h1 class="app-name">能量山：零号协议</h1>
+            <p class="app-desc">添加到桌面，随时畅玩</p>
+        </div>
+    </header>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <!-- 图标预览 -->
+        <div class="icon-note">
+            <div class="icon-preview"><span>&#9889;</span></div>
+            <h4>添加到桌面后的图标效果</h4>
+        </div>
+
+        <!-- 检测结果 -->
+        <div class="detect-card" id="detectCard">
+            <div class="detect-icon" id="detectIcon">&#128269;</div>
+            <div class="detect-info">
+                <h3 id="detectTitle">正在检测...</h3>
+                <p id="detectDesc">请稍候</p>
+            </div>
+        </div>
+
+        <!-- 引导内容 -->
+        <div class="guide-section" id="guideSection">
+            <!-- 动态内容 -->
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="copyLink()">
+                &#128203; 复制链接
+            </button>
+            <button class="btn btn-primary" onclick="openInBrowser()">
+                &#128279; 立即打开
+            </button>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <p>能量山：零号协议 | PROJECT: ZERO</p>
+        <p>点击右上角或底部分享按钮添加到主屏幕</p>
+    </footer>
+
+    <!-- Toast提示 -->
+    <div class="toast" id="toast">链接已复制，快去浏览器打开吧！</div>
+
+    <script>
+        // 检测环境
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isAndroid = /Android/.test(userAgent);
+        const isWeChat = /MicroMessenger/.test(userAgent);
+        const isWeCom = /wxwork/.test(userAgent);
+        const isSafari = /Safari/.test(userAgent) && !isWeChat && !isWeCom;
+        const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
+        const isMobile = /Mobile|Android|iPhone|iPad|iPod/.test(userAgent);
+
+        // 当前游戏链接
+        const gameUrl = window.location.origin + '/game.html';
+
+        // 更新检测结果
+        function updateDetectResult() {
+            const detectIcon = document.getElementById('detectIcon');
+            const detectTitle = document.getElementById('detectTitle');
+            const detectDesc = document.getElementById('detectDesc');
+            const guideSection = document.getElementById('guideSection');
+
+            let iconClass = 'browser';
+            let title = '桌面浏览器';
+            let desc = '使用浏览器打开页面';
+
+            if (isWeChat || isWeCom) {
+                iconClass = 'wechat';
+                title = isWeCom ? '企业微信' : '微信';
+                desc = '微信内置浏览器';
+                renderWeChatGuide(guideSection);
+            } else if (isIOS && isSafari) {
+                iconClass = 'ios';
+                title = 'iPhone / iPad';
+                desc = 'Safari 浏览器';
+                renderIOSGuide(guideSection);
+            } else if (isAndroid && isChrome) {
+                iconClass = 'android';
+                title = 'Android 手机';
+                desc = 'Chrome 浏览器';
+                renderAndroidGuide(guideSection);
+            } else if (isAndroid) {
+                iconClass = 'android';
+                title = 'Android 手机';
+                desc = '其他浏览器';
+                renderAndroidGuide(guideSection);
+            } else if (!isMobile) {
+                title = '桌面设备';
+                desc = '请使用手机扫码访问';
+                renderDesktopGuide(guideSection);
+            } else {
+                renderGenericGuide(guideSection);
+            }
+
+            detectIcon.className = 'detect-icon ' + iconClass;
+            detectTitle.textContent = title;
+            detectDesc.textContent = desc;
+        }
+
+        // 渲染iOS引导
+        function renderIOSGuide(container) {
+            container.innerHTML = `
+                <div class="guide-card">
+                    <div class="guide-header">
+                        <div class="guide-header-icon">&#128241;</div>
+                        <h3>iPhone / iPad 添加到主屏幕</h3>
+                    </div>
+                    <div class="guide-content">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>点击底部分享按钮</h4>
+                                <p>点击 Safari 浏览器底部的&#128228; 分享图标</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>滑动找到"添加到主屏幕"</h4>
+                                <p>在分享菜单中左右滑动，找到"添加到主屏幕"选项</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>点击"添加"</h4>
+                                <p>右上角点击"添加"按钮确认</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>返回主屏幕查看</h4>
+                                <p>图标已添加到主屏幕，点击即可快速打开</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染Android引导
+        function renderAndroidGuide(container) {
+            container.innerHTML = `
+                <div class="guide-card">
+                    <div class="guide-header">
+                        <div class="guide-header-icon">&#128241;</div>
+                        <h3>Android 添加到主屏幕</h3>
+                    </div>
+                    <div class="guide-content">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>点击右上角菜单</h4>
+                                <p>点击 Chrome 浏览器右上角的&#8942; 三个点图标</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>选择"添加到主屏幕"</h4>
+                                <p>在弹出的菜单中点击"添加到主屏幕"</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>点击"添加"</h4>
+                                <p>确认添加应用到主屏幕</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>返回主屏幕查看</h4>
+                                <p>图标已添加到主屏幕，点击即可快速打开</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染微信引导
+        function renderWeChatGuide(container) {
+            container.innerHTML = `
+                <div class="wechat-tip">
+                    <div class="wechat-tip-title">&#9888; 微信无法直接添加</div>
+                    <p>微信内置浏览器不支持添加到主屏幕功能，请先复制链接到浏览器打开</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-header">
+                        <div class="guide-header-icon">&#128228;</div>
+                        <h3>微信中正确打开方式</h3>
+                    </div>
+                    <div class="guide-content">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>点击右上角三个点</h4>
+                                <p>在微信聊天页面，点击右上角的&#8942; 菜单</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>选择"在浏览器中打开"</h4>
+                                <p>点击"在浏览器中打开"，选择系统浏览器</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>在浏览器中添加到主屏幕</h4>
+                                <p>打开后按照浏览器引导添加到主屏幕</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染桌面引导
+        function renderDesktopGuide(container) {
+            container.innerHTML = `
+                <div class="guide-card">
+                    <div class="guide-header">
+                        <div class="guide-header-icon">&#128187;</div>
+                        <h3>请使用手机访问</h3>
+                    </div>
+                    <div class="guide-content">
+                        <div class="qrcode-section">
+                            <div class="qrcode-container" id="qrcodeContainer">
+                                <div class="qrcode-loading"></div>
+                            </div>
+                            <p class="qrcode-tip">&#128269; 扫码添加到手机</p>
+                            <p class="qrcode-url" id="qrcodeUrl">${gameUrl}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 生成二维码
+            generateQRCode();
+        }
+
+        // 生成二维码
+        async function generateQRCode() {
+            const container = document.getElementById('qrcodeContainer');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`/api/qrcode?text=${encodeURIComponent(gameUrl)}&size=200`);
+                const result = await response.json();
+
+                if (result.success && result.data.qrcode) {
+                    container.innerHTML = `<img src="${result.data.qrcode}" alt="二维码">`;
+                } else {
+                    container.innerHTML = '<p style="color: red;">生成失败</p>';
+                }
+            } catch (error) {
+                console.error('生成二维码失败:', error);
+                container.innerHTML = '<p style="color: red;">生成失败</p>';
+            }
+        }
+
+        // 渲染通用引导
+        function renderGenericGuide(container) {
+            container.innerHTML = `
+                <div class="guide-card">
+                    <div class="guide-header">
+                        <div class="guide-header-icon">&#128270;</div>
+                        <h3>添加到主屏幕</h3>
+                    </div>
+                    <div class="guide-content">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>点击浏览器菜单</h4>
+                                <p>点击浏览器右上角的菜单按钮</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>选择添加到主屏幕</h4>
+                                <p>在菜单中找到"添加到主屏幕"选项</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>确认添加</h4>
+                                <p>点击确认，图标将添加到主屏幕</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 复制链接
+        function copyLink() {
+            navigator.clipboard.writeText(gameUrl).then(() => {
+                showToast('链接已复制！请在浏览器中打开');
+            }).catch(() => {
+                // 兼容旧浏览器
+                const textarea = document.createElement('textarea');
+                textarea.value = gameUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('链接已复制！请在浏览器中打开');
+            });
+        }
+
+        // 在浏览器中打开
+        function openInBrowser() {
+            if (isWeChat || isWeCom) {
+                showToast('请点击右上角，在浏览器中打开');
+                return;
+            }
+            window.location.href = gameUrl;
+        }
+
+        // 显示Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', updateDetectResult);
+    </script>
+</body>
+</html>

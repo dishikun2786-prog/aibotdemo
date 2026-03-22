@@ -1,0 +1,130 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+html, body{
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+/* 缩放容器 */
+#chess-container {
+    transform-origin: center center;
+    transition: transform 0.15s ease-out;
+    will-change: transform;
+}
+/* 缩放控制按钮 */
+#zoom-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 16px;
+    border-radius: 25px;
+    backdrop-filter: blur(5px);
+}
+#zoom-controls button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: #fff;
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+#zoom-controls button:hover {
+    background: #e0e0e0;
+    transform: scale(1.1);
+}
+#zoom-controls button:active {
+    transform: scale(0.95);
+}
+#zoom-controls #zoom-reset {
+    width: auto;
+    padding: 0 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: normal;
+}
+#zoom-level {
+    color: #fff;
+    font-size: 14px;
+    min-width: 45px;
+    text-align: center;
+}
+.move_info{
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    margin-top: 5px !important;
+}
+.proj_info{
+    position: absolute;
+    color: white;
+    width: calc(100% - 2 * 20px);
+    padding: 0 20px;
+    bottom: 18px;
+    text-align: center;
+}
+.proj_info a{
+    color: white;
+}
+.btn_box input, .btn_box select{
+    border-radius: 0;
+    padding: 2px 3px;
+    border:  1px solid black;
+    margin: 0 8px;
+}
+.btn_box{
+    user-select: none;
+    -webkit-user-select: none;
+}
+.chess_left{
+    position: relative;
+    top: -15px;
+}
+.b{
+    display: block;
+    height: 5px;
+}
+.game_info{
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 40px);
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, .8);
+    /* display: flex; */
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0 0 0;
+    line-height: 1.5;
+}
+.game_info > div{
+    width: 90%;
+}
+.game_info p{
+    font-size: 18px;
+}
+.game_info h2{
+    font-size: 25px;
+}

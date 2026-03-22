@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>支付商户管理 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --member-bg: #f0f2f5;
+            --member-card-bg: rgba(255, 255, 255, 0.92);
+            --member-primary: #4a90e2;
+            --member-primary-dark: #3a7bc8;
+            --member-accent: #67c23a;
+            --member-text: #1a1a1a;
+            --member-text-secondary: #606266;
+            --member-text-light: #909399;
+            --member-border: rgba(0, 0, 0, 0.08);
+            --member-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --member-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--member-bg);
+            color: var(--member-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* 日期选择器样式修复 */
+        input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #fff !important;
+            color: #333 !important;
+            border: 1px solid #555 !important;
+        }
+        
+        input[type="date"]::-webkit-inner-spin-button,
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0);
+        }
+
+        .bg-decoration {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 0;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--member-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left { display: flex; align-items: center; gap: 12px; }
+
+        .back-btn, .menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--member-bg);
+            color: var(--member-text);
+            text-decoration: none;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .navbar-title { font-size: 18px; font-weight: 600; }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        .card {
+            background: var(--member-card-bg);
+            border-radius: var(--member-radius);
+            box-shadow: var(--member-shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon { font-size: 20px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: var(--member-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--member-border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--member-primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--member-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--member-primary-dark);
+        }
+
+        .btn-success {
+            background: var(--member-accent);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--member-border);
+            color: var(--member-text);
+        }
+
+        .btn-block { width: 100%; }
+
+        .qrcode-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            border: 2px dashed var(--member-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .qrcode-upload:hover {
+            border-color: var(--member-primary);
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .qrcode-upload .placeholder {
+            font-size: 40px;
+            color: var(--member-text-light);
+        }
+
+        .qrcode-upload .text {
+            font-size: 14px;
+            color: var(--member-text-secondary);
+        }
+
+        .qrcode-preview {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+
+        .qrcode-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(103, 194, 58, 0.1);
+            color: var(--member-accent);
+        }
+
+        .status-inactive {
+            background: rgba(144, 147, 153, 0.1);
+            color: var(--member-text-light);
+        }
+
+        .api-key-box {
+            background: #f5f7fa;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .api-key-value {
+            flex: 1;
+            color: var(--member-text-secondary);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--member-border);
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label { color: var(--member-text-secondary); font-size: 14px; }
+        .info-value { font-weight: 500; font-size: 14px; }
+
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tab-item {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--member-text-secondary);
+            transition: all 0.2s;
+        }
+
+        .tab-item.active {
+            background: var(--member-primary);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--member-text-light);
+        }
+
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+        .hidden { display: none !important; }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show { opacity: 1; }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--member-text-light);
+        }
+
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--member-border);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--member-text-secondary);
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            color: var(--member-primary);
+            border-bottom-color: var(--member-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="back-btn" onclick="location.href='/member.html'">←</button>
+            <span class="navbar-title">支付商户</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 商户状态 -->
+        <div class="card" id="merchantStatusCard">
+            <div class="card-title">
+                <span class="icon">💳</span>
+                商户状态
+            </div>
+            <div id="merchantStatus">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 商户未开通 -->
+        <div class="card hidden" id="noMerchantCard">
+            <!-- 使用说明区域 -->
+            <div class="usage-guide" style="padding: 10px;">
+                <h3 style="text-align: center; margin-bottom: 20px; color: #333;">支付商户使用指南</h3>
+                
+                <div class="guide-section" style="margin-bottom: 20px;">
+                    <h4 style="color: #4a90e2; margin-bottom: 10px;">功能介绍</h4>
+                    <p style="color: #666; font-size: 14px; line-height: 1.6;">支付商户是您自主收款的工具，您可以：</p>
+                    <ul style="color: #666; font-size: 13px; line-height: 1.8; padding-left: 20px;">
+                        <li>上传支付宝/微信收款码</li>
+                        <li>创建自定义收款名目</li>
+                        <li>生成付款链接或二维码</li>
+                        <li>查看收款订单和统计数据</li>
+                    </ul>
+                </div>
+                
+                <div class="guide-section" style="margin-bottom: 20px;">
+                    <h4 style="color: #4a90e2; margin-bottom: 10px;">使用步骤</h4>
+                    <div class="step-list">
+                        <div class="step-item" style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <span class="step-num" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #4a90e2; color: #fff; border-radius: 50%; font-size: 12px; margin-right: 10px; flex-shrink: 0;">1</span>
+                            <span class="step-text" style="color: #666; font-size: 13px;">点击下方"立即开通"按钮</span>
+                        </div>
+                        <div class="step-item" style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <span class="step-num" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #4a90e2; color: #fff; border-radius: 50%; font-size: 12px; margin-right: 10px; flex-shrink: 0;">2</span>
+                            <span class="step-text" style="color: #666; font-size: 13px;">设置商户名称</span>
+                        </div>
+                        <div class="step-item" style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <span class="step-num" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #4a90e2; color: #fff; border-radius: 50%; font-size: 12px; margin-right: 10px; flex-shrink: 0;">3</span>
+                            <span class="step-text" style="color: #666; font-size: 13px;">上传支付宝/微信收款码图片</span>
+                        </div>
+                        <div class="step-item" style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <span class="step-num" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #4a90e2; color: #fff; border-radius: 50%; font-size: 12px; margin-right: 10px; flex-shrink: 0;">4</span>
+                            <span class="step-text" style="color: #666; font-size: 13px;">创建收款名目（如：充值、VIP等）</span>
+                        </div>
+                        <div class="step-item" style="display: flex; align-items: center; margin-bottom: 12px;">
+                            <span class="step-num" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #4a90e2; color: #fff; border-radius: 50%; font-size: 12px; margin-right: 10px; flex-shrink: 0;">5</span>
+                            <span class="step-text" style="color: #666; font-size: 13px;">分享收款链接给付款方</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="guide-section" style="margin-bottom: 20px; padding: 12px; background: #fffbe6; border-radius: 8px; border: 1px solid #ffe58f;">
+                    <h4 style="color: #d48806; margin-bottom: 10px;">注意事项</h4>
+                    <ul style="color: #d48806; font-size: 13px; line-height: 1.8; padding-left: 20px;">
+                        <li>请确保收款码真实有效</li>
+                        <li>收款码建议每季度更新一次</li>
+                        <li>妥善保管您的API密钥</li>
+                        <li>如遇问题请联系客服</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary btn-block" style="margin-top: 10px;" onclick="openMerchant()">
+                立即开通
+            </button>
+        </div>
+
+        <!-- 商户已开通 -->
+        <div class="card hidden" id="merchantInfoCard">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchTab('info')">商户信息</button>
+                <button class="nav-tab" onclick="switchTab('items')">收款名目</button>
+                <button class="nav-tab" onclick="switchTab('orders')">收款订单</button>
+                <button class="nav-tab" onclick="switchTab('stats')">数据统计</button>
+            </div>
+
+            <!-- 商户信息Tab -->
+            <div id="tabInfo">
+                <!-- 商户名称 -->
+                <div class="form-group">
+                    <label class="form-label">商户名称</label>
+                    <input type="text" class="form-input" id="merchantName" placeholder="请输入商户名称">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="updateMerchantName()">保存名称</button>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--member-border);">
+
+                <!-- 收款账户管理 -->
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <label class="form-label" style="margin-bottom: 0;">收款账户管理</label>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="showAddAccountModal()">+ 添加账户</button>
+                    </div>
+                    <div id="accountsList">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--member-border);">
+
+                <!-- API秘钥 -->
+                <div class="form-group">
+                    <label class="form-label">API秘钥</label>
+                    <div class="api-key-box">
+                        <span class="api-key-value" id="apiKeyDisplay">---</span>
+                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="copyApiKey()">复制</button>
+                    </div>
+                </div>
+                <button class="btn btn-outline btn-block" onclick="regenerateApiKey()">重置API秘钥</button>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--member-border);">
+
+                <!-- 商户状态开关 -->
+                <div class="info-row">
+                    <span class="info-label">商户状态</span>
+                    <span class="status-badge" id="statusBadge">---</span>
+                </div>
+                <button class="btn btn-outline btn-block" style="margin-top: 12px;" id="toggleStatusBtn" onclick="toggleMerchantStatus()">
+                    停用商户
+                </button>
+            </div>
+
+            <!-- 收款名目Tab -->
+            <div id="tabItems" class="hidden">
+                <button class="btn btn-primary btn-block" onclick="createItem()" style="margin-bottom: 16px;">
+                    + 创建收款名目
+                </button>
+                <div id="itemsList">
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>暂无收款名目</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 收款订单Tab -->
+            <div id="tabOrders" class="hidden">
+                <div class="tab-nav">
+                    <button class="tab-item active" onclick="filterOrders('all', this)">全部</button>
+                    <button class="tab-item" onclick="filterOrders('pending', this)">待付款</button>
+                    <button class="tab-item" onclick="filterOrders('paid', this)">已付款</button>
+                    <button class="tab-item" onclick="filterOrders('confirmed', this)">已完成</button>
+                </div>
+                <div id="ordersList">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 数据统计Tab -->
+            <div id="tabStats">
+                <!-- 日期时间筛选栏 -->
+                <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="display: block; color: #aaa; font-size: 12px; margin-bottom: 6px;">开始时间</label>
+                        <input type="datetime-local" id="exportStartDate" onchange="checkSelectedDate(this)" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a3a; color: #fff; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="display: block; color: #aaa; font-size: 12px; margin-bottom: 6px;">结束时间</label>
+                        <input type="datetime-local" id="exportEndDate" onchange="checkSelectedDate(this)" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a3a; color: #fff; font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <button class="btn" style="background: #667eea; color: #fff; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px;" onclick="loadStats()">查询</button>
+                    <button class="btn" style="background: #67c23a; color: #fff; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px;" onclick="exportCSV()">导出CSV</button>
+                </div>
+
+                <!-- 数据日期范围提示 -->
+                <div id="dateRangeInfo" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 10px 14px; background: #1a1a2e; border-radius: 6px; border-left: 3px solid #667eea;">
+                    <span style="color: #888; font-size: 13px;">有数据的日期:</span>
+                    <span id="dateRangeTip" style="color: #667eea; font-size: 13px; font-weight: 500;">加载中...</span>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div id="statsContent">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
+    <script src="/js/auth-manager.js"></script>
+    <script>
+        const API_BASE = '';
+        let merchantData = null;
+        let hasDataDates = {}; // 存储有数据的日期和订单数
+
+        // 格式化日期，只显示 YYYY-MM-DD
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            // 处理 ISO 格式日期
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).replace(/\//g, '-');
+        }
+
+        // 格式化日期时间，显示 YYYY-MM-DD HH:mm
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/\//g, '-');
+        }
+
+        // 显示提示
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 获取Token
+        function getToken() {
+            return localStorage.getItem('authToken');
+        }
+
+        // 检查登录
+        function checkAuth() {
+            const token = getToken();
+            if (!token) {
+                location.href = '/login.html?redirect=' + encodeURIComponent(location.href);
+                return false;
+            }
+            return true;
+        }
+
+        // 认证Fetch
+        async function authFetch(url, options = {}) {
+            const token = getToken();
+            const res = await fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    ...options.headers
+                }
+            });
+            
+            // 检查Token是否过期
+            if (res.status === 401) {
+                const data = await res.json().catch(() => ({}));
+                if (data.error && (data.error.includes('过期') || data.error.includes('expired'))) {
+                    alert('登录已过期，请重新登录');
+                    clearToken();
+                    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.href);
+                    return res;
+                }
+            }
+            
+            return res;
+        }
+
+        // 加载商户信息
+        async function loadMerchantInfo() {
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/merchant');
+                const data = await res.json();
+
+                if (data.success && data.data.is_merchant) {
+                    merchantData = data.data;
+                    showMerchantInfo(data.data);
+                } else {
+                    showNoMerchant();
+                }
+            } catch (err) {
+                console.error('加载商户信息失败:', err);
+                showToast('加载失败，请重试');
+            }
+        }
+
+        // 显示商户信息
+        function showMerchantInfo(data) {
+            document.getElementById('merchantStatusCard').classList.add('hidden');
+            document.getElementById('noMerchantCard').classList.add('hidden');
+            document.getElementById('merchantInfoCard').classList.remove('hidden');
+
+            document.getElementById('merchantName').value = data.merchant_name || '';
+            document.getElementById('apiKeyDisplay').textContent = data.api_key || '---';
+
+            // 加载账户列表
+            loadAccounts();
+
+            // 状态
+            const badge = document.getElementById('statusBadge');
+            if (data.status === 'active') {
+                badge.textContent = '已启用';
+                badge.className = 'status-badge status-active';
+                document.getElementById('toggleStatusBtn').textContent = '停用商户';
+            } else {
+                badge.textContent = '已停用';
+                badge.className = 'status-badge status-inactive';
+                document.getElementById('toggleStatusBtn').textContent = '启用商户';
+            }
+        }
+
+        // 显示未开通
+        function showNoMerchant() {
+            document.getElementById('merchantStatusCard').classList.add('hidden');
+            document.getElementById('noMerchantCard').classList.remove('hidden');
+        }
+
+        // 开通商户
+        async function openMerchant() {
+            const name = prompt('请输入商户名称:', localStorage.getItem('username') || '');
+            if (!name) return;
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/merchant', {
+                    method: 'POST',
+                    body: JSON.stringify({ merchant_name: name })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('商户开通成功');
+                    loadMerchantInfo();
+                } else {
+                    showToast(data.error || '开通失败');
+                }
+            } catch (err) {
+                showToast('开通失败，请重试');
+            }
+        }
+
+        // 更新商户名称
+        async function updateMerchantName() {
+            const name = document.getElementById('merchantName').value.trim();
+            if (!name) {
+                showToast('请输入商户名称');
+                return;
+            }
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/merchant', {
+                    method: 'POST',
+                    body: JSON.stringify({ merchant_name: name })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('保存成功');
+                } else {
+                    showToast(data.error || '保存失败');
+                }
+            } catch (err) {
+                showToast('保存失败');
+            }
+        }
+
+        // 上传收款码
+        // 上传收款码 - 使用OSS直传
+        async function uploadQRCode(type, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // 显示上传进度
+            const progressId = type + 'Progress';
+            let progressEl = document.getElementById(progressId);
+            if (!progressEl) {
+                // 创建进度条元素
+                const container = input.parentElement;
+                progressEl = document.createElement('div');
+                progressEl.id = progressId;
+                progressEl.className = 'upload-progress';
+                progressEl.style.cssText = 'margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;';
+                progressEl.innerHTML = `
+                    <div class="progress-text" style="color: #fff; font-size: 12px; margin-bottom: 5px;">准备上传...</div>
+                    <div class="progress-bar" style="height: 6px; background: #333; border-radius: 3px; overflow: hidden;">
+                        <div class="progress-fill" style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                `;
+                container.appendChild(progressEl);
+            }
+            progressEl.classList.remove('hidden');
+            
+            const updateProgress = (percent, text) => {
+                const fill = progressEl.querySelector('.progress-fill');
+                const textEl = progressEl.querySelector('.progress-text');
+                if (fill) fill.style.width = percent + '%';
+                if (textEl) textEl.textContent = text;
+            };
+
+            updateProgress(5, '正在获取上传凭证...');
+
+            try {
+                // 1. 获取OSS STS凭证
+                const token = getToken();
+                const stsRes = await fetch(API_BASE + '/api/payment/merchant/oss-token', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const stsData = await stsRes.json();
+                
+                if (!stsData.success) {
+                    throw new Error(stsData.error || '获取STS凭证失败');
+                }
+                
+                const { accessKeyId, accessKeySecret, stsToken, region, bucket, cdnUrl } = stsData.data;
+                
+                updateProgress(10, '正在上传...');
+
+                // 2. 使用OSS SDK上传
+                if (typeof OSS === 'undefined') {
+                    throw new Error('OSS SDK未加载，请在页面头部引入');
+                }
+
+                // 生成存储路径
+                const objectName = 'payment-qrcode/' + type + '_' + Date.now() + '.jpg';
+
+                // 初始化OSS客户端
+                // region可能是 "oss-cn-shenzhen" 或 "cn-shenzhen"，需要处理
+                const ossRegion = region.startsWith('oss-') ? region : 'oss-' + region;
+                const client = new OSS({
+                    region: ossRegion,
+                    bucket: bucket,
+                    accessKeyId: accessKeyId,
+                    accessKeySecret: accessKeySecret,
+                    stsToken: stsToken,
+                    timeout: 120000
+                });
+
+                // 分片上传
+                const result = await client.multipartUpload(objectName, file, {
+                    progress: (p) => {
+                        const percent = Math.round(p * 80) + 10; // 10-90%
+                        updateProgress(percent, '上传中: ' + percent + '%');
+                    },
+                    partSize: 100 * 1024 // 100KB
+                });
+
+                updateProgress(95, '获取访问链接...');
+
+                // 获取文件访问URL - 使用自定义CDN域名
+                const baseUrl = cdnUrl || `https://${bucket}.${region}.aliyuncs.com`;
+                const fileUrl = `${baseUrl}/${objectName}`;
+                
+                updateProgress(100, '上传成功!');
+
+                // 更新显示
+                const preview = document.getElementById(type + 'Preview');
+                preview.src = fileUrl;
+                preview.classList.remove('hidden');
+                document.getElementById(type + 'Placeholder').classList.add('hidden');
+                document.getElementById(type + 'Actions').classList.remove('hidden');
+
+                // 保存到服务器
+                const res = await authFetch(API_BASE + '/api/payment/merchant/qrcodes', {
+                    method: 'PUT',
+                    body: JSON.stringify({ type, image: fileUrl })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('上传成功');
+                } else {
+                    showToast(data.error || '保存失败');
+                }
+
+                // 隐藏进度条
+                setTimeout(() => progressEl.classList.add('hidden'), 2000);
+
+            } catch (err) {
+                console.error('上传失败:', err);
+                updateProgress(0, '上传失败: ' + err.message);
+                showToast('上传失败: ' + err.message);
+            }
+        }
+
+        // 更新银行卡信息
+        async function updateBankInfo() {
+            const bank_account = document.getElementById('bankAccount').value.trim();
+            const bank_name = document.getElementById('bankName').value.trim();
+            const bank_username = document.getElementById('bankUsername').value.trim();
+
+            if (!bank_account || !bank_name || !bank_username) {
+                showToast('请填写完整的银行卡信息');
+                return;
+            }
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/merchant/bank', {
+                    method: 'PUT',
+                    body: JSON.stringify({ bank_account, bank_name, bank_username })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('保存成功');
+                } else {
+                    showToast(data.error || '保存失败');
+                }
+            } catch (err) {
+                showToast('保存失败');
+            }
+        }
+
+        // ========== 账户管理函数 ==========
+
+        // 加载账户列表
+        async function loadAccounts() {
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/accounts');
+                const data = await res.json();
+
+                if (data.success) {
+                    renderAccountsList(data.data);
+                }
+            } catch (err) {
+                console.error('加载账户列表失败:', err);
+                document.getElementById('accountsList').innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+            }
+        }
+
+        // 渲染账户列表
+        function renderAccountsList(accounts) {
+            if (!accounts || accounts.length === 0) {
+                document.getElementById('accountsList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💳</div>
+                        <p>暂无收款账户，请添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按类型分组
+            const alipayAccounts = accounts.filter(a => a.account_type === 'alipay');
+            const wechatAccounts = accounts.filter(a => a.account_type === 'wechat');
+            const bankAccounts = accounts.filter(a => a.account_type === 'bank');
+
+            let html = '';
+
+            // 支付宝账户
+            if (alipayAccounts.length > 0) {
+                html += `<div style="margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #1677ff; margin-bottom: 8px;">支付宝 (${alipayAccounts.filter(a => a.is_enabled).length}/${alipayAccounts.length})</div>`;
+                for (const acc of alipayAccounts) {
+                    html += renderAccountItem(acc, 'alipay');
+                }
+                html += '</div>';
+            }
+
+            // 微信账户
+            if (wechatAccounts.length > 0) {
+                html += `<div style="margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #07c160; margin-bottom: 8px;">微信 (${wechatAccounts.filter(a => a.is_enabled).length}/${wechatAccounts.length})</div>`;
+                for (const acc of wechatAccounts) {
+                    html += renderAccountItem(acc, 'wechat');
+                }
+                html += '</div>';
+            }
+
+            // 银行账户
+            if (bankAccounts.length > 0) {
+                html += `<div style="margin-bottom: 16px;">
+                    <div style="font-weight: 600; color: #e6a23c; margin-bottom: 8px;">银行卡 (${bankAccounts.filter(a => a.is_enabled).length}/${bankAccounts.length})</div>`;
+                for (const acc of bankAccounts) {
+                    html += renderAccountItem(acc, 'bank');
+                }
+                html += '</div>';
+            }
+
+            document.getElementById('accountsList').innerHTML = html;
+        }
+
+        // 渲染单个账户项
+        function renderAccountItem(acc, type) {
+            const icon = type === 'alipay' ? '📱' : (type === 'wechat' ? '💬' : '💳');
+            const typeName = type === 'alipay' ? '支付宝' : (type === 'wechat' ? '微信' : '银行卡');
+            const statusClass = acc.is_enabled ? 'status-active' : 'status-inactive';
+            const statusText = acc.is_enabled ? '已启用' : '已禁用';
+
+            let content = '';
+            if (type === 'bank') {
+                content = `<div style="font-size: 12px; color: #666;">${acc.bank_name} | ${acc.bank_username} | ${acc.bank_account}</div>`;
+            } else {
+                content = acc.qrcode_url ?
+                    `<img src="${acc.qrcode_url}" style="width: 60px; height: 60px; object-fit: contain; border-radius: 4px; border: 1px solid #eee;">` :
+                    '<div style="font-size: 12px; color: #999;">未上传收款码</div>';
+            }
+
+            return `<div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f5f7fa; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-size: 24px;">${icon}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500;">${acc.account_name}</div>
+                    ${content}
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="status-badge ${statusClass}" style="font-size: 11px;">${statusText}</span>
+                    <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;" onclick="toggleAccount(${acc.id}, ${!acc.is_enabled})">${acc.is_enabled ? '禁用' : '启用'}</button>
+                    <button class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; color: #f56c6c; border-color: #f56c6c;" onclick="deleteAccount(${acc.id})">删除</button>
+                </div>
+            </div>`;
+        }
+
+        // 显示添加账户弹窗
+        function showAddAccountModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 450px;">
+                    <div class="modal-header">
+                        <h3>添加收款账户</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">账户类型 *</label>
+                            <select id="newAccountType" class="form-input" onchange="toggleAccountFields()">
+                                <option value="alipay">支付宝</option>
+                                <option value="wechat">微信</option>
+                                <option value="bank">银行卡</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">账户名称 *</label>
+                            <input type="text" id="newAccountName" class="form-input" placeholder="如：主账户、备用账户">
+                        </div>
+
+                        <!-- 支付宝/微信收款码 -->
+                        <div id="qrcodePanel">
+                            <div class="form-group">
+                                <label class="form-label">收款码图片 *</label>
+                                <div class="qrcode-upload" onclick="document.getElementById('newQrcodeInput').click()" id="newQrcodeUpload">
+                                    <img id="newQrcodePreview" class="qrcode-preview hidden" src="" alt="收款码">
+                                    <div id="newQrcodePlaceholder">
+                                        <div class="placeholder">📷</div>
+                                        <div class="text">点击上传收款码图片</div>
+                                    </div>
+                                </div>
+                                <input type="file" id="newQrcodeInput" accept="image/*" class="hidden" onchange="handleNewQrcodeUpload(this)">
+                            </div>
+                        </div>
+
+                        <!-- 银行卡信息 -->
+                        <div id="bankPanel" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label">银行卡号 *</label>
+                                <input type="text" id="newBankAccount" class="form-input" placeholder="请输入银行卡号">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">银行名称 *</label>
+                                <input type="text" id="newBankName" class="form-input" placeholder="如：中国工商银行">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">持卡人姓名 *</label>
+                                <input type="text" id="newBankUsername" class="form-input" placeholder="请输入持卡人姓名">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">支行名称</label>
+                                <input type="text" id="newBankBranch" class="form-input" placeholder="如：XX支行（选填）">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="newAccountEnabled" checked>
+                                <span style="margin-left: 8px; font-size: 14px;">立即启用</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                        <button class="btn btn-primary" onclick="submitNewAccount()">添加</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // 重置表单
+            newQrcodeUrl = '';
+            document.getElementById('newAccountType').value = 'alipay';
+            document.getElementById('newAccountName').value = '';
+            document.getElementById('newQrcodePreview').classList.add('hidden');
+            document.getElementById('newQrcodePlaceholder').classList.remove('hidden');
+            document.getElementById('newQrcodePreview').src = '';
+            document.getElementById('newBankAccount').value = '';
+            document.getElementById('newBankName').value = '';
+            document.getElementById('newBankUsername').value = '';
+            document.getElementById('newBankBranch').value = '';
+            document.getElementById('newAccountEnabled').checked = true;
+
+            // 重置进度条
+            const oldProgress = document.getElementById('uploadProgress');
+            if (oldProgress) {
+                oldProgress.remove();
+            }
+
+            toggleAccountFields();
+        }
+
+        // 切换账户类型显示字段
+        function toggleAccountFields() {
+            const type = document.getElementById('newAccountType').value;
+            const qrcodePanel = document.getElementById('qrcodePanel');
+            const bankPanel = document.getElementById('bankPanel');
+
+            if (type === 'bank') {
+                qrcodePanel.style.display = 'none';
+                bankPanel.style.display = 'block';
+            } else {
+                qrcodePanel.style.display = 'block';
+                bankPanel.style.display = 'none';
+            }
+        }
+
+        // 处理新账户收款码上传
+        let newQrcodeUrl = '';
+        async function handleNewQrcodeUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // 验证文件大小 (最大5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('文件大小不能超过5MB');
+                return;
+            }
+
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                showToast('请选择图片文件');
+                return;
+            }
+
+            // 创建进度显示元素
+            const uploadContainer = input.parentElement;
+            let progressEl = document.getElementById('uploadProgress');
+            if (!progressEl) {
+                progressEl = document.createElement('div');
+                progressEl.id = 'uploadProgress';
+                progressEl.style.cssText = 'margin-top: 12px; padding: 12px; background: #f5f7fa; border-radius: 8px;';
+                uploadContainer.appendChild(progressEl);
+            }
+            progressEl.classList.remove('hidden');
+
+            const updateProgress = (percent, status) => {
+                progressEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 13px; color: #666;">${status}</span>
+                        <span style="font-size: 13px; color: #667eea; font-weight: 500;">${percent}%</span>
+                    </div>
+                    <div style="height: 8px; background: #e4e7ed; border-radius: 4px; overflow: hidden;">
+                        <div style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: ${percent}%; transition: width 0.3s ease;"></div>
+                    </div>
+                `;
+            };
+
+            updateProgress(0, '正在获取上传凭证...');
+
+            try {
+                // 获取OSS凭证
+                const token = localStorage.getItem('authToken');
+                const stsRes = await fetch(API_BASE + '/api/payment/merchant/oss-token', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const stsData = await stsRes.json();
+                if (!stsData.success) throw new Error(stsData.error || '获取STS凭证失败');
+
+                const { accessKeyId, accessKeySecret, stsToken, region, bucket, cdnUrl } = stsData.data;
+
+                updateProgress(10, '准备上传...');
+
+                // 上传到OSS
+                const ossRegion = region.startsWith('oss-') ? region : 'oss-' + region;
+                const client = new OSS({
+                    region: ossRegion,
+                    bucket: bucket,
+                    accessKeyId,
+                    accessKeySecret,
+                    stsToken,
+                    timeout: 120000
+                });
+
+                const objectName = 'payment-accounts/' + Date.now() + '_' + file.name;
+
+                updateProgress(20, '上传中...');
+
+                const result = await client.multipartUpload(objectName, file, {
+                    progress: (p) => {
+                        const percent = Math.round(20 + p * 70);
+                        updateProgress(percent, '上传中 ' + percent + '%');
+                    }
+                });
+
+                updateProgress(95, '获取访问链接...');
+
+                const baseUrl = cdnUrl || `https://${bucket}.${region}.aliyuncs.com`;
+                newQrcodeUrl = `${baseUrl}/${objectName}`;
+
+                updateProgress(100, '上传完成!');
+
+                // 显示预览
+                document.getElementById('newQrcodePreview').src = newQrcodeUrl;
+                document.getElementById('newQrcodePreview').classList.remove('hidden');
+                document.getElementById('newQrcodePlaceholder').classList.add('hidden');
+
+                // 2秒后隐藏进度条
+                setTimeout(() => {
+                    progressEl.classList.add('hidden');
+                }, 2000);
+
+            } catch (err) {
+                console.error('上传失败:', err);
+                updateProgress(0, '上传失败: ' + err.message);
+                progressEl.style.background = '#ffe6e6';
+            }
+        }
+
+        // 提交新账户
+        async function submitNewAccount() {
+            const account_type = document.getElementById('newAccountType').value;
+            const account_name = document.getElementById('newAccountName').value.trim();
+            const is_enabled = document.getElementById('newAccountEnabled').checked;
+
+            if (!account_name) {
+                showToast('请输入账户名称');
+                return;
+            }
+
+            let data = {
+                account_type,
+                account_name,
+                is_enabled
+            };
+
+            if (account_type === 'bank') {
+                data.bank_account = document.getElementById('newBankAccount').value.trim();
+                data.bank_name = document.getElementById('newBankName').value.trim();
+                data.bank_username = document.getElementById('newBankUsername').value.trim();
+                data.bank_branch = document.getElementById('newBankBranch').value.trim();
+
+                if (!data.bank_account || !data.bank_name || !data.bank_username) {
+                    showToast('请填写完整的银行卡信息');
+                    return;
+                }
+            } else {
+                if (!newQrcodeUrl) {
+                    showToast('请上传收款码图片');
+                    return;
+                }
+                data.qrcode_url = newQrcodeUrl;
+            }
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/accounts', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('账户添加成功');
+                    document.querySelector('.modal-overlay')?.remove();
+                    loadAccounts();
+                } else {
+                    showToast(result.error || '添加失败');
+                }
+            } catch (err) {
+                showToast('添加失败');
+            }
+        }
+
+        // 切换账户启用/禁用
+        async function toggleAccount(accountId, isEnabled) {
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/accounts/' + accountId + '/toggle', {
+                    method: 'PUT',
+                    body: JSON.stringify({ is_enabled: isEnabled })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(isEnabled ? '已启用' : '已禁用');
+                    loadAccounts();
+                } else {
+                    showToast(data.error || '操作失败');
+                }
+            } catch (err) {
+                showToast('操作失败');
+            }
+        }
+
+        // 删除账户
+        async function deleteAccount(accountId) {
+            if (!confirm('确定要删除该收款账户吗？')) return;
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/accounts/' + accountId, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('删除成功');
+                    loadAccounts();
+                } else {
+                    showToast(data.error || '删除失败');
+                }
+            } catch (err) {
+                showToast('删除失败');
+            }
+        }
+
+        // 复制API秘钥
+        function copyApiKey() {
+            const key = document.getElementById('apiKeyDisplay').textContent;
+            if (key && key !== '---') {
+                navigator.clipboard.writeText(key).then(() => {
+                    showToast('已复制到剪贴板');
+                });
+            }
+        }
+
+        // 重置API秘钥
+        async function regenerateApiKey() {
+            if (!confirm('确定要重置API秘钥吗？重置后旧秘钥将失效。')) return;
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/merchant/regenerate-key', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('apiKeyDisplay').textContent = data.data.api_key;
+                    showToast('API秘钥已重置');
+                } else {
+                    showToast(data.error || '重置失败');
+                }
+            } catch (err) {
+                showToast('重置失败');
+            }
+        }
+
+        // 切换商户状态
+        async function toggleMerchantStatus() {
+            if (!merchantData) return;
+            const newStatus = merchantData.status === 'active' ? 'inactive' : 'active';
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/merchant/status', {
+                    method: 'PUT',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    merchantData.status = newStatus;
+                    showMerchantInfo(merchantData);
+                    showToast(newStatus === 'active' ? '商户已启用' : '商户已停用');
+                } else {
+                    showToast(data.error || '操作失败');
+                }
+            } catch (err) {
+                showToast('操作失败');
+            }
+        }
+
+        // 切换Tab
+        function switchTab(tab) {
+            // 移除所有active样式
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            // 为当前tab添加active样式
+            const tabMap = { 'info': 0, 'items': 1, 'orders': 2, 'stats': 3 };
+            const tabs = document.querySelectorAll('.nav-tab');
+            if (tabs[tabMap[tab]]) {
+                tabs[tabMap[tab]].classList.add('active');
+            }
+
+            document.getElementById('tabInfo').classList.add('hidden');
+            document.getElementById('tabItems').classList.add('hidden');
+            document.getElementById('tabOrders').classList.add('hidden');
+            document.getElementById('tabStats').classList.add('hidden');
+
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+
+            if (tab === 'items') loadItems();
+            if (tab === 'orders') loadOrders();
+            if (tab === 'stats') loadStats();
+        }
+
+        // 加载收款名目
+        // 当前页码
+        let itemsCurrentPage = 1;
+        
+        async function loadItems(page = 1) {
+            itemsCurrentPage = page;
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/items?page=' + page + '&limit=10');
+                const data = await res.json();
+
+                if (data.success && data.data.list.length > 0) {
+                    const domain = window.location.origin;
+                    let html = '';
+                    for (const item of data.data.list) {
+                        let amountDisplay = '';
+                        if (item.payment_mode === 'calculator') {
+                            amountDisplay = '费用清单: ¥' + parseFloat(item.default_amount || 0).toFixed(2) + '元';
+                        } else if (item.payment_mode === 'fixed') {
+                            amountDisplay = '固定金额: ¥' + parseFloat(item.default_amount || 0).toFixed(2) + '元';
+                        } else {
+                            amountDisplay = '金额: ¥' + parseFloat(item.min_amount || 0.01) + ' - ¥' + parseFloat(item.max_amount || 99999.99) + '元' + (item.enable_custom_amount ? '(可自定义)' : '');
+                        }
+                        const paymentUrl = domain + '/payment-pay.html?item=' + item.id;
+                        const statusClass = item.status === 'active' ? 'status-active' : 'status-inactive';
+                        const statusText = item.status === 'active' ? '启用' : '停用';
+                        
+                        html += '<div class="card" style="padding: 16px;"><div style="display: flex; justify-content: space-between; align-items: center;"><div><div style="font-weight: 600;">' + item.item_name + '</div><div style="font-size: 13px; color: var(--member-text-secondary); margin-top: 4px;">' + amountDisplay + '</div></div><span class="status-badge ' + statusClass + '">' + statusText + '</span></div><div style="margin-top: 12px; display: flex; gap: 8px;"><button class="btn btn-outline" style="flex: 1;" onclick="shareItem(\'' + paymentUrl + '\', \'' + item.item_name + '\')">分享</button><button class="btn btn-outline" style="flex: 1;" onclick="editItem(' + item.id + ')">编辑</button><button class="btn btn-outline" style="flex: 1;" onclick="deleteItem(' + item.id + ')">删除</button></div></div>';
+                    }
+                    document.getElementById('itemsList').innerHTML = html;
+                    
+                    // 添加分页控件
+                    if (data.data.pagination && data.data.pagination.total_pages > 1) {
+                        const pagination = data.data.pagination;
+                        let paginationHtml = '<div style="display:flex;justify-content:center;gap:8px;margin-top:16px;">';
+                        for (let i = 1; i <= pagination.total_pages; i++) {
+                            paginationHtml += '<button class="btn" style="padding:6px 12px;' + (i === pagination.page ? 'background:#667eea;' : 'background:#333;') + '" onclick="loadItems(' + i + ')">' + i + '</button>';
+                        }
+                        paginationHtml += '</div>';
+                        document.getElementById('itemsList').innerHTML += paginationHtml;
+                    }
+                } else {
+                    document.getElementById('itemsList').innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📋</div>
+                            <p>暂无收款名目</p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('加载名目失败:', err);
+            }
+        }
+
+        // 创建名目
+        // 创建名目 - 使用模态框支持三种模式：普通模式(随意/固定)、计算器模式
+        let expenseItems = []; // 费用清单项
+
+        function createItem() {
+            expenseItems = []; // 重置
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3>创建收款名目</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 20px;">
+                        <!-- 模式切换 -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                            <button type="button" class="btn" id="btnModeNormal" style="flex:1;background:#667eea;color:#fff;" onclick="switchItemMode('normal')">普通模式</button>
+                            <button type="button" class="btn" id="btnModeCalc" style="flex:1;background:#333;color:#fff;" onclick="switchItemMode('calculator')">计算器模式</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">名目名称 *</label>
+                            <input type="text" id="newItemName" class="form-input" placeholder="如：装修费用">
+                        </div>
+
+                        <!-- 普通模式 -->
+                        <div id="normalModePanel">
+                            <div class="form-group">
+                                <label class="form-label">收款模式 *</label>
+                                <div style="display: flex; gap: 15px; margin-top: 8px;">
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="radio" name="paymentMode" value="flexible" checked onchange="togglePaymentMode()">
+                                        <span style="margin-left: 6px;">随意金额</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="radio" name="paymentMode" value="fixed" onchange="togglePaymentMode()">
+                                        <span style="margin-left: 6px;">固定金额</span>
+                                    </label>
+                                </div>
+                                <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                    <span id="modeTipFlexible">随意金额：付款方可自定义支付金额</span>
+                                    <span id="modeTipFixed" style="display:none;">固定金额：付款方必须按指定金额支付</span>
+                                </div>
+                            </div>
+
+                            <!-- 固定金额模式 -->
+                            <div id="fixedAmountPanel" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">固定金额 (元) *</label>
+                                    <input type="number" id="newItemFixedAmount" class="form-input" placeholder="如：299.00" step="0.01" min="0.01">
+                                </div>
+                            </div>
+
+                            <!-- 随意金额模式 -->
+                            <div id="flexibleAmountPanel">
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">最小金额 (元)</label>
+                                        <input type="number" id="newItemMinAmount" class="form-input" value="0.01" step="0.01" min="0.01">
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">最大金额 (元)</label>
+                                        <input type="number" id="newItemMaxAmount" class="form-input" value="99999" step="0.01" min="0.01">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="newItemEnableCustom" checked>
+                                        <span style="margin-left: 6px; font-size: 13px; color: #666;">允许用户自定义金额</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 计算器模式 -->
+                        <div id="calculatorModePanel" style="display: none;">
+                            <div style="background: #f5f7fa; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">费用清单（每项输入表达式自动计算金额）</div>
+                                <div id="expenseList" class="expense-list"></div>
+                            </div>
+
+                            <!-- 添加费用项 -->
+                            <div class="form-group">
+                                <label class="form-label">费用名称</label>
+                                <input type="text" id="expenseName" class="form-input" placeholder="如：建材费、人工费">
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                <div style="flex: 1;">
+                                    <label class="form-label">计算表达式</label>
+                                    <input type="text" id="calcFormula" class="form-input" placeholder="如：500+300+200" oninput="calcPreview()">
+                                </div>
+                                <div id="calcPreviewResult" style="min-width: 80px; padding: 10px; text-align: center; color: #667eea; font-weight: bold;"></div>
+                            </div>
+                            <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="addExpenseItem()">+ 添加到清单</button>
+
+                            <!-- 总计 -->
+                            <div style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; text-align: center;">
+                                <span style="color: #fff; font-size: 14px;">总计金额：</span>
+                                <span id="expenseTotal" style="color: #fff; font-size: 24px; font-weight: bold;">¥0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">付款备注提示</label>
+                            <input type="text" id="newItemNote" class="form-input" placeholder="如：请备注用户名">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">取消</button>
+                        <button class="btn btn-primary" onclick="submitNewItem()">创建</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 切换创建模式
+        function switchItemMode(mode) {
+            const btnNormal = document.getElementById('btnModeNormal');
+            const btnCalc = document.getElementById('btnModeCalc');
+            const normalPanel = document.getElementById('normalModePanel');
+            const calcPanel = document.getElementById('calculatorModePanel');
+
+            if (mode === 'normal') {
+                btnNormal.style.background = '#667eea';
+                btnCalc.style.background = '#333';
+                normalPanel.style.display = 'block';
+                calcPanel.style.display = 'none';
+            } else {
+                btnNormal.style.background = '#333';
+                btnCalc.style.background = '#667eea';
+                normalPanel.style.display = 'none';
+                calcPanel.style.display = 'block';
+            }
+        }
+
+        // 计算表达式预览
+        function calcPreview() {
+            const formula = document.getElementById('calcFormula').value;
+            const resultEl = document.getElementById('calcPreviewResult');
+            if (!formula) {
+                resultEl.textContent = '';
+                return;
+            }
+            try {
+                const result = new Function('return ' + formula)();
+                resultEl.textContent = '= ¥' + parseFloat(result.toFixed(2));
+            } catch(e) {
+                resultEl.textContent = '表达式有误';
+            }
+        }
+
+        // 添加费用项
+        function addExpenseItem() {
+            const name = document.getElementById('expenseName').value.trim();
+            const formula = document.getElementById('calcFormula').value.trim();
+
+            if (!name) {
+                showToast('请输入费用名称');
+                return;
+            }
+            if (!formula) {
+                showToast('请输入计算表达式');
+                return;
+            }
+
+            try {
+                const result = new Function('return ' + formula)();
+                const amount = parseFloat(result.toFixed(2));
+
+                expenseItems.push({ name, formula, amount });
+
+                // 清空输入
+                document.getElementById('expenseName').value = '';
+                document.getElementById('calcFormula').value = '';
+                document.getElementById('calcPreviewResult').textContent = '';
+
+                renderExpenseList();
+            } catch(e) {
+                showToast('表达式有误');
+            }
+        }
+
+        // 渲染费用清单
+        function renderExpenseList() {
+            const listEl = document.getElementById('expenseList');
+            const totalEl = document.getElementById('expenseTotal');
+
+            if (expenseItems.length === 0) {
+                listEl.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无费用项，请添加</div>';
+                totalEl.textContent = '¥0.00';
+                return;
+            }
+
+            let listHtml = '';
+            for (let i = 0; i < expenseItems.length; i++) {
+                const item = expenseItems[i];
+                listHtml += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #fff; border-radius: 6px; margin-bottom: 8px;"><div><div style="font-weight: 500;">' + item.name + '</div><div style="font-size: 12px; color: #888;">' + item.formula + '</div></div><div style="display: flex; align-items: center; gap: 10px;"><span style="font-weight: bold; color: #667eea;">¥' + item.amount.toFixed(2) + '</span><button type="button" onclick="removeExpenseItem(' + i + ')" style="width: 24px; height: 24px; border-radius: 50%; border: none; background: #ff4757; color: #fff; cursor: pointer;">×</button></div></div>';
+            }
+            listEl.innerHTML = listHtml;
+
+            const total = expenseItems.reduce((sum, item) => sum + item.amount, 0);
+            totalEl.textContent = '¥' + total.toFixed(2);
+        }
+
+        // 删除费用项
+        function removeExpenseItem(index) {
+            expenseItems.splice(index, 1);
+            renderExpenseList();
+        }
+        
+        // 切换收款模式
+        function togglePaymentMode() {
+            const mode = document.querySelector('input[name="paymentMode"]:checked').value;
+            document.getElementById('fixedAmountPanel').style.display = mode === 'fixed' ? 'block' : 'none';
+            document.getElementById('flexibleAmountPanel').style.display = mode === 'flexible' ? 'block' : 'none';
+            document.getElementById('modeTipFlexible').style.display = mode === 'flexible' ? 'inline' : 'none';
+            document.getElementById('modeTipFixed').style.display = mode === 'fixed' ? 'inline' : 'none';
+        }
+        
+        // 提交新名目
+        function submitNewItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            if (!name) {
+                showToast('请输入名目名称');
+                return;
+            }
+
+            // 判断当前模式 - 检查display是否为block
+            const calcPanel = document.getElementById('calculatorModePanel');
+            const normalPanel = document.getElementById('normalModePanel');
+            const isCalculatorMode = calcPanel && calcPanel.style.display === 'block';
+
+            let data;
+
+            if (isCalculatorMode) {
+                // 计算器模式
+                if (expenseItems.length === 0) {
+                    showToast('请添加至少一个费用项');
+                    return;
+                }
+
+                const totalAmount = expenseItems.reduce((sum, item) => sum + item.amount, 0);
+
+                data = {
+                    item_name: name,
+                    payment_mode: 'calculator',
+                    default_amount: totalAmount,
+                    expense_items: expenseItems
+                };
+            } else {
+                // 普通模式
+                const mode = document.querySelector('input[name="paymentMode"]:checked').value;
+                data = {
+                    item_name: name,
+                    payment_mode: mode
+                };
+
+                if (mode === 'fixed') {
+                    const fixedAmount = parseFloat(document.getElementById('newItemFixedAmount').value);
+                    if (!fixedAmount || fixedAmount <= 0) {
+                        showToast('请填写固定金额');
+                        return;
+                    }
+                    data.default_amount = fixedAmount;
+                } else {
+                    data.min_amount = parseFloat(document.getElementById('newItemMinAmount').value) || 0.01;
+                    data.max_amount = parseFloat(document.getElementById('newItemMaxAmount').value) || 99999;
+                    data.enable_custom_amount = document.getElementById('newItemEnableCustom').checked;
+                }
+            }
+
+            const note = document.getElementById('newItemNote').value.trim();
+            if (note) {
+                data.payment_note = note;
+            }
+
+            authFetch(API_BASE + '/api/payment/items', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }).then(res => res.json()).then(result => {
+                if (result.success) {
+                    showToast('创建成功');
+                    document.querySelector('.modal-overlay')?.remove();
+
+                    // 显示收款链接和二维码
+                    if (result.data && result.data.payment_url) {
+                        showPaymentLinkModal(result.data.payment_url, name);
+                    }
+
+                    loadItems();
+                } else {
+                    showToast(result.error || '创建失败');
+                }
+            });
+        }
+        
+        // 显示收款链接弹窗
+        function showPaymentLinkModal(paymentUrl, itemName) {
+            const modal = document.createElement('div');
+            modal.id = 'paymentLinkModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:#1e1e2e;border-radius:12px;padding:24px;width:90%;max-width:400px;text-align:center;">
+                    <h3 style="margin:0 0 16px 0;color:#fff;">收款名目已创建</h3>
+                    <p style="color:#aaa;margin-bottom:16px;">${itemName}</p>
+                    <div style="background:#2a2a3a;padding:12px;border-radius:8px;margin-bottom:16px;">
+                        <p style="color:#aaa;font-size:12px;margin-bottom:8px;">收款链接</p>
+                        <input type="text" id="paymentLinkInput" value="${paymentUrl}" readonly 
+                            style="width:100%;padding:8px;border-radius:4px;border:1px solid #444;background:#1e1e2e;color:#fff;box-sizing:border-box;font-size:12px;">
+                    </div>
+                    <div style="display:flex;gap:12px;">
+                        <button onclick="copyPaymentLink()" style="flex:1;padding:12px;border-radius:8px;border:none;background:#667eea;color:#fff;cursor:pointer;">复制链接</button>
+                        <button onclick="document.getElementById('paymentLinkModal').remove()" style="flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#fff;cursor:pointer;">关闭</button>
+                    </div>
+                    <p style="color:#666;font-size:12px;margin-top:16px;">分享此链接给付款方即可收款</p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // 复制收款链接
+        function copyPaymentLink() {
+            const input = document.getElementById('paymentLinkInput');
+            input.select();
+            document.execCommand('copy');
+            showToast('链接已复制');
+        }
+
+        // 分享名目（调用弹窗）
+        function shareItem(paymentUrl, itemName) {
+            showPaymentLinkModal(paymentUrl, itemName);
+        }
+
+        // 编辑名目
+        async function editItem(id) {
+            // 获取名目详情
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/items/' + id);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast(data.error || '获取失败');
+                    return;
+                }
+
+                const item = data.data;
+
+                // 创建编辑弹窗
+                const modal = document.createElement('div');
+                modal.id = 'editItemModal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                modal.innerHTML = `
+                    <div style="background:#1e1e2e;border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;">
+                        <h3 style="margin:0 0 20px 0;color:#fff;">编辑收款名目</h3>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;margin-bottom:6px;color:#aaa;">名目名称</label>
+                            <input type="text" id="editItemName" value="${item.item_name}" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#2a2a3a;color:#fff;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;margin-bottom:6px;color:#aaa;">说明文字</label>
+                            <textarea id="editItemDesc" rows="3" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#2a2a3a;color:#fff;box-sizing:border-box;">${item.item_description || ''}</textarea>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-bottom:16px;">
+                            <div style="flex:1;">
+                                <label style="display:block;margin-bottom:6px;color:#aaa;">最小金额(元)</label>
+                                <input type="number" id="editMinAmount" value="${item.min_amount}" step="0.01" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#2a2a3a;color:#fff;box-sizing:border-box;">
+                            </div>
+                            <div style="flex:1;">
+                                <label style="display:block;margin-bottom:6px;color:#aaa;">最大金额(元)</label>
+                                <input type="number" id="editMaxAmount" value="${item.max_amount}" step="0.01" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#2a2a3a;color:#fff;box-sizing:border-box;">
+                            </div>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;margin-bottom:6px;color:#aaa;">默认金额(元)</label>
+                            <input type="number" id="editDefaultAmount" value="${item.default_amount}" step="0.01" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#2a2a3a;color:#fff;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                <input type="checkbox" id="editEnableCustom" ${item.enable_custom_amount ? 'checked' : ''} style="width:18px;height:18px;">
+                                <span style="color:#fff;">允许用户自定义金额</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;margin-bottom:6px;color:#aaa;">付款备注提示</label>
+                            <input type="text" id="editPaymentNote" value="${item.payment_note || ''}" placeholder="例如: 请备注订单号" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#2a2a3a;color:#fff;box-sizing:border-box;">
+                        </div>
+                        <div style="display:flex;gap:12px;">
+                            <button onclick="document.getElementById('editItemModal').remove()" style="flex:1;padding:12px;border-radius:8px;border:none;background:#333;color:#fff;cursor:pointer;">取消</button>
+                            <button onclick="submitEditItem(${id})" style="flex:1;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;">保存</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (err) {
+                showToast('获取名目详情失败');
+                console.error(err);
+            }
+        }
+
+        // 提交编辑名目
+        async function submitEditItem(id) {
+            const item_name = document.getElementById('editItemName').value.trim();
+            const item_description = document.getElementById('editItemDesc').value.trim();
+            const min_amount = parseFloat(document.getElementById('editMinAmount').value) || 0.01;
+            const max_amount = parseFloat(document.getElementById('editMaxAmount').value) || 99999;
+            const default_amount = parseFloat(document.getElementById('editDefaultAmount').value) || 0;
+            const enable_custom_amount = document.getElementById('editEnableCustom').checked;
+            const payment_note = document.getElementById('editPaymentNote').value.trim();
+
+            if (!item_name) {
+                showToast('请输入名目名称');
+                return;
+            }
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/items/' + id, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        item_name,
+                        item_description,
+                        min_amount,
+                        max_amount,
+                        default_amount,
+                        enable_custom_amount,
+                        payment_note
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('更新成功');
+                    // 关闭弹窗
+                    document.querySelectorAll('[style*="position:fixed"]').forEach(el => el.remove());
+                    loadItems();
+                } else {
+                    showToast(data.error || '更新失败');
+                }
+            } catch (err) {
+                showToast('更新失败');
+                console.error(err);
+            }
+        }
+
+        // 删除名目
+        function deleteItem(id) {
+            if (!confirm('确定要删除该收款名目吗？')) return;
+
+            authFetch(API_BASE + '/api/payment/items/' + id, {
+                method: 'DELETE'
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    showToast('删除成功');
+                    loadItems();
+                } else {
+                    showToast(data.error || '删除失败');
+                }
+            });
+        }
+
+        // 当前订单页码
+        let ordersCurrentPage = 1;
+        
+        // 加载订单
+        async function loadOrders(status, page = 1) {
+            ordersCurrentPage = page;
+            const statusParam = status && status !== 'all' ? status : '';
+            const url = '/api/payment/orders?page=' + page + '&limit=10' + (statusParam ? '&status=' + statusParam : '');
+
+            try {
+                const res = await authFetch(API_BASE + url);
+                const data = await res.json();
+
+                if (data.success && data.data.list.length > 0) {
+                    const statusMap = {
+                        'pending': '<span style="color: #f59e0b;">待付款</span>',
+                        'paid': '<span style="color: #1677ff;">已付款</span>',
+                        'confirmed': '<span style="color: #10b981;">已完成</span>',
+                        'rejected': '<span style="color: #ef4444;">已拒绝</span>',
+                        'cancelled': '<span style="color: #888;">已取消</span>'
+                    };
+                    
+                    let html = '';
+                    for (const order of data.data.list) {
+                        const isCalculatorMode = order.payment_mode === 'calculator' && order.expense_items && order.expense_items.length > 0;
+                        const amountStr = isCalculatorMode ? '¥' + parseFloat(order.amount).toFixed(2) + ' (费用清单)' : '¥' + order.amount;
+                        const orderStatusClass = order.status === 'confirmed' ? 'status-active' : 'status-inactive';
+                        const payerName = order.payer_username || '游客';
+                        const payMethod = order.payment_method === 'alipay' ? '支付宝' : (order.payment_method === 'wechat' ? '微信' : '银行卡');
+                        const orderTime = new Date(order.created_at).toLocaleString();
+                        const calculatorTag = isCalculatorMode ? '<div style="font-size: 11px; color: #667eea; margin-top: 4px;">名目类型: 计算器模式</div>' : '';
+                        
+                        let extraHtml = '';
+                        if (order.status === 'paid') {
+                            let paidExtra = '';
+                            if (order.remark_code) {
+                                paidExtra += '<div style="margin-bottom: 8px;padding:8px;background:#2a2a3a;border-radius:6px;text-align:center;"><span style="color:#ffd591;font-size:14px;font-weight:600;">付款号码: ' + order.remark_code + '</span></div>';
+                            }
+                            if (order.payment_screenshot) {
+                                paidExtra += '<div style="margin-bottom: 8px;"><p style="color:#aaa;font-size:12px;margin-bottom:4px;">付款凭证:</p><img src="' + order.payment_screenshot + '" alt="付款截图" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="showImagePreview(\'' + order.payment_screenshot + '\', \'付款凭证\')"></div>';
+                            }
+                            if (order.payer_note) {
+                                paidExtra += '<div style="margin-bottom: 8px;padding:8px;background:#2a2a3a;border-radius:6px;"><span style="color:#aaa;font-size:12px;">付款备注: </span><span style="color:#fff;font-size:12px;">' + order.payer_note + '</span></div>';
+                            }
+                            paidExtra += '<div style="display: flex; gap: 8px;"><button class="btn btn-success" style="flex:1;" onclick="confirmOrder(' + order.id + ')">确认收款</button><button class="btn" style="flex:1;background:#f59e0b;color:#fff;" onclick="rejectOrder(' + order.id + ')">拒绝</button></div>';
+                            extraHtml = '<div style="margin-top: 12px;">' + paidExtra + '</div>';
+                        } else if (order.status === 'confirmed' || order.status === 'rejected' || order.status === 'cancelled') {
+                            extraHtml = '<div style="margin-top: 12px;"><button class="btn" style="width:100%;background:#667eea;color:#fff;" onclick="viewOrderDetail(' + order.id + ')">查看详情</button></div>';
+                        } else if (order.status === 'pending') {
+                            extraHtml = '<div style="margin-top: 12px;"><button class="btn" style="width:100%;background:#666;color:#fff;" onclick="cancelOrder(' + order.id + ')">取消订单</button></div>';
+                        }
+                        
+                        html += '<div class="card" style="padding: 16px;"><div style="display: flex; justify-content: space-between;"><div><div style="font-weight: 600;">订单号: ' + order.order_no + '</div><div style="font-size: 13px; color: var(--member-text-secondary); margin-top: 4px;">金额: ' + amountStr + '</div><div style="font-size: 12px; color: var(--member-text-light); margin-top: 4px;">' + payerName + ' | ' + orderTime + '</div><div style="font-size: 12px; color: #888; margin-top: 4px;">支付方式: ' + payMethod + '</div>' + calculatorTag + '</div><span class="status-badge ' + orderStatusClass + '">' + (statusMap[order.status] || order.status) + '</span></div>' + extraHtml + '</div>';
+                    }
+                    document.getElementById('ordersList').innerHTML = html;
+                    
+                    // 添加分页控件
+                    if (data.data.pagination && data.data.pagination.total_pages > 1) {
+                        const pagination = data.data.pagination;
+                        let paginationHtml = '<div style="display:flex;justify-content:center;gap:8px;margin-top:16px;">';
+                        for (let i = 1; i <= pagination.total_pages; i++) {
+                            paginationHtml += '<button class="btn" style="padding:6px 12px;' + (i === pagination.page ? 'background:#667eea;' : 'background:#333;') + '" onclick="loadOrders(\'' + (status || '') + '\', ' + i + ')">' + i + '</button>';
+                        }
+                        paginationHtml += '</div>';
+                        document.getElementById('ordersList').innerHTML += paginationHtml;
+                    }
+                } else {
+                    document.getElementById('ordersList').innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📄</div>
+                            <p>暂无订单</p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('加载订单失败:', err);
+            }
+        }
+
+        // 确认订单
+        async function confirmOrder(orderId) {
+            if (!confirm('确认已收到款项？')) return;
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/orders/' + orderId + '/confirm', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('确认成功');
+                    loadOrders();
+                } else {
+                    showToast(data.error || '确认失败');
+                }
+            } catch (err) {
+                showToast('确认失败');
+            }
+        }
+
+        // 拒绝订单
+        async function rejectOrder(orderId) {
+            const reason = prompt('请输入拒绝原因:');
+            if (reason === null) return; // 用户取消
+            
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/orders/' + orderId + '/reject', {
+                    method: 'POST',
+                    body: JSON.stringify({ reason: reason || '商户拒绝' })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('已拒绝');
+                    loadOrders();
+                } else {
+                    showToast(data.error || '操作失败');
+                }
+            } catch (err) {
+                showToast('操作失败');
+            }
+        }
+
+        // 取消订单
+        async function cancelOrder(orderId) {
+            if (!confirm('确定要取消该订单吗？')) return;
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/orders/' + orderId + '/cancel', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('已取消');
+                    loadOrders();
+                } else {
+                    showToast(data.error || '操作失败');
+                }
+            } catch (err) {
+                showToast('操作失败');
+            }
+        }
+
+        // 查看订单详情
+        async function viewOrderDetail(orderId) {
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/orders/' + orderId);
+                const data = await res.json();
+
+                if (data.success) {
+                    const order = data.data;
+                    const statusMap = {
+                        'pending': '待付款',
+                        'paid': '已付款',
+                        'confirmed': '已完成',
+                        'rejected': '已拒绝',
+                        'cancelled': '已取消'
+                    };
+                    const methodMap = {
+                        'alipay': '支付宝',
+                        'wechat': '微信',
+                        'bank': '银行卡'
+                    };
+
+                    // 判断是否计算器模式
+                    const isCalculatorMode = order.payment_mode === 'calculator' && order.expense_items && order.expense_items.length > 0;
+
+                    // 费用清单HTML
+                    let expenseItemsHtml = '';
+                    if (isCalculatorMode && order.expense_items) {
+                        let expenseList = '';
+                        for (const item of order.expense_items) {
+                            expenseList += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;"><span style="color:#aaa;">' + item.name + '</span><span style="color:#fff;">¥' + parseFloat(item.amount).toFixed(2) + '</span></div>';
+                        }
+                        expenseItemsHtml = '<div style="margin-top:12px;padding:12px;background:#2a2a3a;border-radius:8px;"><p style="color:#667eea;font-size:13px;margin-bottom:8px;">费用明细</p>' + expenseList + '<div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid #444;margin-top:8px;"><span style="color:#fff;font-weight:600;">合计</span><span style="color:#667eea;font-weight:600;">¥' + parseFloat(order.amount).toFixed(2) + '</span></div></div>';
+                    }
+
+                    const modal = document.createElement('div');
+                    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                    
+                    let screenshotHtml = '';
+                    if (order.payment_screenshot) {
+                        screenshotHtml = `
+                            <div style="margin-top: 16px;">
+                                <p style="color:#aaa;font-size:13px;margin-bottom:8px;">付款凭证截图:</p>
+                                <img src="${order.payment_screenshot}" alt="付款截图" 
+                                    style="max-width:100%;border-radius:8px;cursor:pointer;"
+                                    onclick="if(this.style.maxWidth==='100%'){this.style.maxWidth='200px'}else{this.style.maxWidth='100%'}">
+                            </div>
+                        `;
+                    }
+
+                    modal.innerHTML = `
+                        <div style="background:#1e1e2e;border-radius:12px;padding:24px;width:90%;max-width:400px;max-height:80vh;overflow-y:auto;">
+                            <h3 style="margin:0 0 16px 0;color:#fff;text-align:center;">订单详情</h3>
+
+                            <div style="background:#2a2a3a;padding:12px;border-radius:8px;margin-bottom:12px;">
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="color:#aaa;">订单号:</span>
+                                    <span style="color:#fff;">${order.order_no || ''}</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="color:#aaa;">金额:</span>
+                                    <span style="color:#f56c6c;font-weight:600;">¥${order.amount || 0}</span>
+                                </div>
+                                ${expenseItemsHtml}
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="color:#aaa;">状态:</span>
+                                    <span style="color:#10b981;">${statusMap[order.status] || order.status || ''}</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="color:#aaa;">支付方式:</span>
+                                    <span style="color:#fff;">${methodMap[order.payment_method] || order.payment_method || ''}</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="color:#aaa;">备注码:</span>
+                                    <span style="color:#ffd591;">${order.remark_code || '-'}</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="color:#aaa;">付款人:</span>
+                                    <span style="color:#fff;">${order.payer_username || '游客'}</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <span style="color:#aaa;">创建时间:</span>
+                                    <span style="color:#aaa;font-size:12px;">${order.created_at ? new Date(order.created_at).toLocaleString() : ''}</span>
+                                </div>
+                            </div>
+                            
+                            ${order.note ? `
+                            <div style="background:#2a2a3a;padding:12px;border-radius:8px;margin-bottom:12px;">
+                                <p style="color:#aaa;font-size:13px;margin-bottom:8px;">付款备注:</p>
+                                <p style="color:#fff;">${order.note}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${screenshotHtml}
+                            
+                            <button onclick="document.getElementById('orderDetailModal')?.remove()" 
+                                style="width:100%;padding:12px;border-radius:8px;border:none;background:#667eea;color:#fff;cursor:pointer;margin-top:16px;">关闭</button>
+                        </div>
+                    `;
+                    modal.id = 'orderDetailModal';
+                    document.body.appendChild(modal);
+                } else {
+                    showToast(data.error || '获取详情失败');
+                }
+            } catch (err) {
+                showToast('获取详情失败');
+            }
+        }
+
+        // 筛选订单
+        function filterOrders(status, btn) {
+            document.querySelectorAll('.tab-nav .tab-item').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            loadOrders(status);
+        }
+
+        // 加载统计
+        async function loadStats() {
+            // 先获取有数据的日期范围
+            try {
+                const dailyRes = await authFetch(API_BASE + '/api/payment/stats/daily?days=90');
+                const dailyData = await dailyRes.json();
+
+                hasDataDates = {};
+                let dateRangeTip = '暂无数据';
+
+                if (dailyData.success && dailyData.data && dailyData.data.length > 0) {
+                    const datesWithData = dailyData.data.filter(d => d.orders > 0);
+                    if (datesWithData.length > 0) {
+                        // 构建日期到订单数的映射（使用格式化后的日期作为key）
+                        datesWithData.forEach(d => {
+                            const formattedDate = formatDate(d.date);
+                            hasDataDates[formattedDate] = d.orders;
+                        });
+                        const dates = datesWithData.map(d => formatDate(d.date)).sort();
+                        dateRangeTip = `${dates[0]} 至 ${dates[dates.length - 1]} (共${dates.length}天有订单)`;
+                    } else {
+                        dateRangeTip = '暂无订单数据';
+                    }
+                }
+                document.getElementById('dateRangeTip').textContent = dateRangeTip;
+            } catch (err) {
+                console.error('获取日期范围失败:', err);
+                document.getElementById('dateRangeTip').textContent = '获取失败';
+            }
+
+            // 获取日期时间选择器的值
+            const startDateTime = document.getElementById('exportStartDate').value;
+            const endDateTime = document.getElementById('exportEndDate').value;
+
+            // 转换为后端需要的日期格式 (YYYY-MM-DD)
+            const startDate = startDateTime ? startDateTime.slice(0, 10) : '';
+            const endDate = endDateTime ? endDateTime.slice(0, 10) : '';
+
+            const params = new URLSearchParams();
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            try {
+                const res = await authFetch(API_BASE + '/api/payment/stats/summary?' + params.toString());
+                const data = await res.json();
+
+                if (data.success) {
+                    const s = data.data;
+                    document.getElementById('statsContent').innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div class="card" style="text-align: center; padding: 16px;">
+                                <div style="font-size: 24px; font-weight: 700; color: #67c23a;">¥${s.total_amount}</div>
+                                <div style="font-size: 13px; color: var(--member-text-secondary);">累计收入</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 16px;">
+                                <div style="font-size: 24px; font-weight: 700;">${s.total_orders}</div>
+                                <div style="font-size: 13px; color: var(--member-text-secondary);">总订单数</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 16px;">
+                                <div style="font-size: 24px; font-weight: 700; color: #e6a23c;">¥${s.today_amount}</div>
+                                <div style="font-size: 13px; color: var(--member-text-secondary);">今日收入</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 16px;">
+                                <div style="font-size: 24px; font-weight: 700;">${s.today_orders}</div>
+                                <div style="font-size: 13px; color: var(--member-text-secondary);">今日订单</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 16px;">
+                                <div style="font-size: 24px; font-weight: 700; color: #409eff;">${s.pending_orders}</div>
+                                <div style="font-size: 13px; color: var(--member-text-secondary);">待确认</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 16px;">
+                                <div style="font-size: 24px; font-weight: 700; color: #67c23a;">${s.confirmed_orders}</div>
+                                <div style="font-size: 13px; color: var(--member-text-secondary);">已完成</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('加载统计失败:', err);
+            }
+        }
+
+        // 检查所选日期是否有数据
+        function checkSelectedDate(input) {
+            const selectedDateTime = input.value;
+            if (!selectedDateTime) return;
+
+            // 从 datetime-local 格式提取日期部分 YYYY-MM-DD
+            const selectedDate = selectedDateTime.slice(0, 10);
+            // 格式化为友好显示
+            const displayDate = formatDateTime(selectedDateTime);
+
+            const dateTipEl = document.getElementById('dateRangeTip');
+            const orders = hasDataDates[selectedDate];
+
+            if (orders !== undefined) {
+                // 有数据 - 绿色提示
+                dateTipEl.innerHTML = `<span style="color: #67c23a;">${displayDate} 有 ${orders} 笔订单</span>`;
+            } else {
+                // 无数据 - 灰色提示
+                dateTipEl.innerHTML = `<span style="color: #909399;">${displayDate} 无订单</span>`;
+            }
+        }
+
+        // 导出CSV
+        async function exportCSV() {
+            const startDateTime = document.getElementById('exportStartDate').value;
+            const endDateTime = document.getElementById('exportEndDate').value;
+
+            // 转换为后端需要的日期格式 (YYYY-MM-DD)
+            const startDate = startDateTime ? startDateTime.slice(0, 10) : '';
+            const endDate = endDateTime ? endDateTime.slice(0, 10) : '';
+
+            const params = new URLSearchParams();
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const url = API_BASE + '/api/payment/export?' + params.toString();
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const err = await response.json();
+                        throw new Error(err.error || '导出失败');
+                    } else {
+                        throw new Error('服务器错误: ' + response.status);
+                    }
+                }
+
+                // 下载文件
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `订单数据_${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                showToast('导出成功');
+            } catch (err) {
+                console.error('导出失败:', err);
+                showToast(err.message || '导出失败');
+            }
+        }
+
+        // 图片预览函数
+        function showImagePreview(src, title = '图片预览') {
+            const modal = document.createElement('div');
+            modal.id = 'imagePreviewModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:16px;font-weight:600;">${title}</div>
+                <img src="${src}" style="max-width:90%;max-height:80vh;object-fit:contain;border-radius:8px;">
+                <button onclick="closeImagePreview()" style="position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:#fff;font-size:20px;cursor:pointer;">X</button>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeImagePreview() {
+            document.getElementById('imagePreviewModal')?.remove();
+        }
+
+        // 初始化
+        if (checkAuth()) {
+            loadMerchantInfo();
+        }
+    </script>
+</body>
+</html>

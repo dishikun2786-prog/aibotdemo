@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>功能中心 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyber-blue: #00f3ff;
+            --cyber-purple: #bc13fe;
+            --cyber-red: #ff003c;
+            --cyber-gold: #ffd700;
+            --cyber-green: #0aff00;
+            --cyber-cyan: #00ffff;
+            --cyber-bg: #050505;
+            --cyber-glass: rgba(16, 20, 24, 0.85);
+            --cyber-border: rgba(0, 243, 255, 0.3);
+
+            --q-primary: #7C5CFF;
+            --q-secondary: #FF6B9D;
+            --q-accent: #FFD93D;
+            --q-success: #6BCB77;
+            --q-danger: #FF6B6B;
+            --q-info: #4ECDC4;
+            --q-bg: #F8F6FF;
+            --q-bg-dark: #E8E4F5;
+            --q-card-bg: #FFFFFF;
+            --q-text: #5A4E7D;
+            --q-text-light: #9B8EC2;
+            --q-shadow: 0 8px 25px rgba(124, 92, 255, 0.15);
+            --q-shadow-hover: 0 12px 35px rgba(124, 92, 255, 0.25);
+            --q-radius: 16px;
+            --q-border: 2px solid #E8E4F5;
+
+            --neon-blue: var(--q-primary);
+            --neon-purple: var(--q-secondary);
+            --neon-red: var(--q-danger);
+            --neon-gold: var(--q-accent);
+            --neon-green: var(--q-success);
+            --neon-cyan: var(--q-info);
+            --bg-dark: var(--q-bg);
+            --glass-bg: var(--q-card-bg);
+            --border-color: var(--q-border);
+        }
+
+        body.theme-cyber {
+            --neon-blue: var(--cyber-blue);
+            --neon-purple: var(--cyber-purple);
+            --neon-red: var(--cyber-red);
+            --neon-gold: var(--cyber-gold);
+            --neon-green: var(--cyber-green);
+            --neon-cyan: var(--cyber-cyan);
+            --bg-dark: var(--cyber-bg);
+            --glass-bg: var(--cyber-glass);
+            --border-color: var(--cyber-border);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--q-text);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        body.theme-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Background */
+        .page-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.1) 0%, rgba(255, 107, 157, 0.1) 50%, rgba(255, 217, 61, 0.1) 100%);
+            pointer-events: none;
+        }
+
+        body.theme-cyber .page-bg {
+            background: radial-gradient(ellipse at top, rgba(0, 243, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom, rgba(188, 19, 254, 0.1) 0%, transparent 50%),
+                        var(--cyber-bg);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 25px rgba(124, 92, 255, 0.3);
+        }
+
+        .logo-text {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body.theme-cyber .logo-text {
+            color: var(--cyber-blue);
+            -webkit-text-fill-color: var(--cyber-blue);
+            text-shadow: 0 0 20px var(--cyber-blue);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--q-text-light);
+            margin-bottom: 30px;
+        }
+
+        body.theme-cyber .subtitle {
+            color: var(--cyber-cyan);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .theme-btn {
+            padding: 10px 25px;
+            border: 2px solid var(--border-color);
+            background: var(--glass-bg);
+            color: var(--q-text);
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            background: var(--neon-blue);
+            color: white;
+            border-color: var(--neon-blue);
+            box-shadow: 0 5px 20px rgba(124, 92, 255, 0.3);
+        }
+
+        body.theme-cyber .theme-btn:hover, 
+        body.theme-cyber .theme-btn.active {
+            background: var(--cyber-blue);
+            border-color: var(--cyber-blue);
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Section Title */
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--q-text);
+            margin-bottom: 10px;
+        }
+
+        body.theme-cyber .section-title h2 {
+            color: var(--cyber-cyan);
+        }
+
+        .section-title p {
+            color: var(--q-text-light);
+            font-size: 16px;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: var(--border-color);
+            border-radius: var(--q-radius);
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeInUp 0.6s ease both;
+            text-decoration: none;
+            display: block;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--q-shadow-hover);
+            border-color: var(--neon-blue);
+        }
+
+        body.theme-cyber .feature-card:hover {
+            border-color: var(--cyber-blue);
+            box-shadow: 0 10px 40px rgba(0, 243, 255, 0.2);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-icon.game { background: linear-gradient(135deg, #7C5CFF, #FF6B9D); }
+        .feature-icon.plaza { background: linear-gradient(135deg, #FFD93D, #FF6B6B); }
+        .feature-icon.ai { background: linear-gradient(135deg, #00f3ff, #bc13fe); }
+        .feature-icon.podcast { background: linear-gradient(135deg, #6BCB77, #4ECDC4); }
+        .feature-icon.energy { background: linear-gradient(135deg, #FFD93D, #FF8C00); }
+        .feature-icon.member { background: linear-gradient(135deg, #FF6B9D, #C71585); }
+        .feature-icon.chess { background: linear-gradient(135deg, #8B4513, #D2691E); }
+        .feature-icon.leaderboard { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .feature-icon.file { background: linear-gradient(135deg, #4ECDC4, #26A69A); }
+        .feature-icon.skin { background: linear-gradient(135deg, #E91E63, #9C27B0); }
+
+        body.theme-cyber .feature-icon.game { background: linear-gradient(135deg, var(--cyber-blue), var(--cyber-purple)); }
+        body.theme-cyber .feature-icon.plaza { background: linear-gradient(135deg, var(--cyber-gold), var(--cyber-red)); }
+        body.theme-cyber .feature-icon.ai { background: linear-gradient(135deg, var(--cyber-cyan), var(--cyber-purple)); }
+        body.theme-cyber .feature-icon.podcast { background: linear-gradient(135deg, var(--cyber-green), var(--cyber-cyan)); }
+        body.theme-cyber .feature-icon.energy { background: linear-gradient(135deg, var(--cyber-gold), var(--cyber-red)); }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--q-text);
+            margin-bottom: 12px;
+        }
+
+        body.theme-cyber .feature-title {
+            color: var(--cyber-cyan);
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            color: var(--q-text-light);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feature-tag {
+            padding: 5px 12px;
+            background: var(--q-bg-dark);
+            border-radius: 15px;
+            font-size: 12px;
+            color: var(--q-text-light);
+        }
+
+        body.theme-cyber .feature-tag {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--cyber-cyan);
+        }
+
+        .feature-arrow {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            font-size: 24px;
+            color: var(--q-text-light);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Stagger animation for cards */
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.15s; }
+        .feature-card:nth-child(3) { animation-delay: 0.2s; }
+        .feature-card:nth-child(4) { animation-delay: 0.25s; }
+        .feature-card:nth-child(5) { animation-delay: 0.3s; }
+        .feature-card:nth-child(6) { animation-delay: 0.35s; }
+        .feature-card:nth-child(7) { animation-delay: 0.4s; }
+        .feature-card:nth-child(8) { animation-delay: 0.45s; }
+        .feature-card:nth-child(9) { animation-delay: 0.5s; }
+        .feature-card:nth-child(10) { animation-delay: 0.55s; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 30px;
+            color: var(--q-text-light);
+            font-size: 14px;
+            animation: fadeInUp 0.8s ease 0.5s both;
+        }
+
+        .footer a {
+            color: var(--neon-blue);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .logo-text {
+                font-size: 24px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card {
+                padding: 25px;
+            }
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--glass-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--q-text);
+        }
+
+        .back-btn:hover {
+            background: var(--neon-blue);
+            color: white;
+            border-color: var(--neon-blue);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-bg"></div>
+
+    <a href="https://aibotdemo.skym178.com/" class="back-btn" title="返回首页">&#8592;</a>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">&#9889;</div>
+                <div class="logo-text">能量山：零号协议</div>
+            </div>
+            <p class="subtitle">探索精彩功能，开启你的冒险之旅</p>
+
+            <div class="theme-toggle">
+                <button class="theme-btn active" onclick="setTheme('q')">&#127922; Q版风格</button>
+                <button class="theme-btn" onclick="setTheme('cyber')">&#128187; 赛博风格</button>
+            </div>
+        </header>
+
+        <!-- Features Section -->
+        <section class="section-title">
+            <h2>&#127912; 功能中心</h2>
+            <p>发现更多精彩功能，体验多元玩法</p>
+        </section>
+
+        <div class="features-grid">
+            <!-- 游戏主系统 -->
+            <a href="https://aibotdemo.skym178.com/game.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon game">&#127918;</div>
+                <h3 class="feature-title">能量山游戏</h3>
+                <p class="feature-desc">核心游戏玩法，节点占据、PK对战、挖矿寻宝，成为能量王者</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">节点占据</span>
+                    <span class="feature-tag">PK对战</span>
+                    <span class="feature-tag">挖矿</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 玩家广场 -->
+            <a href="https://aibotdemo.skym178.com/plaza.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon plaza">&#128172;</div>
+                <h3 class="feature-title">玩家广场</h3>
+                <p class="feature-desc">分享游戏心得，结交好友，组建PK团，共同征战能量山</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">帖子</span>
+                    <span class="feature-tag">点赞评论</span>
+                    <span class="feature-tag">PK团</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- AI客服 -->
+            <a href="https://aibotdemo.skym178.com/agent-chat.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon ai">&#129302;</div>
+                <h3 class="feature-title">AI智能客服</h3>
+                <p class="feature-desc">定制你的AI分身，智能对话，知识库问答，随时随地在线答疑</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">AI分身</span>
+                    <span class="feature-tag">知识库</span>
+                    <span class="feature-tag">实时对话</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 播客系统 -->
+            <a href="https://aibotdemo.skym178.com/podcast.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon podcast">&#127911;</div>
+                <h3 class="feature-title">播客广场</h3>
+                <p class="feature-desc">创作你的播客节目，分享声音魅力，订阅喜爱的播客主</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">音频上传</span>
+                    <span class="feature-tag">播放</span>
+                    <span class="feature-tag">订阅</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 能量交易 -->
+            <a href="https://aibotdemo.skym178.com/energy-market.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon energy">&#9889;</div>
+                <h3 class="feature-title">能量市场</h3>
+                <p class="feature-desc">自由交易能量，买卖双方直接对接，安全可靠的交易平台</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">发布广告</span>
+                    <span class="feature-tag">购买能量</span>
+                    <span class="feature-tag">交易保障</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 会员中心 -->
+            <a href="https://aibotdemo.skym178.com/member.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon member">&#128176;</div>
+                <h3 class="feature-title">会员中心</h3>
+                <p class="feature-desc">推广邀请获取奖励，查看团队成员，发展你的能量帝国</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">推荐码</span>
+                    <span class="feature-tag">团队管理</span>
+                    <span class="feature-tag">邀请奖励</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 象棋游戏 -->
+            <a href="https://aibotdemo.skym178.com/chess-plaza.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon chess">&#9822;</div>
+                <h3 class="feature-title">象棋对弈</h3>
+                <p class="feature-desc">与中国象棋AI对战，提升棋艺，与好友切磋技艺</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">人机对战</span>
+                    <span class="feature-tag">在线匹配</span>
+                    <span class="feature-tag">残局挑战</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 排行榜 -->
+            <a href="https://aibotdemo.skym178.com/leaderboard.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon leaderboard">&#127942;</div>
+                <h3 class="feature-title">荣耀榜</h3>
+                <p class="feature-desc">查看全服最强玩家，能量榜、战绩榜、连胜榜荣誉殿堂</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">能量排行</span>
+                    <span class="feature-tag">战绩排行</span>
+                    <span class="feature-tag">连胜排行</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 文件管理 -->
+            <a href="https://aibotdemo.skym178.com/file-manager.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon file">&#128193;</div>
+                <h3 class="feature-title">我的网盘</h3>
+                <p class="feature-desc">安全存储你的文件，支持分享链接，随时随地访问资料</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">文件上传</span>
+                    <span class="feature-tag">文件分享</span>
+                    <span class="feature-tag">在线预览</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+
+            <!-- 皮肤商店 -->
+            <a href="https://aibotdemo.skym178.com/skin-code-shop.html" class="feature-card" style="position: relative;">
+                <div class="feature-icon skin">&#127912;</div>
+                <h3 class="feature-title">皮肤商店</h3>
+                <p class="feature-desc">兑换激活码，解锁炫酷皮肤，展现个性游戏形象</p>
+                <div class="feature-tags">
+                    <span class="feature-tag">激活码</span>
+                    <span class="feature-tag">皮肤兑换</span>
+                    <span class="feature-tag">限时活动</span>
+                </div>
+                <span class="feature-arrow">&#8594;</span>
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 能量山：零号协议 | <a href="#">关于我们</a> | <a href="#">帮助中心</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function setTheme(theme) {
+            if (theme === 'cyber') {
+                document.body.classList.add('theme-cyber');
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector('.theme-btn:nth-child(2)').classList.add('active');
+            } else {
+                document.body.classList.remove('theme-cyber');
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector('.theme-btn:nth-child(1)').classList.add('active');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'q';
+        setTheme(savedTheme);
+    </script>
+</body>
+</html>

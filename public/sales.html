@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>能量山 - 私域AI社区营销变现框架</title>
+    <meta name="description" content="开源可定制的私域AI社区营销系统，一套框架实现会员体系、经济系统、内容平台、智能客服、支付交易，快速部署上线！">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --plaza-bg: #f0f2f5;
+            --plaza-card-bg: rgba(255, 255, 255, 0.92);
+            --plaza-primary: #4a90e2;
+            --plaza-primary-dark: #3a7bc8;
+            --plaza-accent: #67c23a;
+            --plaza-text: #1a1a1a;
+            --plaza-text-secondary: #606266;
+            --plaza-text-light: #909399;
+            --plaza-border: rgba(0, 0, 0, 0.08);
+            --plaza-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --plaza-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --plaza-radius: 12px;
+            --plaza-radius-lg: 16px;
+            --plaza-radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--plaza-bg);
+            color: var(--plaza-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* 背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 320px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a18cd1 100%);
+            z-index: 0;
+        }
+
+        /* 顶部导航 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--plaza-border);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-logo {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: var(--plaza-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--plaza-bg);
+            color: var(--plaza-primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--plaza-primary);
+            color: var(--plaza-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--plaza-primary);
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 移动端菜单 */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .menu-toggle span {
+            width: 22px;
+            height: 2px;
+            background: var(--plaza-text-secondary);
+            transition: all 0.3s;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 16px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero区域 */
+        .hero {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        .hero-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-tags {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            backdrop-filter: blur(10px);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: white;
+            border: none;
+        }
+
+        .btn-large {
+            padding: 12px 36px;
+            font-size: 16px;
+            border-radius: 25px;
+        }
+
+        /* 功能卡片网格 */
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--plaza-text);
+        }
+
+        .section-more {
+            color: var(--plaza-primary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .section-more:hover {
+            text-decoration: underline;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .feature-icon.game {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .feature-icon.energy {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .feature-icon.plaza {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .feature-icon.ai {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+
+        .feature-icon.podcast {
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+        }
+
+        .feature-icon.member {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+        }
+
+        .feature-icon.enterprise {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .feature-icon.card {
+            background: linear-gradient(135deg, #ee0979, #ff6a00);
+        }
+
+        .feature-icon.leaderboard {
+            background: linear-gradient(135deg, #f12711, #f5af19);
+        }
+
+        .feature-icon.payment {
+            background: linear-gradient(135deg, #834d9b, #d04ed6);
+        }
+
+        .feature-icon.file {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--plaza-text);
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--plaza-text-secondary);
+            line-height: 1.5;
+        }
+
+        /* 帖子卡片样式 */
+        .post-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .post-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--plaza-text);
+        }
+
+        .post-info span {
+            font-size: 12px;
+            color: var(--plaza-text-light);
+        }
+
+        .post-content {
+            font-size: 14px;
+            color: var(--plaza-text);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 20px;
+            color: var(--plaza-text-light);
+            font-size: 13px;
+        }
+
+        .post-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 能量交易卡片 */
+        .energy-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a18cd1 100%);
+            border-radius: var(--plaza-radius-lg);
+            padding: 28px;
+            color: white;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .energy-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .energy-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .energy-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .energy-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .energy-card-arrow {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .energy-card:hover .energy-card-arrow {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(4px);
+        }
+
+        .energy-card p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .energy-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .energy-stat {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .energy-stat:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+
+        .energy-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .energy-stat-value .icon {
+            font-size: 16px;
+        }
+
+        .energy-stat-label {
+            font-size: 11px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 播客卡片 */
+        .podcast-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .podcast-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .podcast-cover {
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .podcast-cover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+        }
+
+        .podcast-cover.c1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .podcast-cover.c2 {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .podcast-cover.c3 {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .podcast-info {
+            padding: 16px;
+        }
+
+        .podcast-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--plaza-text);
+            line-height: 1.4;
+        }
+
+        .podcast-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--plaza-text-light);
+            align-items: center;
+        }
+
+        .podcast-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 会员卡片 */
+        .member-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            padding: 24px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .member-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--plaza-primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .member-card:hover::before {
+            opacity: 1;
+        }
+
+        .member-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .member-card:hover .member-icon {
+            transform: scale(1.1);
+        }
+
+        .member-icon.gift {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .member-icon.referral {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .member-icon.service {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .member-icon.vip {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+        }
+
+        .member-card h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--plaza-text);
+        }
+
+        .member-card p {
+            font-size: 12px;
+            color: var(--plaza-text-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* 技术栈 */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .tech-item {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius);
+            box-shadow: var(--plaza-shadow);
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .tech-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .tech-item h4 {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--plaza-text);
+        }
+
+        .tech-desc {
+            font-size: 11px;
+            color: var(--plaza-text-light);
+            margin-top: 4px;
+        }
+
+        .tech-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .tech-feature {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius);
+            box-shadow: var(--plaza-shadow);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .tech-feature:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .tech-feature-icon {
+            font-size: 28px;
+        }
+
+        .tech-feature h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--plaza-text);
+            margin-bottom: 4px;
+        }
+
+        .tech-feature p {
+            font-size: 12px;
+            color: var(--plaza-text-secondary);
+            margin: 0;
+        }
+
+        /* CTA区域 */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--plaza-radius-lg);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-section h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .cta-section p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-white {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .btn-white:hover {
+            background: linear-gradient(135deg, #5a6fd6, #653d8a);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-white {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 2px solid transparent;
+            color: white;
+        }
+
+        .btn-outline-white:hover {
+            background: linear-gradient(135deg, #5a6fd6, #653d8a);
+            transform: translateY(-1px);
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 30px 16px;
+            color: var(--plaza-text-light);
+            font-size: 13px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .footer-links a {
+            color: var(--plaza-text-secondary);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: var(--plaza-primary);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-links.active {
+                display: flex;
+                position: absolute;
+                top: 56px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: 16px;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .energy-stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .energy-card {
+                padding: 20px;
+            }
+
+            .energy-card h3 {
+                font-size: 18px;
+            }
+
+            .energy-stat {
+                padding: 14px 12px;
+            }
+
+            .energy-stat-value {
+                font-size: 20px;
+            }
+
+            .energy-stat-label {
+                font-size: 10px;
+            }
+
+            .tech-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .advantages-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .business-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .business-card.featured {
+                transform: none;
+            }
+
+            .business-card.featured:hover {
+                transform: translateY(-4px);
+            }
+
+            .tech-features {
+                grid-template-columns: 1fr;
+            }
+
+            /* 会员卡片移动端 */
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .member-card {
+                padding: 16px;
+            }
+
+            .member-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            .member-card h4 {
+                font-size: 14px;
+            }
+
+            .member-card p {
+                font-size: 11px;
+            }
+
+            /* 播客卡片移动端 */
+            .podcast-cover {
+                height: 80px;
+                font-size: 32px;
+            }
+
+            .podcast-info {
+                padding: 12px;
+            }
+
+            .podcast-info h4 {
+                font-size: 13px;
+            }
+
+            /* CTA移动端 */
+            .cta-section {
+                padding: 30px 16px;
+            }
+
+            .cta-section h2 {
+                font-size: 20px;
+            }
+
+            .cta-section p {
+                font-size: 13px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .cta-buttons .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            /* 页脚移动端 */
+            .footer {
+                padding: 24px 12px;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .container {
+                padding: 20px 12px 60px;
+            }
+        }
+
+        /* 差异化优势 */
+        .advantages-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .advantage-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            padding: 24px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .advantage-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .advantage-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .advantage-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--plaza-text);
+        }
+
+        .advantage-card p {
+            font-size: 13px;
+            color: var(--plaza-text-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* 商业模式 */
+        .business-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .business-card {
+            background: var(--plaza-card-bg);
+            border-radius: var(--plaza-radius-lg);
+            box-shadow: var(--plaza-shadow);
+            padding: 28px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .business-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--plaza-shadow-hover);
+        }
+
+        .business-card.featured {
+            border-color: var(--plaza-primary);
+            transform: scale(1.02);
+        }
+
+        .business-card.featured:hover {
+            transform: scale(1.02) translateY(-4px);
+        }
+
+        .business-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .business-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .business-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--plaza-text);
+        }
+
+        .business-price {
+            font-size: 14px;
+            color: var(--plaza-primary);
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .business-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .business-features li {
+            font-size: 13px;
+            color: var(--plaza-text-secondary);
+            padding: 6px 0;
+            border-bottom: 1px solid var(--plaza-border);
+        }
+
+        .business-features li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* 页脚CTA */
+        .footer-cta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--plaza-radius-lg);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .footer-cta h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .footer-cta p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景装饰 -->
+    <div class="bg-decoration"></div>
+
+    <!-- 顶部导航 -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="/" class="navbar-logo">能量山</a>
+            <div class="nav-links" id="navLinks">
+                <a href="#features" class="nav-link active">功能</a>
+                <a href="#advantages" class="nav-link">优势</a>
+                <a href="#business" class="nav-link">合作</a>
+                <a href="#tech" class="nav-link">技术</a>
+                <a href="#contact" class="nav-link">联系</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <a href="/game.html" class="btn btn-outline">登录</a>
+            <a href="/game.html" class="btn btn-primary">注册</a>
+        </div>
+        <div class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- Hero区域 -->
+        <section class="hero">
+            <h1 class="hero-title">能量山 <span>私域AI社区营销变现框架</span></h1>
+            <p class="hero-subtitle">为私域运营而生的AI社区营销系统 | 一套框架 = 会员体系 + 经济系统 + 内容平台 + 智能客服 + 支付交易</p>
+            <div class="hero-tags">
+                <span class="tag">&#128736; 开源框架</span>
+                <span class="tag">&#128200; 私域运营</span>
+                <span class="tag">&#129302; AI营销</span>
+            </div>
+            <div class="hero-cta">
+                <a href="/game.html" class="btn btn-white btn-large">免费试用</a>
+                <a href="#features" class="btn btn-outline-white btn-large">了解更多</a>
+            </div>
+        </section>
+
+        <!-- 核心功能 -->
+        <section class="section" id="features">
+            <div class="section-header">
+                <h2 class="section-title">&#128200; 运营变现模块</h2>
+            </div>
+            <div class="features-grid">
+                <a href="/member.html" class="feature-card">
+                    <div class="feature-icon member">&#128101;</div>
+                    <h3>用户管理体系</h3>
+                    <p>会员等级、权益体系、推荐裂变，快速构建私域用户池</p>
+                </a>
+                <a href="/game.html" class="feature-card">
+                    <div class="feature-icon energy">&#128176;</div>
+                    <h3>经济系统</h3>
+                    <p>积分商城、虚拟货币、能量交易，构建完整商业闭环</p>
+                </a>
+                <a href="/plaza.html" class="feature-card">
+                    <div class="feature-icon plaza">&#128172;</div>
+                    <h3>私域流量池</h3>
+                    <p>帖子、PK团、互动社区，高效沉淀私域用户资产</p>
+                </a>
+                <a href="/agent-chat.html" class="feature-card">
+                    <div class="feature-icon ai">&#129302;</div>
+                    <h3>智能营销助手</h3>
+                    <p>AI分身客服+知识库，7×24小时自动获客留资</p>
+                </a>
+                <a href="/podcast.html" class="feature-card">
+                    <div class="feature-icon podcast">&#127911;</div>
+                    <h3>内容营销</h3>
+                    <p>音频内容创作、付费订阅，打造知识付费变现渠道</p>
+                </a>
+                <a href="/business-card.html" class="feature-card">
+                    <div class="feature-icon game">&#128188;</div>
+                    <h3>个人品牌数字名片</h3>
+                    <p>一键生成数字名片，裂变传播获取精准客户</p>
+                </a>
+                <a href="/game.html" class="feature-card">
+                    <div class="feature-icon game">&#127941;</div>
+                    <h3>互动激励机制</h3>
+                    <p>排行榜、PK对战、任务活动，激发用户活跃度</p>
+                </a>
+                <a href="/energy-market.html" class="feature-card">
+                    <div class="feature-icon energy">&#128179;</div>
+                    <h3>交易闭环</h3>
+                    <p>能量买卖、商户入驻、充值变现，资金安全有保障</p>
+                </a>
+                <a href="/file-manager.html" class="feature-card">
+                    <div class="feature-icon plaza">&#128193;</div>
+                    <h3>资源变现</h3>
+                    <p>文件网盘、付费资源、课程销售，知识变现更简单</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- 差异化优势 -->
+        <section class="section" id="advantages">
+            <div class="section-header">
+                <h2 class="section-title">&#9989; 为什么选择能量山</h2>
+            </div>
+            <div class="advantages-grid">
+                <div class="advantage-card">
+                    <div class="advantage-icon">&#128736;</div>
+                    <h3>开源可定制</h3>
+                    <p>代码完全开放，支持二次开发，灵活定制满足业务需求</p>
+                </div>
+                <div class="advantage-card">
+                    <div class="advantage-icon">&#9889;</div>
+                    <h3>快速上线</h3>
+                    <p>即装即用，标准部署7天上线，无需漫长开发周期</p>
+                </div>
+                <div class="advantage-card">
+                    <div class="advantage-icon">&#128176;</div>
+                    <h3>低成本</h3>
+                    <p>无需养技术团队，订阅式服务大幅降低运营成本</p>
+                </div>
+                <div class="advantage-card">
+                    <div class="advantage-icon">&#129302;</div>
+                    <h3>持续迭代</h3>
+                    <p>AI能力持续升级，新功能新技术第一时间体验</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 商业模式 -->
+        <section class="section" id="business">
+            <div class="section-header">
+                <h2 class="section-title">&#128188; 合作模式</h2>
+            </div>
+            <div class="business-grid">
+                <div class="business-card">
+                    <div class="business-icon saas">&#128421;</div>
+                    <h3>SaaS订阅</h3>
+                    <p class="business-price">月付/年付</p>
+                    <ul class="business-features">
+                        <li>&#10003; 快速部署</li>
+                        <li>&#10003; 持续更新</li>
+                        <li>&#10003; 云端运维</li>
+                        <li>&#10003; 基础客服</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-outline btn-block">咨询详情</a>
+                </div>
+                <div class="business-card featured">
+                    <div class="business-tag">推荐</div>
+                    <div class="business-icon custom">&#128736;</div>
+                    <h3>定制开发</h3>
+                    <p class="business-price">按需报价</p>
+                    <ul class="business-features">
+                        <li>&#10003; 专属功能</li>
+                        <li>&#10003; 品牌定制</li>
+                        <li>&#10003; 源码交付</li>
+                        <li>&#10003; 培训支持</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-primary btn-block">咨询详情</a>
+                </div>
+                <div class="business-card">
+                    <div class="business-icon agent">&#127970;</div>
+                    <h3>代理加盟</h3>
+                    <p class="business-price">区域/行业独家</p>
+                    <ul class="business-features">
+                        <li>&#10003; 独家代理权</li>
+                        <li>&#10003; 分成收益</li>
+                        <li>&#10003; 品牌授权</li>
+                        <li>&#10003; 技术支持</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-outline btn-block">咨询详情</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技术架构 -->
+        <section class="section" id="tech">
+            <div class="section-header">
+                <h2 class="section-title">&#128187; 技术架构 & 扩展性</h2>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="tech-icon">&#128187;</div>
+                    <h4>Node.js</h4>
+                    <p class="tech-desc">高性能后端</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">&#128421;</div>
+                    <h4>Express</h4>
+                    <p class="tech-desc">RESTful API</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">&#128225;</div>
+                    <h4>Socket.io</h4>
+                    <p class="tech-desc">实时通信</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">&#128202;</div>
+                    <h4>MySQL</h4>
+                    <p class="tech-desc">业务数据</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">&#128367;</div>
+                    <h4>Redis</h4>
+                    <p class="tech-desc">缓存 & 状态</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">&#128451;</div>
+                    <h4>MongoDB</h4>
+                    <p class="tech-desc">日志 & 聊天</p>
+                </div>
+            </div>
+            <div class="tech-features">
+                <div class="tech-feature">
+                    <span class="tech-feature-icon">&#128736;</span>
+                    <div>
+                        <h4>模块化设计</h4>
+                        <p>各功能独立，即插即用</p>
+                    </div>
+                </div>
+                <div class="tech-feature">
+                    <span class="tech-feature-icon">&#128279;</span>
+                    <div>
+                        <h4>API开放</h4>
+                        <p>支持第三方系统对接</p>
+                    </div>
+                </div>
+                <div class="tech-feature">
+                    <span class="tech-feature-icon">&#129302;</span>
+                    <div>
+                        <h4>AI能力</h4>
+                        <p>集成主流大语言模型</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 立即行动 -->
+        <section class="cta-section" id="contact">
+            <h2>&#128679; 立即开启你的私域变现之旅</h2>
+            <p>开源 · 可定制 · 零门槛部署 | 7天快速上线</p>
+            <div class="cta-buttons">
+                <a href="/game.html" class="btn btn-white">免费试用</a>
+                <a href="#business" class="btn btn-outline-white">了解合作模式</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="/">首页</a>
+            <a href="#features">功能</a>
+            <a href="#advantages">优势</a>
+            <a href="#business">合作</a>
+            <a href="#contact">联系我们</a>
+        </div>
+        <p>COPYRIGHT 2026 能量山 ALL RIGHTS RESERVED | 私域AI社区营销变现框架</p>
+    </footer>
+
+    <script>
+        // 移动端菜单
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // 点击导航链接
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const target = document.querySelector(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+                // 更新激活状态
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                // 关闭移动端菜单
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+
+        // 滚动时更新导航激活状态
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollPos = window.scrollY + 100;
+
+            sections.forEach(section => {
+                const top = section.offsetTop;
+                const height = section.offsetHeight;
+                const id = section.getAttribute('id');
+
+                if (scrollPos >= top && scrollPos < top + height) {
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

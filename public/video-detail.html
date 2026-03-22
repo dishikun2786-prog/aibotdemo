@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>视频详情 | 能量山：零号协议</title>
+    <script src="/js/auth-manager.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --video-bg: #0f0f0f;
+            --video-card-bg: #1e1e1e;
+            --video-primary: #ff0000;
+            --video-accent: #ff0000;
+            --video-text: #ffffff;
+            --video-text-secondary: #aaaaaa;
+            --video-text-light: #717171;
+            --video-border: rgba(255, 255, 255, 0.1);
+            --video-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --video-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--video-bg);
+            color: var(--video-text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .video-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .video-player-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: var(--video-radius);
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            display: block;
+        }
+
+        .video-info {
+            max-width: 900px;
+            margin: 20px auto;
+        }
+
+        .video-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .video-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: var(--video-text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .video-stats-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--video-border);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 24px;
+            color: var(--video-text);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn.liked {
+            color: var(--video-primary);
+        }
+
+        .action-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .video-creator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--video-card-bg);
+            border-radius: var(--video-radius);
+            margin-bottom: 24px;
+        }
+
+        .creator-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .creator-info {
+            flex: 1;
+        }
+
+        .creator-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .creator-subscribe {
+            font-size: 13px;
+            color: var(--video-text-secondary);
+        }
+
+        .subscribe-btn {
+            padding: 10px 24px;
+            background: var(--video-primary);
+            border: none;
+            border-radius: 24px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .subscribe-btn:hover {
+            opacity: 0.9;
+        }
+
+        .subscribe-btn.subscribed {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .video-description {
+            padding: 16px;
+            background: var(--video-card-bg);
+            border-radius: var(--video-radius);
+            margin-bottom: 16px;
+        }
+
+        .description-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .description-content {
+            font-size: 14px;
+            color: var(--video-text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* 自定义菜单样式 */
+        .custom-menu-section {
+            padding: 16px;
+            background: var(--video-card-bg);
+            border-radius: var(--video-radius);
+            margin-bottom: 24px;
+        }
+
+        .custom-menu-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--video-text-light);
+            margin-bottom: 12px;
+        }
+
+        .custom-menu-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .custom-menu-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--video-border);
+            border-radius: 20px;
+            color: var(--video-text);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .custom-menu-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .custom-menu-item .menu-icon {
+            font-size: 16px;
+        }
+
+        /* 相关视频样式 */
+        .related-videos-section {
+            padding: 16px;
+            background: var(--video-card-bg);
+            border-radius: var(--video-radius);
+            margin-bottom: 24px;
+        }
+
+        .related-videos-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--video-text-light);
+            margin-bottom: 16px;
+        }
+
+        .related-videos-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .related-video-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .related-video-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .related-video-cover {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #333;
+        }
+
+        .related-video-title {
+            font-size: 14px;
+            color: var(--video-text-light);
+            margin-top: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .related-video-meta {
+            font-size: 12px;
+            color: var(--video-text-secondary);
+            margin-top: 4px;
+        }
+
+        .comments-section {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .comments-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-count {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--video-text-secondary);
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            flex-shrink: 0;
+        }
+
+        .comment-input-wrapper {
+            flex: 1;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--video-card-bg);
+            border: 1px solid var(--video-border);
+            border-radius: 8px;
+            color: var(--video-text);
+            font-size: 14px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--video-primary);
+        }
+
+        .comment-input::placeholder {
+            color: var(--video-text-light);
+        }
+
+        .comment-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .comment-submit-btn {
+            padding: 8px 24px;
+            background: var(--video-primary);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .comment-submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .comment-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-item-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            flex-shrink: 0;
+        }
+
+        .comment-item-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .comment-item-content {
+            flex: 1;
+        }
+
+        .comment-item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .comment-item-username {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .comment-item-time {
+            font-size: 12px;
+            color: var(--video-text-light);
+        }
+
+        .comment-item-text {
+            font-size: 14px;
+            color: var(--video-text-secondary);
+            word-break: break-word;
+        }
+
+        .comment-item-actions {
+            margin-top: 8px;
+        }
+
+        .comment-delete-btn {
+            background: none;
+            border: none;
+            color: #ff4d4f;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .comment-delete-btn:hover {
+            background: rgba(255, 77, 79, 0.1);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.6);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--video-text-secondary);
+        }
+
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--video-border);
+            border-top-color: var(--video-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .error-state h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .error-state p {
+            color: var(--video-text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .error-state .btn {
+            padding: 12px 32px;
+            background: var(--video-primary);
+            border: none;
+            border-radius: 24px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--video-text-secondary);
+        }
+
+        .not-found {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .not-found h2 {
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        .not-found p {
+            color: var(--video-text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .not-found a {
+            display: inline-block;
+            padding: 12px 32px;
+            background: var(--video-primary);
+            border-radius: 24px;
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .video-container {
+                padding: 12px;
+            }
+
+            .video-title {
+                font-size: 18px;
+            }
+
+            .video-stats {
+                font-size: 13px;
+            }
+
+            .video-actions {
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .video-creator {
+                flex-wrap: wrap;
+            }
+
+            .subscribe-btn {
+                width: 100%;
+                margin-top: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">←</button>
+
+    <div id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <div>加载中...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let videoData = null;
+        let currentUserId = null;
+        let currentUser = null;
+        let isLoggedIn = false;
+
+        // 获取URL参数
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 返回上一页
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        // 初始化
+        async function init() {
+            const videoId = getUrlParam('id');
+
+            if (!videoId) {
+                showNotFound();
+                return;
+            }
+
+            // 检查登录状态
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                try {
+                    const res = await fetch(API_BASE + '/api/auth/me', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.success && data.data) {
+                            isLoggedIn = true;
+                            currentUserId = data.data.id;
+                            currentUser = data.data;
+                        }
+                    }
+                } catch (err) {
+                    console.error('检查登录状态失败:', err);
+                }
+            }
+
+            // 加载视频详情
+            await loadVideoDetail(videoId);
+        }
+
+        // 加载视频详情
+        async function loadVideoDetail(videoId) {
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoId);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showNotFound();
+                    return;
+                }
+
+                videoData = data.data;
+                renderVideoDetail();
+            } catch (err) {
+                console.error('加载视频详情失败:', err);
+                showError();
+            }
+        }
+
+        // 渲染视频详情
+        function renderVideoDetail() {
+            const app = document.getElementById('app');
+
+            const video = videoData;
+            const createdDate = new Date(video.created_at).toLocaleDateString('zh-CN');
+            const viewsCount = formatNumber(video.views_count || 0);
+
+            app.innerHTML = `
+                <div class="video-container">
+                    <div class="video-player-wrapper">
+                        <video class="video-player" controls poster="${video.cover_image || ''}">
+                            <source src="${video.video_url}" type="video/mp4">
+                            您的浏览器不支持视频播放
+                        </video>
+                    </div>
+
+                    <div class="video-info">
+                        <h1 class="video-title">${escapeHtml(video.title)}</h1>
+
+                        <div class="video-stats">
+                            <span class="video-stats-item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                ${viewsCount} 次观看
+                            </span>
+                            <span class="video-stats-item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                ${formatNumber(video.likes_count || 0)}
+                            </span>
+                            <span class="video-stats-item">${createdDate}</span>
+                        </div>
+
+                        <div class="video-actions">
+                            <button class="action-btn" id="likeBtn" onclick="toggleLike()">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                点赞
+                            </button>
+                            <button class="action-btn" onclick="shareVideo()">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                                分享
+                            </button>
+                        </div>
+
+                        <div class="video-creator">
+                            <img class="creator-avatar" src="${getAvatarUrl(video.user_id, video.username, video.user_avatar)}" alt="头像" />
+                            <div class="creator-info">
+                                <div class="creator-name">${escapeHtml(video.username || '用户' + video.user_id)}</div>
+                                <div class="creator-subscribe">发布者</div>
+                            </div>
+                            <button class="subscribe-btn" onclick="handleSubscribe()">订阅</button>
+                        </div>
+
+                        <div class="video-description">
+                            <div class="description-title">简介</div>
+                            <div class="description-content">${video.description ? escapeHtml(video.description) : '暂无简介'}</div>
+                        </div>
+
+                        ${renderCustomMenu(video.custom_menu)}
+
+                        <div class="related-videos-section" id="relatedVideosSection">
+                            <div class="related-videos-title">更多视频</div>
+                            <div class="related-videos-list" id="relatedVideosList">
+                                <div class="loading"><div class="spinner"></div>加载中...</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="comments-section">
+                        <div class="comments-header">
+                            评论 <span class="comment-count">${formatNumber(video.comments_count || 0)}</span>
+                        </div>
+
+                        ${isLoggedIn ? `
+                        <div class="comment-form">
+                            <img class="comment-avatar" src="${getAvatarUrl(currentUserId, currentUser?.username, currentUser?.avatar_url)}" alt="我的头像" />
+                            <div class="comment-input-wrapper">
+                                <textarea class="comment-input" id="commentInput" placeholder="添加评论..." rows="2"></textarea>
+                                <div class="comment-actions">
+                                    <button class="comment-submit-btn" onclick="submitComment()">评论</button>
+                                </div>
+                            </div>
+                        </div>
+                        ` : `
+                        <div class="empty-state">登录后参与评论</div>
+                        `}
+
+                        <div class="comment-list" id="commentList">
+                            <div class="loading"><div class="spinner"></div>加载评论...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 加载评论
+            loadComments(video.video_id);
+
+            // 加载相关视频
+            loadRelatedVideos(video.video_id);
+        }
+
+        // 加载评论
+        async function loadComments(videoId) {
+            try {
+                // 获取当前用户信息
+                let currentUserId = null;
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    try {
+                        const userRes = await fetch(API_BASE + '/api/auth/me', {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        });
+                        if (userRes.ok) {
+                            const userData = await userRes.json();
+                            if (userData && userData.success && userData.data) {
+                                currentUserId = userData.data.id;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('获取用户信息失败:', e);
+                    }
+                }
+
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoId + '/comments');
+                const data = await res.json();
+
+                const commentList = document.getElementById('commentList');
+
+                if (data.success && data.data && data.data.length > 0) {
+                    commentList.innerHTML = data.data.map(comment => {
+                        const isOwnComment = currentUserId && comment.user_id === currentUserId;
+                        return `
+                            <div class="comment-item" data-comment-id="${comment.comment_id}">
+                                <div class="comment-item-avatar">
+                                    <img src="${getAvatarUrl(comment.user_id, comment.username, comment.avatar_url)}" alt="${escapeHtml(comment.username)}" />
+                                </div>
+                                <div class="comment-item-content">
+                                    <div class="comment-item-header">
+                                        <span class="comment-item-username">${escapeHtml(comment.username)}</span>
+                                        <span class="comment-item-time">${formatTime(comment.created_at)}</span>
+                                    </div>
+                                    <div class="comment-item-text">${escapeHtml(comment.content)}</div>
+                                    ${isOwnComment ? `<div class="comment-item-actions"><button class="comment-delete-btn" onclick="deleteComment('${comment.comment_id}')">删除</button></div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    commentList.innerHTML = '<div class="empty-state">暂无评论，快来抢沙发吧</div>';
+                }
+            } catch (err) {
+                console.error('加载评论失败:', err);
+                document.getElementById('commentList').innerHTML = '<div class="empty-state">评论加载失败</div>';
+            }
+        }
+
+        // 删除评论
+        async function deleteComment(commentId) {
+            if (!confirm('确定要删除这条评论吗？')) {
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('请先登录');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/comments/' + commentId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // 重新加载评论
+                    loadComments(videoData.video_id);
+                    // 更新评论数
+                    videoData.comments_count = Math.max(0, (videoData.comments_count || 0) - 1);
+                    document.querySelector('.comment-count').textContent = formatNumber(videoData.comments_count);
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            } catch (err) {
+                console.error('删除评论失败:', err);
+                alert('删除失败，请重试');
+            }
+        }
+
+        // 提交评论
+        async function submitComment() {
+            const input = document.getElementById('commentInput');
+            const content = input.value.trim();
+
+            if (!content) {
+                alert('请输入评论内容');
+                return;
+            }
+
+            const btn = document.querySelector('.comment-submit-btn');
+            btn.disabled = true;
+            btn.textContent = '提交中...';
+
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoData.video_id + '/comments', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    input.value = '';
+                    // 重新加载评论
+                    loadComments(videoData.video_id);
+                    // 更新评论数
+                    videoData.comments_count = (videoData.comments_count || 0) + 1;
+                    document.querySelector('.comment-count').textContent = formatNumber(videoData.comments_count);
+                } else {
+                    alert(data.error || '评论失败');
+                }
+            } catch (err) {
+                console.error('评论失败:', err);
+                alert('评论失败，请重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '评论';
+            }
+        }
+
+        // 点赞
+        async function toggleLike() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('请先登录');
+                return;
+            }
+
+            const btn = document.getElementById('likeBtn');
+
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoData.video_id + '/like', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    btn.classList.toggle('liked');
+                    const isLiked = btn.classList.contains('liked');
+                    videoData.likes_count = (videoData.likes_count || 0) + (isLiked ? 1 : -1);
+                    videoData.is_liked = isLiked;
+                    btn.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        ${formatNumber(videoData.likes_count)}
+                    `;
+                }
+            } catch (err) {
+                console.error('点赞失败:', err);
+            }
+        }
+
+        // 订阅按钮点击处理
+        function handleSubscribe() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // 未登录，跳转到登录页面
+                window.location.href = '/game.html?redirect=' + encodeURIComponent(window.location.href);
+                return;
+            }
+
+            // 已登录，显示订阅功能开发中提示
+            alert('订阅功能开发中');
+        }
+
+        // 分享视频
+        function shareVideo() {
+            const shareUrl = window.location.href;
+            const shareTitle = videoData.title || '分享视频';
+
+            // 尝试使用Web Share API（移动端）
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: videoData.description ? videoData.description.substring(0, 100) : '来看看这个视频',
+                    url: shareUrl
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.error('分享失败:', err);
+                    }
+                });
+            } else {
+                // 桌面端使用剪贴板
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert('链接已复制到剪贴板');
+                    }).catch(() => {
+                        // 备用方案：显示输入框
+                        prompt('复制以下链接分享:', shareUrl);
+                    });
+                } else {
+                    // 备用方案
+                    prompt('复制以下链接分享:', shareUrl);
+                }
+            }
+        }
+
+        // 工具函数
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (!num) return '0';
+            if (num >= 10000) {
+                return (num / 10000).toFixed(1) + '万';
+            }
+            return num.toString();
+        }
+
+        // 渲染自定义菜单
+        function renderCustomMenu(customMenu) {
+            if (!customMenu) {
+                return '';
+            }
+
+            // 兼容字符串格式
+            let menuArray = customMenu;
+            if (typeof customMenu === 'string') {
+                try {
+                    menuArray = JSON.parse(customMenu);
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            if (!Array.isArray(menuArray) || menuArray.length === 0) {
+                return '';
+            }
+
+            const menuItems = menuArray.map(item => {
+                const icon = item.icon || '';
+                const title = escapeHtml(item.title || '');
+                const url = escapeHtml(item.url || '');
+                if (!title || !url) return '';
+                return `<a class="custom-menu-item" href="${url}" target="_blank" rel="noopener noreferrer">
+                    ${icon ? `<span class="menu-icon">${icon}</span>` : ''}
+                    <span>${title}</span>
+                </a>`;
+            }).filter(item => item).join('');
+
+            if (!menuItems) return '';
+
+            return `<div class="custom-menu-section">
+                <div class="custom-menu-title">相关链接</div>
+                <div class="custom-menu-list">${menuItems}</div>
+            </div>`;
+        }
+
+        // 加载相关视频
+        async function loadRelatedVideos(videoId) {
+            const container = document.getElementById('relatedVideosList');
+            if (!container) return;
+
+            try {
+                const res = await fetch(API_BASE + '/api/marketing/videos/' + videoId + '/related?limit=5');
+                const data = await res.json();
+
+                if (data.success && data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(video => `
+                        <div class="related-video-item" onclick="window.location.href='/video-detail.html?id=${video.video_id}'">
+                            <img class="related-video-cover" src="${video.cover_image || ''}" alt="${escapeHtml(video.title)}" />
+                            <div class="related-video-title">${escapeHtml(video.title)}</div>
+                            <div class="related-video-meta">${formatNumber(video.views_count || 0)}次观看</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">暂无相关视频</div>';
+                }
+            } catch (err) {
+                console.error('加载相关视频失败:', err);
+                container.innerHTML = '';
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        function getAvatarUrl(userId, username, userAvatar) {
+            // 优先使用用户自定义头像
+            if (userAvatar) {
+                return userAvatar;
+            }
+            // 用户名为空时使用默认头像
+            if (!username) {
+                return getDefaultAvatar();
+            }
+            // 使用用户名首字母头像
+            return getLetterAvatar(username);
+        }
+
+        function getLetterAvatar(text) {
+            // 使用字母头像服务
+            return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(text)}&backgroundColor=667eea,764ba2`;
+        }
+
+        function getDefaultAvatar() {
+            // 默认SVG头像
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="25" fill="#667eea"/><circle cx="50" cy="100" r="40" fill="#667eea"/></svg>');
+        }
+
+        function showNotFound() {
+            document.getElementById('app').innerHTML = `
+                <div class="not-found">
+                    <h2>视频不存在</h2>
+                    <p>您访问的视频可能已被删除或不存在</p>
+                    <a href="/">返回首页</a>
+                </div>
+            `;
+        }
+
+        function showError() {
+            document.getElementById('app').innerHTML = `
+                <div class="error-state">
+                    <h2>加载失败</h2>
+                    <p>无法加载视频详情，请稍后重试</p>
+                    <button class="btn" onclick="location.reload()">重试</button>
+                </div>
+            `;
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

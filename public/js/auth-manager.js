@@ -32,7 +32,6 @@ const AuthManager = {
    */
   setToken(token) {
     if (!token) {
-      console.warn('[AuthManager] 尝试设置空token');
       return;
     }
 
@@ -43,7 +42,6 @@ const AuthManager = {
 
     // 设置新key
     localStorage.setItem(AuthManager.TOKEN_KEY, token);
-    console.log('[AuthManager] Token已设置到 authToken');
   },
 
   /**
@@ -51,7 +49,6 @@ const AuthManager = {
    */
   clearToken() {
     localStorage.removeItem(AuthManager.TOKEN_KEY);
-    console.log('[AuthManager] Token已清除');
   },
 
   /**
@@ -79,7 +76,6 @@ const AuthManager = {
     for (const key of AuthManager.LEGACY_TOKEN_KEYS) {
       const oldToken = localStorage.getItem(key);
       if (oldToken) {
-        console.log(`[AuthManager] 发现旧token（${key}），迁移到 authToken`);
         localStorage.setItem(AuthManager.TOKEN_KEY, oldToken);
         localStorage.removeItem(key);
         return;
@@ -199,11 +195,3 @@ if (typeof window !== 'undefined') {
   window.logout = logout;
   window.getCurrentUser = getCurrentUser;
 }
-
-module.exports = {
-  AuthManager,
-  authFetch,
-  requireLogin,
-  logout,
-  getCurrentUser
-};

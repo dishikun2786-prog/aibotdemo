@@ -2101,16 +2101,19 @@
 
         // 音频进度更新
         const audio = document.getElementById('audioElement');
-        audio.addEventListener('timeupdate', () => {
-            if (!currentAudio) return;
-            const current = formatDuration(Math.floor(audio.currentTime));
-            const total = formatDuration(currentAudio.duration || 0);
-            document.getElementById('audioProgress').textContent = current + ' / ' + total;
-        });
+        if (audio) {
+            audio.addEventListener('timeupdate', () => {
+                if (!currentAudio) return;
+                const current = formatDuration(Math.floor(audio.currentTime));
+                const total = formatDuration(currentAudio.duration || 0);
+                document.getElementById('audioProgress').textContent = current + ' / ' + total;
+            });
 
-        audio.addEventListener('ended', () => {
-            document.getElementById('audioPlayBtn').innerHTML = '&#9654;';
-        });
+            audio.addEventListener('ended', () => {
+                const playBtn = document.getElementById('audioPlayBtn');
+                if (playBtn) playBtn.innerHTML = '&#9654;';
+            });
+        }
 
         // 跳转到编辑播客页面
         function goToEditPodcast() {

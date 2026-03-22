@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能语音计算器 V5.2 - MiniMax 流式版</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2ed573;
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --record-active: #ff4757;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-main);
+        }
+
+        /* 顶部配置栏 */
+        .top-bar {
+            width: 100%; background: #fff; padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            box-sizing: border-box; position: sticky; top: 0; z-index: 100;
+        }
+
+        .api-input-group { display: flex; gap: 8px; align-items: center; }
+        .api-input-group input { 
+            padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; width: 250px;
+            font-size: 13px; outline: none;
+        }
+        .api-input-group input:focus { border-color: var(--primary-color); }
+        .btn-save { background: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
+        .status-on { background: var(--secondary-color); box-shadow: 0 0 5px var(--secondary-color); }
+
+        /* 主体内容 */
+        .main-content { width: 100%; max-width: 1100px; padding: 20px; box-sizing: border-box; }
+        
+        .usage-guide {
+            background: #eef2f7; border-radius: 12px; padding: 15px 20px; margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .guide-item h4 { margin: 0 0 5px 0; color: var(--primary-color); }
+        .guide-item p { margin: 0; font-size: 13px; color: #666; }
+
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        h2 { margin: 0 0 20px 0; font-size: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+
+        /* 计算器显示 */
+        #display {
+            width: 100%; height: 90px; font-size: 2.8rem; text-align: right;
+            padding: 15px; box-sizing: border-box; border: 2px solid #f0f0f0;
+            border-radius: 12px; background: #fafafa; font-family: 'Consolas', monospace;
+            margin-bottom: 5px;
+        }
+        
+        /* AI 状态提示优化 */
+        .ai-log { 
+            font-size: 12px; color: #888; min-height: 22px; margin-bottom: 15px;
+            display: flex; align-items: center; gap: 8px; transition: all 0.3s;
+        }
+        .ai-log.loading {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        .ai-log.loading::before {
+            content: ''; width: 12px; height: 12px; border: 2px solid #4a90e2;
+            border-top-color: transparent; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .ai-log.error { 
+            color: #ff4757; 
+            font-weight: 500;
+            animation: shake 0.5s;
+        }
+        .ai-log.success { 
+            color: var(--secondary-color); 
+            font-weight: 500;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        /* 流式预览区域 */
+        .stream-preview {
+            background: linear-gradient(135deg, #f8fbff 0%, #f0f7ff 100%);
+            border: 1px solid #d0e7ff; 
+            border-radius: 10px;
+            padding: 12px 15px; 
+            margin-bottom: 15px; 
+            font-size: 13px; 
+            color: #2c3e50;
+            min-height: 45px; 
+            display: none;
+            line-height: 1.6;
+        }
+        .stream-preview.active { 
+            display: block; 
+            animation: slideDown 0.3s ease-out;
+        }
+        .stream-preview .label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 8px;
+        }
+        .stream-preview .content {
+            color: #555;
+            font-family: 'Consolas', monospace;
+        }
+        @keyframes slideDown { 
+            from { opacity: 0; transform: translateY(-10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .voice-btn {
+            width: 100%; padding: 16px; background: #fff; border: 2px dashed #4a90e2;
+            border-radius: 12px; color: #4a90e2; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-bottom: 20px; transition: all 0.3s;
+        }
+        .voice-btn:hover:not(.recording):not(.processing) {
+            background: #f8fbff;
+            border-color: #2d7dd2;
+        }
+        .voice-btn.recording { 
+            background: var(--record-active); 
+            color: white; 
+            border-style: solid; 
+            border-color: var(--record-active); 
+            animation: pulse 1.5s infinite; 
+        }
+        .voice-btn.processing {
+            background: var(--primary-color);
+            color: white;
+            border-style: solid;
+            border-color: var(--primary-color);
+            cursor: not-allowed;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .keypad button { padding: 18px; font-size: 1.3rem; border: 1px solid #f0f0f0; border-radius: 10px; background: #fff; cursor: pointer; transition: 0.1s; }
+        .keypad button:active { background: #f5f5f5; transform: translateY(2px); }
+        .btn-op { color: var(--primary-color); font-weight: bold; background: #f8fbff !important; }
+        .btn-eq { background: var(--primary-color) !important; color: white !important; grid-column: span 2; }
+        .btn-clear { color: #ff4d4f; }
+
+        /* 统计与表格 */
+        .summary-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .summary-tag { background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eef2f7; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .tag-total { background: var(--primary-color); color: white; font-weight: bold; }
+
+        .table-container { height: 550px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f9f9f9; }
+        th { background: #fafafa; font-size: 12px; color: #999; text-transform: uppercase; position: sticky; top: 0; }
+        .col-res { color: var(--primary-color); font-weight: bold; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="font-weight: bold; color: var(--primary-color);">智能语音记账计算器 V5.2</div>
+        <div class="api-input-group">
+            <span id="status-dot" class="status-dot"></span>
+            <input type="password" id="api-key" placeholder="输入 MiniMax API Key">
+            <button class="btn-save" onclick="saveConfig()">应用配置</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="usage-guide">
+            <div class="guide-item">
+                <h4>🎙️ AI 语义模式</h4>
+                <p>点击"开始记账"后说："<strong>买菜花了25加13块</strong>"，AI 将自动解析名目与算式并计算。</p>
+            </div>
+            <div class="guide-item">
+                <h4>⌨️ 传统/快捷键</h4>
+                <p>支持物理键盘，<span style="border:1px solid #ccc; padding:0 3px">Enter</span> 自动保存并清零，<span style="border:1px solid #ccc; padding:0 3px">Tab</span> 快速切换名目。</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <h2>计算面板</h2>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; color: #888;">当前流水名目：</label>
+                    <input type="text" id="item-name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box" value="通用">
+                </div>
+                
+                <input type="text" id="display" readonly placeholder="0">
+                <div id="ai-log" class="ai-log"></div>
+                
+                <!-- 流式预览区域 -->
+                <div id="stream-preview" class="stream-preview">
+                    <div><span class="label">识别文本:</span><span id="stream-text" class="content">-</span></div>
+                    <div><span class="label">AI 解析:</span><span id="stream-result" class="content">等待中...</span></div>
+                </div>
+
+                <button id="voice-trigger" class="voice-btn">
+                    <span>🎤</span> <span id="voice-text">点击开始 语音记账</span>
+                </button>
+
+                <div class="keypad">
+                    <button class="btn-clear" onclick="clearDisplay()">C</button>
+                    <button class="btn-op" onclick="appendDisplay('/')">÷</button>
+                    <button class="btn-op" onclick="appendDisplay('*')">×</button>
+                    <button class="btn-op" onclick="deleteLast()">⌫</button>
+                    
+                    <button onclick="appendDisplay('7')">7</button>
+                    <button onclick="appendDisplay('8')">8</button>
+                    <button onclick="appendDisplay('9')">9</button>
+                    <button class="btn-op" onclick="appendDisplay('-')">-</button>
+                    
+                    <button onclick="appendDisplay('4')">4</button>
+                    <button onclick="appendDisplay('5')">5</button>
+                    <button onclick="appendDisplay('6')">6</button>
+                    <button class="btn-op" onclick="appendDisplay('+')">+</button>
+                    
+                    <button onclick="appendDisplay('1')">1</button>
+                    <button onclick="appendDisplay('2')">2</button>
+                    <button onclick="appendDisplay('3')">3</button>
+                    <button class="btn-eq" onclick="calculate()">保存结算 (Enter)</button>
+                    
+                    <button onclick="appendDisplay('0')" style="grid-column: span 2;">0</button>
+                    <button onclick="appendDisplay('.')">.</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>历史流水与统计</h2>
+                <div id="summary-row" class="summary-row"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>名目</th><th>计算过程</th><th>结果</th><th>记录时间</th></tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button onclick="exportCSV()" style="flex:2; padding:12px; background:var(--secondary-color); border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold">导出 CSV 账单</button>
+                    <button onclick="clearAll()" style="flex:1; padding:12px; background:#bdc3c7; border:none; border-radius:8px; color:white; cursor:pointer">清空记录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- API & 配置管理 ---
+        function saveConfig() {
+            const key = document.getElementById('api-key').value.trim();
+            if(!key) return alert("请输入有效的 API Key");
+            localStorage.setItem('mm_api_key', key);
+            updateStatus();
+            alert("API 配置已更新！");
+        }
+
+        function updateStatus() {
+            const hasKey = !!localStorage.getItem('mm_api_key');
+            document.getElementById('status-dot').className = hasKey ? 'status-dot status-on' : 'status-dot';
+            if(hasKey && !document.getElementById('api-key').value) {
+                document.getElementById('api-key').value = "已配置秘钥 (可重新输入覆盖)";
+            }
+        }
+
+        // --- UI 状态管理 ---
+        function logAI(msg, type = 'normal') {
+            const log = document.getElementById('ai-log');
+            log.className = 'ai-log';
+            if(type === 'loading') log.classList.add('loading');
+            if(type === 'error') log.classList.add('error');
+            if(type === 'success') log.classList.add('success');
+            log.innerText = msg;
+        }
+
+        function showStreamPreview(show = true) {
+            const preview = document.getElementById('stream-preview');
+            if(show) {
+                preview.classList.add('active');
+            } else {
+                preview.classList.remove('active');
+            }
+        }
+
+        function updateStreamText(text) {
+            document.getElementById('stream-text').innerText = text || '-';
+        }
+
+        function updateStreamResult(result) {
+            document.getElementById('stream-result').innerText = result || '等待中...';
+        }
+
+        // --- AI 核心解析 (MiniMax SSE 流式) ---
+        async function callMiniMaxAI(text) {
+            const key = localStorage.getItem('mm_api_key');
+            if (!key || key.includes("已配置")) {
+                logAI("未配置 API Key，退化为普通语音模式", 'error');
+                return null;
+            }
+
+            logAI("AI 正在解析语义...", 'loading');
+            showStreamPreview(true);
+            updateStreamText(text);
+            updateStreamResult('AI 思考中...');
+
+            try {
+                const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "abab6.5s-chat",
+                        messages: [
+                            { 
+                                role: "system", 
+                                content: "你是专业账单助手。从用户语音文字中提取'名目'和'数学公式'。仅以 JSON 格式回复：{\"name\": \"买菜\", \"formula\": \"25+13\"}。无名目时默认'通用'。" 
+                            },
+                            { role: "user", content: text }
+                        ],
+                        stream: true,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API 错误: ${response.status} ${response.statusText}`);
+                }
+
+                // 处理 SSE 流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullContent = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6).trim();
+                            if (data === '[DONE]') continue;
+                            
+                            try {
+                                const parsed = JSON.parse(data);
+                                const delta = parsed.choices?.[0]?.delta?.content || '';
+                                if (delta) {
+                                    fullContent += delta;
+                                    updateStreamResult(fullContent || 'AI 正在生成...');
+                                }
+                            } catch (e) {
+                                console.warn('解析流式数据失败:', e);
+                            }
+                        }
+                    }
+                }
+
+                // 解析最终结果
+                const result = JSON.parse(fullContent);
+                logAI("✓ AI 解析完成", 'success');
+                
+                setTimeout(() => showStreamPreview(false), 2000);
+                return result;
+
+            } catch (err) {
+                console.error("AI解析错误:", err);
+                logAI(`✗ AI 解析失败: ${err.message}`, 'error');
+                updateStreamResult(`错误: ${err.message}`);
+                setTimeout(() => showStreamPreview(false), 3000);
+                return null;
+            }
+        }
+
+        // --- 录音逻辑 ---
+        let recognition;
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'zh-CN';
+
+            recognition.onresult = async (event) => {
+                const text = event.results[0][0].transcript;
+                logAI(`识别到: "${text}"`, 'success');
+                
+                voiceBtn.classList.remove('recording');
+                voiceBtn.classList.add('processing');
+                document.getElementById('voice-text').innerText = "AI 处理中...";
+                
+                const aiResult = await callMiniMaxAI(text);
+                
+                if (aiResult && aiResult.formula) {
+                    document.getElementById('item-name').value = aiResult.name || '通用';
+                    document.getElementById('display').value = aiResult.formula;
+                    calculate();
+                    logAI("✓ 记账成功", 'success');
+                } else {
+                    // 退化模式：仅提取数字和符号
+                    let basicExpr = text.replace(/加/g, '+').replace(/减/g, '-').replace(/乘/g, '*').replace(/除/g, '/');
+                    let mathMatch = basicExpr.match(/[0-9+\-*/.]+/g);
+                    if(mathMatch) {
+                        document.getElementById('display').value = mathMatch.join('');
+                        logAI("普通录入模式", 'normal');
+                    } else {
+                        logAI("未识别到有效算式", 'error');
+                    }
+                }
+                
+                stopVoice();
+            };
+            
+            recognition.onerror = (event) => {
+                logAI(`语音识别错误: ${event.error}`, 'error');
+                stopVoice();
+            };
+            
+            recognition.onend = () => {
+                if(isRecording) {
+                    logAI("语音识别已停止", 'normal');
+                    stopVoice();
+                }
+            };
+        } else {
+            alert("您的浏览器不支持语音识别，请使用 Chrome 或 Edge 浏览器");
+        }
+
+        const voiceBtn = document.getElementById('voice-trigger');
+        let isRecording = false;
+
+        voiceBtn.onclick = () => {
+            if(voiceBtn.classList.contains('processing')) return;
+            
+            if(isRecording) { 
+                stopVoice(); 
+            } else { 
+                try { 
+                    recognition.start(); 
+                    isRecording = true; 
+                    voiceBtn.classList.add('recording'); 
+                    document.getElementById('voice-text').innerText = "🎤 正在录音..."; 
+                    logAI("请开始说话", 'loading');
+                } catch(e) { 
+                    logAI("麦克风启动失败，请检查权限", 'error');
+                }
+            }
+        };
+
+        function stopVoice() { 
+            try { recognition.stop(); } catch(e) {}
+            isRecording = false; 
+            voiceBtn.classList.remove('recording', 'processing'); 
+            document.getElementById('voice-text').innerText = "点击开始 语音记账"; 
+        }
+
+        // --- 计算器核心 ---
+        const display = document.getElementById('display');
+
+        function appendDisplay(v) { display.value = (display.value === '0' && v !== '.') ? v : display.value + v; }
+        function clearDisplay() { display.value = ''; logAI('', 'normal'); showStreamPreview(false); }
+        function deleteLast() { display.value = display.value.slice(0, -1); }
+
+        function calculate() {
+            try {
+                const expr = display.value;
+                if (!expr) return;
+                const result = new Function('return ' + expr)();
+                const record = {
+                    name: document.getElementById('item-name').value || "通用",
+                    formula: expr,
+                    result: parseFloat(result.toFixed(4)),
+                    time: new Date().toLocaleString('zh-CN', { hour12: false })
+                };
+                saveRecord(record);
+                clearDisplay();
+                logAI("✓ 已保存", 'success');
+            } catch (e) { 
+                logAI("✗ 算式错误", 'error'); 
+            }
+        }
+
+        function saveRecord(rec) {
+            let list = JSON.parse(localStorage.getItem('calc_v52') || '[]');
+            list.unshift(rec);
+            localStorage.setItem('calc_v52', JSON.stringify(list));
+            render();
+        }
+
+        function render() {
+            let list = JSON.parse(localStorage.getItem('calc_v52') || '[]');
+            document.getElementById('history-body').innerHTML = list.map(i => `
+                <tr>
+                    <td><strong>${i.name}</strong></td>
+                    <td style="color:#666">${i.formula}</td>
+                    <td class="col-res">${i.result}</td>
+                    <td style="font-size:11px; color:#aaa">${i.time}</td>
+                </tr>
+            `).join('');
+
+            // 统计
+            let total = 0, cats = {};
+            list.forEach(i => { total += i.result; cats[i.name] = (cats[i.name] || 0) + i.result; });
+            
+            let html = `<div class="summary-tag tag-total">💰 总计：${total.toFixed(2)}</div>`;
+            for(let name in cats) {
+                html += `<div class="summary-tag">${name}：${cats[name].toFixed(2)}</div>`;
+            }
+            document.getElementById('summary-row').innerHTML = html;
+        }
+
+        // --- 辅助功能 ---
+        window.addEventListener('keydown', (e) => {
+            if(document.activeElement.tagName !== 'INPUT' && e.key === 'Enter') calculate();
+        });
+
+        function clearAll() { 
+            if(confirm("确定清空所有数据？")) { 
+                localStorage.removeItem('calc_v52'); 
+                render(); 
+                logAI("已清空所有记录", 'success');
+            } 
+        }
+
+        function exportCSV() {
+            let list = JSON.parse(localStorage.getItem('calc_v52') || '[]');
+            if(!list.length) return alert("暂无数据可导出");
+            let csv = "\uFEFF名目,公式,结果,时间\n" + list.map(i => `"${i.name}","${i.formula}","${i.result}","${i.time}"`).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `AI账单_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            logAI("✓ 导出成功", 'success');
+        }
+
+        window.onload = () => { updateStatus(); render(); };
+    </script>
+</body>
+</html>

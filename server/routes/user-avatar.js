@@ -53,7 +53,8 @@ const uploadAvatar = multer({
 async function ensureAvatarColumn() {
   try {
     const result = await db.query('DESCRIBE users');
-    const columns = Array.isArray(result) ? result[0] : result;
+    // db.query 直接返回结果数组，不需要 result[0]
+    const columns = Array.isArray(result) ? result : [];
     const hasAvatarField = columns.some(col => col.Field === 'avatar_image');
     if (!hasAvatarField) {
       await db.query(

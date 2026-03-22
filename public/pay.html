@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商户收款 | 能量山：零号协议</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyber-blue: #00f3ff;
+            --cyber-purple: #bc13fe;
+            --cyber-red: #ff003c;
+            --cyber-gold: #ffd700;
+            --cyber-green: #0aff00;
+            --cyber-cyan: #00ffff;
+            --cyber-bg: #050505;
+            --cyber-glass: rgba(16, 20, 24, 0.85);
+            --cyber-border: rgba(0, 243, 255, 0.3);
+
+            --q-primary: #7C5CFF;
+            --q-secondary: #FF6B9D;
+            --q-accent: #FFD93D;
+            --q-success: #6BCB77;
+            --q-danger: #FF6B6B;
+            --q-info: #4ECDC4;
+            --q-bg: #F8F6FF;
+            --q-bg-dark: #E8E4F5;
+            --q-card-bg: #FFFFFF;
+            --q-text: #5A4E7D;
+            --q-text-light: #9B8EC2;
+            --q-shadow: 0 8px 25px rgba(124, 92, 255, 0.15);
+            --q-shadow-hover: 0 12px 35px rgba(124, 92, 255, 0.25);
+            --q-radius: 16px;
+            --q-border: 2px solid #E8E4F5;
+
+            --neon-blue: var(--q-primary);
+            --neon-purple: var(--q-secondary);
+            --neon-red: var(--q-danger);
+            --neon-gold: var(--q-accent);
+            --neon-green: var(--q-success);
+            --neon-cyan: var(--q-info);
+            --bg-dark: var(--q-bg);
+            --glass-bg: var(--q-card-bg);
+            --border-color: var(--q-border);
+        }
+
+        body.theme-cyber {
+            --neon-blue: var(--cyber-blue);
+            --neon-purple: var(--cyber-purple);
+            --neon-red: var(--cyber-red);
+            --neon-gold: var(--cyber-gold);
+            --neon-green: var(--cyber-green);
+            --neon-cyan: var(--cyber-cyan);
+            --bg-dark: var(--cyber-bg);
+            --glass-bg: var(--cyber-glass);
+            --border-color: var(--cyber-border);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--q-text);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        body.theme-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .page-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.08) 0%, rgba(255, 107, 157, 0.08) 50%, rgba(255, 217, 61, 0.08) 100%);
+            pointer-events: none;
+        }
+
+        body.theme-cyber .page-bg {
+            background: radial-gradient(ellipse at top, rgba(0, 243, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom, rgba(188, 19, 254, 0.1) 0%, transparent 50%),
+                        var(--cyber-bg);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--q-text);
+        }
+
+        body.theme-cyber .logo-text {
+            color: var(--cyber-blue);
+            text-shadow: 0 0 10px var(--cyber-blue);
+        }
+
+        .theme-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .theme-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            background: var(--glass-bg);
+            color: var(--q-text);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            background: var(--neon-blue);
+            color: white;
+            border-color: var(--neon-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 20px 60px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(255, 107, 157, 0.1));
+            border: 1px solid var(--neon-blue);
+            border-radius: 30px;
+            font-size: 14px;
+            color: var(--neon-blue);
+            margin-bottom: 30px;
+        }
+
+        body.theme-cyber .hero-badge {
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body.theme-cyber .hero h1 {
+            color: var(--cyber-blue);
+            -webkit-text-fill-color: var(--cyber-blue);
+            text-shadow: 0 0 30px var(--cyber-blue);
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--q-text-light);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        body.theme-cyber .hero p {
+            color: var(--cyber-cyan);
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(124, 92, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(124, 92, 255, 0.5);
+        }
+
+        body.theme-cyber .btn-primary {
+            box-shadow: 0 8px 30px rgba(0, 243, 255, 0.4);
+        }
+
+        body.theme-cyber .btn-primary:hover {
+            box-shadow: 0 12px 40px rgba(0, 243, 255, 0.6);
+        }
+
+        .btn-secondary {
+            padding: 16px 40px;
+            background: transparent;
+            color: var(--q-text);
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass-bg);
+            border-color: var(--neon-blue);
+        }
+
+        /* Section */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--q-text);
+        }
+
+        body.theme-cyber .section-header h2 {
+            color: var(--cyber-cyan);
+        }
+
+        .section-header p {
+            font-size: 18px;
+            color: var(--q-text-light);
+        }
+
+        body.theme-cyber .section-header p {
+            color: var(--cyber-cyan);
+        }
+
+        /* Pain Points */
+        .pain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+        }
+
+        .pain-card {
+            background: var(--glass-bg);
+            border: var(--border-color);
+            border-radius: var(--q-radius);
+            padding: 30px;
+            transition: all 0.4s ease;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .pain-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--q-shadow-hover);
+            border-color: var(--neon-red);
+        }
+
+        body.theme-cyber .pain-card:hover {
+            box-shadow: 0 10px 40px rgba(255, 0, 60, 0.2);
+        }
+
+        .pain-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+        }
+
+        .pain-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--q-text);
+        }
+
+        body.theme-cyber .pain-card h3 {
+            color: var(--cyber-cyan);
+        }
+
+        .pain-card p {
+            font-size: 14px;
+            color: var(--q-text-light);
+            line-height: 1.7;
+        }
+
+        /* Solution Features */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: var(--border-color);
+            border-radius: var(--q-radius);
+            padding: 35px;
+            transition: all 0.4s ease;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--q-shadow-hover);
+            border-color: var(--neon-green);
+        }
+
+        body.theme-cyber .feature-card:hover {
+            box-shadow: 0 10px 40px rgba(10, 255, 0, 0.2);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 25px;
+        }
+
+        .feature-icon.payment { background: linear-gradient(135deg, #6BCB77, #4ECDC4); }
+        .feature-icon.channel { background: linear-gradient(135deg, #4ECDC4, #26A69A); }
+        .feature-icon.auto-bookkeeping { background: linear-gradient(135deg, #7C5CFF, #FF6B9D); }
+        .feature-icon.order { background: linear-gradient(135deg, #FFD93D, #FF8C00); }
+        .feature-icon.stats { background: linear-gradient(135deg, #FF6B9D, #C71585); }
+        .feature-icon.api { background: linear-gradient(135deg, #00f3ff, #bc13fe); }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--q-text);
+        }
+
+        body.theme-cyber .feature-card h3 {
+            color: var(--cyber-cyan);
+        }
+
+        .feature-card p {
+            font-size: 15px;
+            color: var(--q-text-light);
+            line-height: 1.7;
+        }
+
+        /* Steps */
+        .steps-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .step-item {
+            text-align: center;
+            max-width: 280px;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            margin: 0 auto 25px;
+            box-shadow: 0 8px 25px rgba(124, 92, 255, 0.4);
+        }
+
+        body.theme-cyber .step-number {
+            box-shadow: 0 8px 30px rgba(0, 243, 255, 0.5);
+        }
+
+        .step-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--q-text);
+        }
+
+        body.theme-cyber .step-item h3 {
+            color: var(--cyber-cyan);
+        }
+
+        .step-item p {
+            font-size: 15px;
+            color: var(--q-text-light);
+        }
+
+        .step-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 40px;
+            color: var(--neon-blue);
+            align-self: center;
+        }
+
+        /* FAQ */
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--glass-bg);
+            border: var(--border-color);
+            border-radius: var(--q-radius);
+            margin-bottom: 15px;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .faq-question {
+            padding: 20px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--q-text);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        body.theme-cyber .faq-question {
+            color: var(--cyber-cyan);
+        }
+
+        .faq-question:hover {
+            background: rgba(124, 92, 255, 0.05);
+        }
+
+        .faq-icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+        }
+
+        .faq-answer-content {
+            padding: 0 25px 20px;
+            font-size: 14px;
+            color: var(--q-text-light);
+            line-height: 1.8;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.1) 0%, rgba(255, 107, 157, 0.1) 100%);
+            border-radius: 30px;
+            margin: 40px 0;
+        }
+
+        body.theme-cyber .cta-section {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.1) 0%, rgba(188, 19, 254, 0.1) 100%);
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--q-text);
+        }
+
+        body.theme-cyber .cta-section h2 {
+            color: var(--cyber-cyan);
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            color: var(--q-text-light);
+            margin-bottom: 40px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--q-text-light);
+            font-size: 14px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        .footer a {
+            color: var(--neon-blue);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        .pain-card:nth-child(1) { animation-delay: 0.1s; }
+        .pain-card:nth-child(2) { animation-delay: 0.15s; }
+        .pain-card:nth-child(3) { animation-delay: 0.2s; }
+        .pain-card:nth-child(4) { animation-delay: 0.25s; }
+
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.15s; }
+        .feature-card:nth-child(3) { animation-delay: 0.2s; }
+        .feature-card:nth-child(4) { animation-delay: 0.25s; }
+        .feature-card:nth-child(5) { animation-delay: 0.3s; }
+        .feature-card:nth-child(6) { animation-delay: 0.35s; }
+
+        .step-item:nth-child(1) { animation-delay: 0.1s; }
+        .step-item:nth-child(3) { animation-delay: 0.2s; }
+        .step-item:nth-child(5) { animation-delay: 0.3s; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .section-header h2 {
+                font-size: 28px;
+            }
+
+            .steps-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .step-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-bg"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <a href="game.html" class="logo">
+                <div class="logo-icon">&#9889;</div>
+                <div class="logo-text">个人收款码聚合管理智能收款记账系统</div>
+            </a>
+            <div class="theme-toggle">
+                <button class="theme-btn active" onclick="setTheme('q')">&#127922; Q版</button>
+                <button class="theme-btn" onclick="setTheme('cyber')">&#128187; 赛博</button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">&#127919; 个人免签约收款解决方案</div>
+            <h1>轻松收款，智能做账</h1>
+            <p>告别个人收款烦恼，开启个人免签约商户收款新时代<br>自定义金额、<strong>多码轮询</strong>、自动记账、实时统计</p>
+            <div class="hero-cta">
+                <a href="game.html" class="btn-primary">立即免费开通 &#8594;</a>
+                <a href="#features" class="btn-secondary">了解更多</a>
+            </div>
+        </section>
+
+        <!-- Pain Points: Payment -->
+        <section class="section">
+            <div class="section-header">
+                <h2>&#128680; 个人收款的三大难题</h2>
+                <p>你是否也遇到过这些尴尬时刻？</p>
+            </div>
+            <div class="pain-grid">
+                <div class="pain-card">
+                    <div class="pain-icon">&#128203;</div>
+                    <h3>收款没有名目，记账不方便</h3>
+                    <p>每次收款不知道是什么项目，客户问起来也说不清。月底对账时一团乱，根本分不清每笔钱的来源！</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">&#128193;</div>
+                    <h3>多个收款码不方便管理</h3>
+                    <p>支付宝多个码、微信多个码、银行卡多个...客户问要哪个码自己也搞混了，管理起来太麻烦！</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">&#128202;</div>
+                    <h3>收款不能分类统计</h3>
+                    <p>不知道哪种服务最赚钱，不清楚哪个客户付款最多。生意好坏全凭感觉，没有数据支撑！</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pain Points: 记账 -->
+        <section class="section" style="background: rgba(124, 92, 255, 0.03); border-radius: 30px;">
+            <div class="section-header">
+                <h2>&#128680; 个人做账的四大难题</h2>
+                <p>每天忙生意，还要忙记账，心累！</p>
+            </div>
+            <div class="pain-grid">
+                <div class="pain-card">
+                    <div class="pain-icon">&#128221;</div>
+                    <h3>个人收款手工记账太麻烦</h3>
+                    <p>每笔收入都要手动记录，耗时又容易出错，哪天忘记记就全乱了。</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">&#128202;</div>
+                    <h3>个人收款月底对账不清楚</h3>
+                    <p>月底对账时，金额对不上，头疼！不知道哪一笔出了问题。</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">&#128200;</div>
+                    <h3>个人收款无法查看统计</h3>
+                    <p>不知道每天、每周、每月收入情况，生意好不好全凭感觉。</p>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-icon">&#128196;</div>
+                    <h3>个人收款账单难以分享</h3>
+                    <p>想给客户发个收款账单，还要一个个整理，太麻烦了！</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solution Features -->
+        <section class="section" id="features">
+            <div class="section-header">
+                <h2>&#9989; 我们的解决方案</h2>
+                <p>六大核心功能，帮你轻松解决所有问题</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon payment">&#128176;</div>
+                    <h3>自定义金额</h3>
+                    <p>支持固定金额、随意金额、计算器模式三种收款方式。商品定价、服务套餐，一键生成对应收款码。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon channel">&#128179;</div>
+                    <h3>多码自动轮询</h3>
+                    <p>支持绑定多个支付宝、微信、银行卡账户。系统自动轮询分配订单，<strong>有效分散风控风险</strong>，再也不用担心账户被封！</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon auto-bookkeeping">&#128203;</div>
+                    <h3>自动记账</h3>
+                    <p>每笔订单自动记录，生成完整财务报表。再也不怕漏记一笔，账目清晰明了。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon order">&#128230;</div>
+                    <h3>订单管理</h3>
+                    <p>待付款、已付款、已完成，一目了然。确认收款、拒绝订单，轻松管理每一笔交易。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon stats">&#128201;</div>
+                    <h3>数据统计</h3>
+                    <p>每日、每周、每月收入统计，图表展示。生意好坏数据说话，了解收入趋势不费劲。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon stats">&#128201;</div>
+                    <h3>多收款名目清单收款 </h3>
+                    <p>支持名目清单列表展示，收款明细一目了然。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon api">&#128421;</div>
+                    <h3>API对接</h3>
+                    <p>支持API调用，自动化集成。技术党可以自己开发应用，批量生成收款链接。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="section">
+            <div class="section-header">
+                <h2>&#128640; 只需三步，轻松开通</h2>
+                <p>分钟级别开通，立即开始收款</p>
+            </div>
+            <div class="steps-container">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <h3>注册账号</h3>
+                    <p>点击上方按钮，在游戏平台注册账号，只需30秒</p>
+                </div>
+                <div class="step-arrow">&#8594;</div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <h3>开通商户</h3>
+                    <p>进入商户后台，绑定支付宝、微信、银行卡收款账户</p>
+                </div>
+                <div class="step-arrow">&#8594;</div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <h3>开始收款</h3>
+                    <p>创建收款名目，生成收款链接或二维码，立即开始收款</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="section">
+            <div class="section-header">
+                <h2>&#10067; 常见问题</h2>
+                <p>你关心的问题，这里都有答案</p>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>开通商户需要收费吗？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            免费体验7天，年费699元。
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>收款到账时间是多长？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            资金直接到达您绑定的支付账户（支付宝/微信/银行卡），到账时间秒到账，0手续费。
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>需要提供资质证明吗？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            个人用户只需绑定个人收款账户即可使用。商家用户如需更高级功能，可能需要提供营业执照等资质证明，具体以页面提示为准。
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>多码轮询是什么？安全吗？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            多码轮询是指您可以绑定多个支付宝、微信、银行卡账户。每次收款时，系统会自动选择一个账户接收付款，轮询分配订单。这样可以有效分散风控风险，即使某个账户被临时限制，其他账户仍可正常使用，大大提高收款稳定性！
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>资金安全有保障吗？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            资金全程由支付宝、微信、银联等正规支付渠道处理，我们不接触用户资金。所有交易都有完整记录，可随时查询对账。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <h2>&#128075; 还等什么？</h2>
+            <p>立即开通商户，让收款变得更简单</p>
+            <div class="hero-cta">
+                <a href="game.html" class="btn-primary">立即免费开通 &#8594;</a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 能量山：零号协议 | <a href="#">服务条款</a> | <a href="#">隐私政策</a> | <a href="#">帮助中心</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function setTheme(theme) {
+            if (theme === 'cyber') {
+                document.body.classList.add('theme-cyber');
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector('.theme-btn:nth-child(2)').classList.add('active');
+            } else {
+                document.body.classList.remove('theme-cyber');
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector('.theme-btn:nth-child(1)').classList.add('active');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'q';
+        setTheme(savedTheme);
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            faqItem.classList.toggle('active');
+        }
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

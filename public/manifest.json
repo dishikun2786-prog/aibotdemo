@@ -1,0 +1,39 @@
+{
+  "name": "能量山：零号协议",
+  "short_name": "能量山",
+  "description": "能量山：零号协议 - 多人在线游戏平台",
+  "start_url": "/game.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8F6FF",
+  "theme_color": "#7C5CFF",
+  "scope": "/",
+  "lang": "zh-CN",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

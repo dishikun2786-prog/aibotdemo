@@ -124,7 +124,7 @@ const CONFIG_RULES = {
     type: 'string',
     required: false,
     enum: ['qwen-max', 'qwen-plus', 'qwen-turbo', 'qwen-long', 'qwen-max-longcontext', 'qwen3.5-plus', 'qwen3.5-plus-2026-02-15', 'qwen3-max', 'qwen3-max-2026-01-23', 'qwen3-max-2025-09-23'],
-    default: 'qwen3.5-plus'
+    default: 'qwen-max'
   },
   'bailian_image_model': {
     type: 'string',
@@ -148,7 +148,7 @@ const CONFIG_RULES = {
     type: 'string',
     required: false,
     enum: ['wanx2.1-t2v-plus', 'wanx2.1-t2v-turbo'],
-    default: 'wanx2.1-t2v-turbo'
+    default: 'wanx2.1-t2v-plus'
   },
   'bailian_i2v_model': {
     type: 'string',
@@ -160,7 +160,7 @@ const CONFIG_RULES = {
     type: 'string',
     required: false,
     enum: ['cosyvoice-v3-plus', 'cosyvoice-v3-flash', 'cosyvoice-v2', 'qwen-tts'],
-    default: 'cosyvoice-v3-flash'
+    default: 'cosyvoice-v3-plus'
   },
   'bailian_temperature': {
     type: 'number',
@@ -436,6 +436,60 @@ const CONFIG_RULES = {
     required: false,
     default: true,
     description: '是否使用传输加速域名'
+  },
+
+  // 主题风格
+  'theme_style': {
+    type: 'string',
+    required: false,
+    enum: ['q', 'cyber'],
+    default: 'q',
+    description: '游戏主题风格：q=Q版可爱风格, cyber=赛博朋克风格'
+  },
+
+  // 体力与能量配置
+  'stamina_recovery_rate': {
+    type: 'number',
+    required: false,
+    min: 0,
+    max: 100,
+    default: 1,
+    description: '体力恢复速率（每分钟）'
+  },
+  'energy_per_second': {
+    type: 'number',
+    required: false,
+    min: 0,
+    max: 100,
+    default: 5,
+    description: '每秒能量产出'
+  },
+
+  // 注册配置
+  'require_activation_code': {
+    type: 'boolean',
+    required: false,
+    default: true,
+    description: '是否启用激活码注册'
+  },
+
+  // PK超时配置
+  'pk_timeout': {
+    type: 'number',
+    required: false,
+    min: 5,
+    max: 60,
+    default: 15,
+    description: 'PK超时时间（秒）'
+  },
+
+  // OSS CNAME配置
+  'oss_cname_domain': {
+    type: 'string',
+    required: false,
+    pattern: /^https?:\/\/.+/,
+    default: '',
+    description: 'OSS自定义域名'
   }
 };
 

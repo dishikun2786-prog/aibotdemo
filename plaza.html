@@ -246,6 +246,110 @@
             transform: translateY(-2px);
         }
 
+        /* 置顶帖子样式 */
+        .post-card.pinned {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, rgba(255,107,107,0.08), rgba(255,107,107,0.02));
+        }
+
+        .pinned-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 编辑按钮 */
+        .edit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .edit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        /* wangEditor样式 */
+        .w-e-panel-container {
+            z-index: 10001 !important;
+        }
+
+        .w-e-text-container {
+            min-height: 150px !important;
+        }
+
+        #editor-wrapper, #edit-editor-wrapper {
+            border: 1px solid var(--plaza-border, #ddd);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #toolbarContainer, #editToolbarContainer {
+            border-bottom: 1px solid var(--plaza-border, #ddd);
+            background: #fafafa;
+        }
+
+        #editorContainer, #editEditorContainer {
+            min-height: 200px;
+        }
+
+        /* 编辑器内图片和视频自适应样式 */
+        #editorContainer .w-e-text-container img,
+        #editEditorContainer .w-e-text-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+
+        #editorContainer .w-e-text-container video,
+        #editEditorContainer .w-e-text-container video {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+
+        #editorContainer .w-e-panel-container,
+        #editEditorContainer .w-e-panel-container {
+            z-index: 1000;
+        }
+
+        .w-e-toolbar {
+            border-bottom: 1px solid var(--plaza-border, #ddd) !important;
+        }
+
+        .w-e-text-container {
+            border: none !important;
+        }
+
+        /* 编辑弹窗样式 */
+        .edit-post-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .post-author-row {
+            display: flex;
+            align-items: center;
+        }
+
         .post-header {
             display: flex;
             align-items: center;
@@ -351,6 +455,25 @@
             display: grid;
             gap: 8px;
             margin-bottom: 14px;
+        }
+
+        /* 帖子内容中的图片和视频自适应 */
+        .post-content img,
+        .detail-post-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .post-content video,
+        .detail-post-content video {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+            border-radius: 4px;
         }
 
         .post-images.grid-1 { grid-template-columns: 1fr; }
@@ -576,6 +699,30 @@
             font-size: 12px;
             color: var(--plaza-text-light);
             margin-top: 6px;
+        }
+
+        /* 微信文章采集按钮 */
+        .wechat-collect-btn {
+            font-size: 12px;
+            padding: 4px 10px;
+            margin-left: 10px;
+            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .wechat-collect-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(7, 193, 96, 0.4);
+        }
+        .wechat-collect-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         /* 验证码 */
@@ -1460,13 +1607,16 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">标题</label>
+                    <label class="form-label">标题 <button type="button" class="wechat-collect-btn" id="collectWechatBtn" title="从微信公众号文章采集">📥 采集微信文章</button></label>
                     <input type="text" class="form-input" id="postTitle" placeholder="请输入帖子标题" maxlength="100">
                 </div>
                 <div class="form-group">
                     <label class="form-label">内容</label>
-                    <textarea class="form-input form-textarea" id="postContent" placeholder="分享你的想法..."></textarea>
-                    <div class="form-hint">支持 emoji 表情</div>
+                    <div id="editor-wrapper">
+                        <div id="toolbarContainer"></div>
+                        <div id="editorContainer"></div>
+                    </div>
+                    <div class="form-hint">支持富文本编辑</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">验证码</label>
@@ -1550,6 +1700,53 @@
         </div>
     </div>
 
+    <!-- 编辑帖子弹窗 -->
+    <div class="modal-overlay" id="editPostModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">编辑帖子</span>
+                <button class="modal-close" id="editModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editPostId">
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" class="form-input" id="editPostTitle" placeholder="请输入帖子标题" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">内容</label>
+                    <div id="edit-editor-wrapper">
+                        <div id="editToolbarContainer"></div>
+                        <div id="editEditorContainer"></div>
+                    </div>
+                    <div class="form-hint">支持富文本编辑，点击工具栏图片/视频按钮上传</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">验证码</label>
+                    <div class="captcha-wrapper">
+                        <input type="text" class="form-input captcha-input" id="editCaptchaCode" placeholder="请输入验证码" maxlength="4">
+                        <div>
+                            <img class="captcha-image" id="editCaptchaImage" src="" alt="验证码">
+                            <div class="captcha-refresh" id="editRefreshCaptcha">换一张</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="add-menu-btn" id="editToggleMenuEditor">+ 添加/编辑菜单</button>
+                    <div class="menu-editor" id="editMenuEditor" style="display: none;">
+                        <div class="menu-editor-title">自定义菜单</div>
+                        <div id="editMenuList"></div>
+                        <button type="button" class="add-menu-btn" id="editAddMenuBtn" style="margin-top: 8px;">+ 添加菜单</button>
+                        <div class="menu-hint">最多添加6个菜单，每个菜单名称最多20个字符</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" id="editSubmitBtn" style="width: 100%;">保存修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 图片预览 -->
     <div class="image-preview-overlay" id="imagePreview">
         <button class="image-preview-close" id="imagePreviewClose">&times;</button>
@@ -1565,7 +1762,10 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css">
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+    <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
     <script src="/js/auth-manager.js"></script>
     <script>
         // 全局配置
@@ -1602,6 +1802,14 @@
             await loadPosts();
             initSocket();
             initEventListeners();
+            initWangEditor();
+
+            // 检查URL参数，如果有post参数则直接打开详情页
+            const urlParams = new URLSearchParams(window.location.search);
+            const postParam = urlParams.get('post');
+            if (postParam) {
+                await openDetail(postParam);
+            }
         });
 
         // 检查登录状态
@@ -1704,17 +1912,23 @@
                 const menusHtml = renderMenus(post.menus);
                 const freePKHtml = renderFreePKSection(post);
 
+                // 置顶标签
+                const pinnedBadge = post.is_pinned ? '<span class="pinned-badge">置顶</span>' : '';
+
                 return `
-                    <div class="post-card" data-id="${post.id}">
+                    <div class="post-card ${post.is_pinned ? 'pinned' : ''}" data-id="${post.id}">
                         <div class="post-header">
                             <div class="post-avatar">${avatarChar}</div>
                             <div class="post-info">
-                                <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                                <div class="post-author-row">
+                                    ${pinnedBadge}
+                                    <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                                </div>
                                 <div class="post-time">${timeAgo}</div>
                             </div>
                         </div>
                         <div class="post-title">${escapeHtml(post.title)}</div>
-                        <div class="post-content">${escapeHtml(post.content)}</div>
+                        <div class="post-content">${post.content || ''}</div>
                         ${imagesHtml}
                         ${menusHtml}
                         ${freePKHtml}
@@ -1794,10 +2008,23 @@
         // 加载PK团状态
         async function loadFreePKGroup(groupId) {
             try {
-                const res = await fetch(`${API_BASE}/api/plaza/free-pk/${groupId}`);
+                // 处理 groupId 格式（可能是字符串或包含 $oid 的对象）
+                let cleanGroupId = groupId;
+                if (typeof groupId === 'object' && groupId !== null) {
+                    cleanGroupId = groupId.$oid || groupId.toString();
+                }
+                cleanGroupId = String(cleanGroupId);
+
+                // 验证 groupId 格式（MongoDB ObjectId 是 24 位十六进制）
+                if (!/^[0-9a-fA-F]{24}$/.test(cleanGroupId)) {
+                    console.warn('[Plaza] 无效的PK团ID格式:', cleanGroupId);
+                    return;
+                }
+
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/${cleanGroupId}`);
                 const data = await res.json();
                 if (data.success) {
-                    updateFreePKSection(groupId, data.data);
+                    updateFreePKSection(cleanGroupId, data.data);
                 }
             } catch (err) {
                 console.error('加载PK团失败:', err);
@@ -1885,17 +2112,23 @@
             const menusHtml = renderMenus(post.menus);
             const freePKHtml = renderFreePKSection(post);
 
+            // 置顶标签
+            const pinnedBadge = post.is_pinned ? '<span class="pinned-badge">置顶</span>' : '';
+
             return `
-                <div class="post-card" data-id="${post.id}" style="animation: slideIn 0.3s ease;">
+                <div class="post-card ${post.is_pinned ? 'pinned' : ''}" data-id="${post.id}" style="animation: slideIn 0.3s ease;">
                     <div class="post-header">
                         <div class="post-avatar">${avatarChar}</div>
                         <div class="post-info">
-                            <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                            <div class="post-author-row">
+                                ${pinnedBadge}
+                                <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
+                            </div>
                             <div class="post-time">${timeAgo}</div>
                         </div>
                     </div>
                     <div class="post-title">${escapeHtml(post.title)}</div>
-                    <div class="post-content">${escapeHtml(post.content)}</div>
+                    <div class="post-content">${post.content || ''}</div>
                     ${imagesHtml}
                     ${menusHtml}
                     ${freePKHtml}
@@ -1939,6 +2172,144 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // OSS上传配置
+        const OSS_CUSTOM_DOMAIN = 'https://boke.skym178.com';
+
+        // 阿里云OSS直传上传函数
+        async function ossUploadFile(file, type, onProgress) {
+            if (typeof OSS === 'undefined') {
+                throw new Error('OSS SDK未加载');
+            }
+
+            // 获取STS临时凭证
+            const token = AuthManager.getToken();
+            const stsRes = await fetch(API_BASE + '/api/marketing/get-sts-token', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const stsData = await stsRes.json();
+            if (!stsData.success) {
+                throw new Error(stsData.error || '获取STS凭证失败');
+            }
+            const sts = stsData.data;
+
+            // 生成OSS存储路径
+            const ext = file.name.substring(file.name.lastIndexOf('.'));
+            const dir = type === 'video' ? 'plaza/videos' : 'plaza/images';
+            const objectName = `${dir}/${Date.now()}_${Math.random().toString(36).substr(2, 9)}${ext}`;
+
+            // 初始化OSS客户端
+            const client = new OSS({
+                region: 'oss-cn-shenzhen',
+                bucket: sts.bucket,
+                accessKeyId: sts.accessKeyId,
+                accessKeySecret: sts.accessKeySecret,
+                stsToken: sts.stsToken
+            });
+
+            // 上传文件
+            const result = await client.multipartUpload(objectName, file, {
+                progress: (p) => {
+                    if (onProgress) onProgress(Math.round(p * 100));
+                },
+                partSize: 5 * 1024 * 1024,
+                parallel: 4
+            });
+
+            // 返回自定义域名的URL
+            return `${OSS_CUSTOM_DOMAIN}/${result.name}`;
+        }
+
+        // 触发图片上传
+        function triggerImageUpload() {
+            document.getElementById('editImageUpload').click();
+        }
+
+        // 处理图片上传
+        async function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // 验证文件大小（最大10MB）
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('图片大小不能超过10MB');
+                return;
+            }
+
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                showToast('请选择图片文件');
+                return;
+            }
+
+            showToast('图片上传中...');
+
+            try {
+                const url = await ossUploadFile(file, 'image', (progress) => {
+                    console.log('图片上传进度:', progress + '%');
+                });
+
+                // 在编辑器中插入图片
+                if (editEditor) {
+                    editEditor.focus();
+                    const imgHtml = `<p><img src="${url}" style="max-width: 100%;"/></p>`;
+                    editEditor.dangerouslyInsertHtml(imgHtml);
+                }
+
+                showToast('图片上传成功');
+            } catch (err) {
+                console.error('图片上传失败:', err);
+                showToast('图片上传失败: ' + err.message);
+            }
+
+            // 清空input，允许重复选择同一文件
+            input.value = '';
+        }
+
+        // 触发视频上传
+        function triggerVideoUpload() {
+            document.getElementById('editVideoUpload').click();
+        }
+
+        // 处理视频上传
+        async function handleVideoUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // 验证文件大小（最大100MB）
+            if (file.size > 100 * 1024 * 1024) {
+                showToast('视频大小不能超过100MB');
+                return;
+            }
+
+            // 验证文件类型
+            if (!file.type.startsWith('video/')) {
+                showToast('请选择视频文件');
+                return;
+            }
+
+            showToast('视频上传中...');
+
+            try {
+                const url = await ossUploadFile(file, 'video', (progress) => {
+                    console.log('视频上传进度:', progress + '%');
+                });
+
+                // 在编辑器中插入视频
+                if (editEditor) {
+                    editEditor.focus();
+                    const videoHtml = `<p><video src="${url}" controls style="max-width: 100%;"></video></p>`;
+                    editEditor.dangerouslyInsertHtml(videoHtml);
+                }
+
+                showToast('视频上传成功');
+            } catch (err) {
+                console.error('视频上传失败:', err);
+                showToast('视频上传失败: ' + err.message);
+            }
+
+            input.value = '';
         }
 
         // 图片预览
@@ -2062,8 +2433,8 @@
 
         // 初始化事件监听
         function initEventListeners() {
-            // 我的PK团记录
-            document.getElementById('navMyPK').addEventListener('click', async (e) => {
+            // PK团记录
+            document.getElementById('navRecords').addEventListener('click', async (e) => {
                 e.preventDefault();
                 if (!currentUser) {
                     showToast('请先登录');
@@ -2071,6 +2442,12 @@
                     return;
                 }
                 await showMyPKRecords();
+            });
+
+            // 个人中心
+            document.getElementById('navMy').addEventListener('click', async (e) => {
+                e.preventDefault();
+                window.location.href = 'member.html';
             });
 
             // 发布按钮
@@ -2096,6 +2473,29 @@
 
             // 发布帖子
             document.getElementById('submitPost').addEventListener('click', submitPost);
+
+            // 采集微信文章
+            document.getElementById('collectWechatBtn').addEventListener('click', collectWechatArticle);
+
+            // 编辑弹窗事件
+            document.getElementById('editModalClose').addEventListener('click', closeEditPostModal);
+            document.getElementById('editPostModal').addEventListener('click', (e) => {
+                if (e.target.id === 'editPostModal') closeEditPostModal();
+            });
+
+            // 编辑弹窗刷新验证码
+            document.getElementById('editRefreshCaptcha').addEventListener('click', loadEditCaptcha);
+            document.getElementById('editCaptchaImage').addEventListener('click', loadEditCaptcha);
+
+            // 编辑弹窗菜单
+            document.getElementById('editToggleMenuEditor').addEventListener('click', () => {
+                const editor = document.getElementById('editMenuEditor');
+                editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
+            });
+            document.getElementById('editAddMenuBtn').addEventListener('click', addEditMenu);
+
+            // 提交编辑
+            document.getElementById('editSubmitBtn').addEventListener('click', submitEditPost);
 
             // 搜索
             let searchTimer;
@@ -2168,11 +2568,399 @@
             });
         }
 
-        // 关闭发布弹窗
+        // 初始化wangEditor
+        let postEditor = null;
+        let postToolbar = null;
+        function initWangEditor() {
+            const tryInit = () => {
+                const E = window.wangEditor;
+                if (!E || !E.createEditor) {
+                    console.log('[Plaza] 等待wangEditor加载...');
+                    setTimeout(tryInit, 100);
+                    return;
+                }
+
+                try {
+                    const { createEditor, createToolbar } = E;
+
+                    // 工具栏配置 - 启用图片和视频上传按钮
+                    const toolbarConfig = {
+                        toolbarKeys: [
+                            'header',
+                            'bold',
+                            'italic',
+                            'underline',
+                            'strikeThrough',
+                            'color',
+                            'bgColor',
+                            'quote',
+                            '|',
+                            'bulletedList',
+                            'numberedList',
+                            '|',
+                            'justifyLeft',
+                            'justifyCenter',
+                            'justifyRight',
+                            '|',
+                            'uploadImage',
+                            'uploadVideo',
+                            'emotion',
+                            '|',
+                            'undo',
+                            'redo'
+                        ]
+                    };
+
+                    // 创建编辑器
+                    postEditor = createEditor({
+                        selector: '#editorContainer',
+                        html: '<p><br></p>',
+                        config: {
+                            placeholder: '分享你的想法...',
+                            scroll: true,
+                            autoFocus: false,
+                            height: 350,
+                            // 远程图片使用URL模式，不转为base64
+                            uploadImageShowType: 'url',
+                            // 允许插入远程图片
+                            linkImgCheck: function(src) {
+                                return true; // 允许所有图片URL
+                            },
+                            // 启用内置上传，使用MENU_CONF自定义上传
+                            MENU_CONF: {
+                                'uploadImage': {
+                                    customUpload: async (file, insertFn) => {
+                                        try {
+                                            const url = await ossUploadFile(file, 'image', (p) => {});
+                                            insertFn(url, '图片');
+                                        } catch (err) {
+                                            console.error('图片上传失败:', err);
+                                            alert('图片上传失败: ' + err.message);
+                                        }
+                                    }
+                                },
+                                'uploadVideo': {
+                                    customUpload: async (file, insertFn) => {
+                                        try {
+                                            const url = await ossUploadFile(file, 'video', (p) => {});
+                                            insertFn(url, '视频');
+                                        } catch (err) {
+                                            console.error('视频上传失败:', err);
+                                            alert('视频上传失败: ' + err.message);
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        toolbarConfig: toolbarConfig,
+                        mode: 'default'
+                    });
+
+                    // 创建工具栏
+                    postToolbar = createToolbar({
+                        editor: postEditor,
+                        selector: '#toolbarContainer',
+                        toolbarConfig: toolbarConfig,
+                        mode: 'default'
+                    });
+
+                    console.log('[Plaza] wangEditor初始化成功');
+                } catch (err) {
+                    console.error('[Plaza] wangEditor初始化失败:', err);
+                }
+            };
+
+            tryInit();
+        }
+
+        // 初始化编辑帖子用的wangEditor
+        let editEditor = null;
+        let editToolbar = null;
+        function initEditEditor() {
+            const tryInit = () => {
+                const E = window.wangEditor;
+                if (!E || !E.createEditor) {
+                    setTimeout(tryInit, 100);
+                    return;
+                }
+
+                try {
+                    const { createEditor, createToolbar } = E;
+
+                    // 工具栏配置 - 启用图片和视频上传按钮
+                    const toolbarConfig = {
+                        toolbarKeys: [
+                            'header',
+                            'bold',
+                            'italic',
+                            'underline',
+                            'strikeThrough',
+                            'color',
+                            'bgColor',
+                            'quote',
+                            '|',
+                            'bulletedList',
+                            'numberedList',
+                            '|',
+                            'justifyLeft',
+                            'justifyCenter',
+                            'justifyRight',
+                            '|',
+                            'uploadImage',
+                            'uploadVideo',
+                            'emotion',
+                            '|',
+                            'undo',
+                            'redo'
+                        ]
+                    };
+
+                    // 创建编辑器
+                    editEditor = createEditor({
+                        selector: '#editEditorContainer',
+                        html: '<p><br></p>',
+                        config: {
+                            placeholder: '编辑帖子内容...',
+                            scroll: true,
+                            autoFocus: false,
+                            height: 350,
+                            // 远程图片使用URL模式，不转为base64
+                            uploadImageShowType: 'url',
+                            // 允许插入远程图片
+                            linkImgCheck: function(src) {
+                                return true; // 允许所有图片URL
+                            },
+                            // 启用内置上传，使用MENU_CONF自定义上传
+                            MENU_CONF: {
+                                'uploadImage': {
+                                    customUpload: async (file, insertFn) => {
+                                        try {
+                                            const url = await ossUploadFile(file, 'image', (p) => {});
+                                            insertFn(url, '图片');
+                                        } catch (err) {
+                                            console.error('图片上传失败:', err);
+                                            alert('图片上传失败: ' + err.message);
+                                        }
+                                    }
+                                },
+                                'uploadVideo': {
+                                    customUpload: async (file, insertFn) => {
+                                        try {
+                                            const url = await ossUploadFile(file, 'video', (p) => {});
+                                            insertFn(url, '视频');
+                                        } catch (err) {
+                                            console.error('视频上传失败:', err);
+                                            alert('视频上传失败: ' + err.message);
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        toolbarConfig: toolbarConfig,
+                        mode: 'default'
+                    });
+
+                    // 创建工具栏
+                    editToolbar = createToolbar({
+                        editor: editEditor,
+                        selector: '#editToolbarContainer',
+                        toolbarConfig: toolbarConfig,
+                        mode: 'default'
+                    });
+                } catch (err) {
+                    console.error('[Plaza] 编辑器初始化失败:', err);
+                }
+            };
+
+            tryInit();
+        }
+
+        // 编辑弹窗的菜单数据
+        let editMenus = [];
+
+        // 打开编辑弹窗
+        async function openEditPost(postId) {
+            if (!currentUser) {
+                showToast('请先登录');
+                openLoginPopup();
+                return;
+            }
+
+            try {
+                // 加载帖子详情
+                const res = await fetch(`${API_BASE}/api/plaza/posts/${postId}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast(data.error || '加载失败');
+                    return;
+                }
+
+                const post = data.data;
+
+                // 检查权限
+                if (post.user_id !== currentUser.id) {
+                    showToast('无权限编辑此帖子');
+                    return;
+                }
+
+                // 填充数据
+                document.getElementById('editPostId').value = postId;
+                document.getElementById('editPostTitle').value = post.title;
+
+                // 初始化编辑器（如果还没初始化）
+                if (!editEditor) {
+                    initEditEditor();
+                }
+                // 设置编辑器内容
+                setTimeout(() => {
+                    if (editEditor) {
+                        editEditor.setHtml(post.content || '');
+                    }
+                }, 100);
+
+                // 设置菜单
+                editMenus = post.menus || [];
+                renderEditMenuItems();
+
+                // 加载验证码
+                loadEditCaptcha();
+
+                // 显示弹窗
+                document.getElementById('editPostModal').classList.add('active');
+            } catch (err) {
+                console.error('加载帖子失败:', err);
+                showToast('加载失败');
+            }
+        }
+
+        // 关闭编辑弹窗
+        function closeEditPostModal() {
+            document.getElementById('editPostModal').classList.remove('active');
+        }
+
+        // 加载编辑弹窗的验证码
+        async function loadEditCaptcha() {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/captcha`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('editCaptchaImage').src = data.image;
+                    document.getElementById('editCaptchaImage').dataset.captchaId = data.captchaId;
+                }
+            } catch (err) {
+                console.error('加载验证码失败:', err);
+            }
+        }
+
+        // 渲染编辑弹窗的菜单项
+        function renderEditMenuItems() {
+            const container = document.getElementById('editMenuList');
+            container.innerHTML = editMenus.map((menu, index) => `
+                <div class="menu-item">
+                    <input type="text" class="form-input" placeholder="菜单名称" value="${escapeHtml(menu.name)}" onchange="updateEditMenu(${index}, 'name', this.value)">
+                    <input type="text" class="form-input" placeholder="菜单链接" value="${escapeHtml(menu.url)}" onchange="updateEditMenu(${index}, 'url', this.value)">
+                    <button type="button" class="menu-remove-btn" onclick="removeEditMenu(${index})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function updateEditMenu(index, field, value) {
+            editMenus[index] = editMenus[index] || {};
+            editMenus[index][field] = value;
+        }
+
+        function removeEditMenu(index) {
+            editMenus.splice(index, 1);
+            renderEditMenuItems();
+        }
+
+        function addEditMenu() {
+            if (editMenus.length >= 6) {
+                showToast('最多添加6个菜单');
+                return;
+            }
+            editMenus.push({ name: '', url: '' });
+            renderEditMenuItems();
+        }
+
+        // 提交编辑
+        async function submitEditPost() {
+            const postId = document.getElementById('editPostId').value;
+            const title = document.getElementById('editPostTitle').value.trim();
+            // 兼容新旧版本的getHtml方法
+            const getEditorContent = (editor) => {
+                if (!editor) return '';
+                if (typeof editor.getHtml === 'function') return editor.getHtml().trim();
+                if (typeof editor.getText === 'function') return editor.getText().trim();
+                return '';
+            };
+            const content = getEditorContent(editEditor);
+            const captchaCode = document.getElementById('editCaptchaCode').value.trim();
+            const captchaId = document.getElementById('editCaptchaImage').dataset.captchaId;
+
+            if (!title) {
+                showToast('请输入标题');
+                return;
+            }
+            if (!content || content === '<p><br></p>') {
+                showToast('请输入内容');
+                return;
+            }
+            if (!captchaCode) {
+                showToast('请输入验证码');
+                return;
+            }
+
+            const btn = document.getElementById('editSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/plaza/posts/${postId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AuthManager.getToken()}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        captchaId,
+                        captchaCode,
+                        menus: editMenus
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('修改成功');
+                    closeEditPostModal();
+                    // 刷新帖子列表和详情
+                    loadPosts();
+                    if (currentPostId === postId) {
+                        openDetail(postId);
+                    }
+                } else {
+                    showToast(data.error || '修改失败');
+                    loadEditCaptcha();
+                }
+            } catch (err) {
+                console.error('修改帖子失败:', err);
+                showToast('修改失败');
+                loadEditCaptcha();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '保存修改';
+            }
+        }
         function closePostModal() {
             document.getElementById('postModal').classList.remove('active');
             document.getElementById('postTitle').value = '';
-            document.getElementById('postContent').value = '';
+            if (postEditor) {
+                postEditor.setHtml('');
+            }
             document.getElementById('captchaCode').value = '';
             // 重置菜单
             menus = [];
@@ -2252,7 +3040,14 @@
         // 提交帖子
         async function submitPost() {
             const title = document.getElementById('postTitle').value.trim();
-            const content = document.getElementById('postContent').value.trim();
+            // 兼容新旧版本的getHtml方法
+            const getEditorContent = (editor) => {
+                if (!editor) return '';
+                if (typeof editor.getHtml === 'function') return editor.getHtml().trim();
+                if (typeof editor.getText === 'function') return editor.getText().trim();
+                return '';
+            };
+            const content = getEditorContent(postEditor);
             const captchaCode = document.getElementById('captchaCode').value.trim();
 
             if (!title) {
@@ -2339,8 +3134,12 @@
                         
                         const pkData = await pkRes.json();
                         if (pkData.success) {
+                            // 确保 freePKGroupId 是字符串类型
+                            const groupId = pkData.data.groupId;
                             postData.hasFreePKGroup = true;
-                            postData.freePKGroupId = pkData.data.groupId;
+                            postData.freePKGroupId = typeof groupId === 'object' && groupId !== null 
+                                ? groupId.$oid || groupId.toString() 
+                                : String(groupId);
                             showToast('发布成功，自由PK团已创建！');
                         } else {
                             showToast('发布成功，但PK团创建失败：' + pkData.error);
@@ -2349,21 +3148,11 @@
                         showToast('发布成功');
                     }
 
-                    // 乐观更新：直接插入新帖子到列表顶部
-                    const postsContainer = document.getElementById('postList');
-                    if (postsContainer && currentPage === 1 && !searchKeyword) {
-                        newPost = postData;
-                        newPost.isLiked = false;
-                        newPost.created_at = new Date().toISOString();
-                        const postHtml = renderPostCardHtml(newPost);
-                        // 插入到容器开头
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = postHtml;
-                        const newElement = tempDiv.firstElementChild;
-                        postsContainer.insertBefore(newElement, postsContainer.firstChild);
-                        // 初始化懒加载
-                        initImageLazyLoad();
-                    }
+                    // 刷新帖子列表
+                    await loadPosts();
+
+                    // 关闭弹窗
+                    closePostModal();
 
                     closePostModal();
                     loadCaptcha();
@@ -2411,12 +3200,16 @@
             const imagesHtml = renderImages(post.images);
             const menusHtml = renderMenus(post.menus);
 
+            // 检查是否是当前用户的帖子
+            const isOwner = currentUser && currentUser.id === post.user_id;
+
             const html = `
                 <div class="detail-post">
                     <div class="post-header">
                         <div class="post-avatar">${avatarChar}</div>
                         <div class="post-info">
                             <div class="post-author-row">
+                                ${isOwner ? `<button class="edit-btn" onclick="openEditPost('${post.id}')">编辑</button>` : ''}
                                 <div class="post-author">${escapeHtml(post.username || '匿名用户')}</div>
                                 <div class="user-stats-mini">
                                     <span class="stat-item energy" title="能量">
@@ -2437,7 +3230,7 @@
                         </div>
                     </div>
                     <div class="detail-post-title">${escapeHtml(post.title)}</div>
-                    <div class="detail-post-content">${escapeHtml(post.content)}</div>
+                    <div class="detail-post-content">${post.content || ''}</div>
                     ${imagesHtml}
                     ${menusHtml}
                     <div class="post-stats">
@@ -2488,13 +3281,30 @@
             if (!container) return;
 
             try {
-                const res = await fetch(`${API_BASE}/api/plaza/free-pk/${groupId}`);
+                // 处理 groupId 格式
+                let cleanGroupId = groupId;
+                if (typeof groupId === 'object' && groupId !== null) {
+                    cleanGroupId = groupId.$oid || groupId.toString();
+                }
+                cleanGroupId = String(cleanGroupId);
+
+                // 验证 groupId 格式
+                if (!/^[0-9a-fA-F]{24}$/.test(cleanGroupId)) {
+                    console.warn('[Plaza] 无效的PK团ID格式:', cleanGroupId);
+                    container.innerHTML = '<div style="color: red;">PK团ID格式无效</div>';
+                    return;
+                }
+
+                const res = await fetch(`${API_BASE}/api/plaza/free-pk/${cleanGroupId}`);
                 const data = await res.json();
                 if (data.success) {
                     renderDetailFreePK(container, data.data);
+                } else {
+                    container.innerHTML = '<div style="color: red;">' + (data.error || '加载失败') + '</div>';
                 }
             } catch (err) {
                 console.error('加载PK团详情失败:', err);
+                container.innerHTML = '<div style="color: red;">加载失败</div>';
             }
         }
 
@@ -3102,6 +3912,96 @@
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
+        // 采集微信公众号文章
+        async function collectWechatArticle() {
+            const url = prompt('请粘贴微信公众号文章链接:');
+            if (!url) return;
+
+            // 简单验证
+            if (!url.includes('mp.weixin.qq.com')) {
+                showToast('请输入有效的微信公众号文章链接');
+                return;
+            }
+
+            const btn = document.getElementById('collectWechatBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '采集中...';
+
+            try {
+                const token = AuthManager.getToken();
+                if (!token) {
+                    showToast('请先登录');
+                    return;
+                }
+
+                const res = await fetch(`${API_BASE}/api/plaza/parse-wechat-article`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ url: url.trim() })
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    // 检查是否是验证相关错误
+                    const errorMsg = data.error || '采集失败';
+                    if (errorMsg.includes('验证') || errorMsg.includes('扫码')) {
+                        alert('采集失败：该文章需要微信扫码验证后才能访问。\n\n解决方案：\n1. 请在微信中打开文章\n2. 点击右上角"..."\n3. 选择"复制链接"\n4. 将复制的公开链接粘贴到此处');
+                    } else if (errorMsg.includes('删除') || errorMsg.includes('不存在') || errorMsg.includes('不可见')) {
+                        alert('采集失败：该文章可能已被删除或设置为不可见');
+                    } else {
+                        showToast(errorMsg);
+                    }
+                    return;
+                }
+
+                // 填充标题
+                document.getElementById('postTitle').value = data.data.title || '';
+
+                // 填充内容到编辑器
+                if (postEditor && data.data.content) {
+                    // 确保内容不为空且是有效字符串
+                    let content = data.data.content;
+                    if (typeof content !== 'string') {
+                        content = String(content || '');
+                    }
+                    content = content.trim();
+                    
+                    if (content) {
+                        // 使用 try-catch 包裹
+                        try {
+                            postEditor.setHtml(content);
+                        } catch (e) {
+                            console.error('setHtml失败:', e.message);
+                            // 尝试使用备用方法
+                            try {
+                                if (postEditor.getText() === '') {
+                                    // 编辑器为空，直接设置
+                                    postEditor.setHtml('<p>' + content + '</p>');
+                                }
+                            } catch (e2) {
+                                console.error('备用方法也失败:', e2.message);
+                                alert('内容加载失败，请手动粘贴');
+                            }
+                        }
+                    }
+                }
+
+                showToast(`采集成功！已提取${data.data.images?.length || 0}张图片`);
+
+            } catch (err) {
+                console.error('采集微信文章失败:', err);
+                showToast('采集失败，请稍后重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
         // 显示通知
         function showNotification(message) {
             const notif = document.getElementById('notification');
@@ -3211,9 +4111,13 @@
             <span class="bottom-nav-icon">&#127918;</span>
             <span>游戏</span>
         </a>
-        <a href="#" class="bottom-nav-item" id="navMyPK">
-            <span class="bottom-nav-icon">&#9876;</span>
-            <span>我的PK</span>
+        <a href="plaza.html?tab=records" class="bottom-nav-item" id="navRecords">
+            <span class="bottom-nav-icon">&#128203;</span>
+            <span>记录</span>
+        </a>
+        <a href="member.html" class="bottom-nav-item" id="navMy">
+            <span class="bottom-nav-icon">&#128100;</span>
+            <span>我的</span>
         </a>
     </nav>
 </body>

@@ -52,3 +52,20 @@ landing.html
 supply-chain.html
 aiwork.html
 knowledge-manage.html
+
+# 象棋相关（本地保留，不同步到远程）
+chess-plaza.html
+chess-room.html
+chess-challenge.html
+chiness-chess/
+xiangqi/
+server/routes/chess.js
+server/routes/admin-chess.js
+server/services/chess-ai.js
+server/services/chess-socket.js
+server/services/chess-alpha-beta.js
+server/utils/chess-validate.js
+server/utils/chess-format.js
+public/src/js/chess-integration.js
+docs/CHESS_TEST_GUIDE.md
+.cursor/rules/chess-module.mdc
